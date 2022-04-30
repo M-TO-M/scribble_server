@@ -1,4 +1,15 @@
+from dataclasses import dataclass
+
 from django.db import models
+
+
+@dataclass
+class Default:
+    user: int
+    book_object: int
+    note: int
+    page: int
+    page_comment: int
 
 
 class TimeStampModel(models.Model):
