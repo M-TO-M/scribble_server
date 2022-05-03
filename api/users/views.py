@@ -77,6 +77,27 @@ class SignInView(generics.CreateAPIView):
         return Response(response, status=status.HTTP_201_CREATED)
 
 
+class UserView(generics.UpdateAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+
+    def patch(self, request, *args, **kwargs):
+        user = self.get_object()
+        if request.user and request.user.id != user.id:
+            raise AuthenticationFailed(detail=_("unauthorized_user"))
+
+        data = json.loads(request.body)
+        user_serializer = self.serializer_class(data=data, partial=True)
+        user_serializer.is_valid(raise_exception=True)
+        update_user = user_serializer.update(instance=user, validated_data=data)
+
+        response = {
+            "user": UserSerializer(instance=update_user).data
+        }
+
+        return Response(response, status=status.HTTP_201_CREATED)
+
+
 class CategoryView(generics.GenericAPIView, mixins.RetrieveModelMixin, mixins.UpdateModelMixin):
     queryset = User.objects.all()
     serializer_class = CategoryFieldSerializer
