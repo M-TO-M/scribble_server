@@ -1,6 +1,7 @@
 from django.contrib.auth.models import AnonymousUser
 from django.utils.deprecation import MiddlewareMixin
 from django.utils.functional import SimpleLazyObject
+from rest_framework.exceptions import APIException
 
 from scribble.authentication import CustomJWTAuthentication
 
@@ -14,14 +15,16 @@ class TokenAuthMiddleWare(MiddlewareMixin):
         self.get_response = get_response
 
     def __call__(self, request):
+        if request.path not in ALLOWED_PATH:
+            self.process_request(request)
         return self.get_response(request)
 
     def process_request(self, request):
-        if request.path in ALLOWED_PATH:
-            pass
         request.user = SimpleLazyObject(lambda: self.get_token_user(request))
 
     @staticmethod
     def get_token_user(request):
-        user, jwt_token = CustomJWTAuthentication.authenticate(request)
+        auth = CustomJWTAuthentication()
+        user, jwt_token = auth.authenticate(request)
+
         return user or AnonymousUser()
