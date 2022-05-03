@@ -23,5 +23,7 @@ class TokenAuthMiddleWare(MiddlewareMixin):
 
     @staticmethod
     def get_token_user(request):
-        user, jwt_token = CustomJWTAuthentication.authenticate(request)
+        auth = CustomJWTAuthentication()
+        user, jwt_token = auth.authenticate(request)
+
         return user or AnonymousUser()
