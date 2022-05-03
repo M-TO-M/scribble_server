@@ -1,5 +1,5 @@
 import json
-from typing import Union
+from typing import Union, Tuple
 
 from django.contrib.auth.hashers import check_password
 from django.utils.translation import gettext_lazy as _
