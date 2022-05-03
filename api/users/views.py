@@ -25,6 +25,28 @@ class SignUpView(generics.CreateAPIView):
         return Response(response, status=status.HTTP_201_CREATED)
 
 
+class VerifyView(generics.RetrieveAPIView):
+    queryset = User.objects.all()
+    serializer_class = VerifySerializer
+
+    def get(self, request, *args, **kwargs):
+        params = request.GET
+        if not params:
+            return Response(None)
+
+        response = {}
+        email = params.get('email', '')
+        if email:
+            provider = self.serializer_class.get_email(email)
+            response["provider"] = provider
+
+        nickname = params.get('nickname', '')
+        if nickname:
+            self.serializer_class.get_nickname(nickname)
+
+        return Response(response, status=status.HTTP_200_OK)
+
+
 class SignInView(generics.CreateAPIView):
     queryset = User.objects.all()
     serializer_class = ScribbleTokenObtainPairSerializer
