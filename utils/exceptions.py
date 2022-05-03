@@ -8,7 +8,10 @@ def custom_exception_handler(exc, context):
 
     code, data = response.status_code, response.data
     if isinstance(data, dict):
-        _data = [str(val[0]) for val in data.values()]
+        _data = [
+            str(val[0]) if isinstance(val, list) else str(val)
+            for val in data.values()
+        ]
     elif isinstance(data, list):
         _data = [str(val) for val in data]
     else:
