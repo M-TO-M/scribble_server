@@ -54,3 +54,48 @@ class VerifySerializer(serializers.ModelSerializer):
             raise ValidationError(detail={"fail_case": "exist_nickname", "recommend": recommend})
         except User.DoesNotExist:
             return None
+
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ("id", "email", "password", "nickname", "category", "profile_image", "created_at", "updated_at")
+
+    def update(self, instance, validated_data):
+        instance.nickname = validated_data.pop('nickname', instance.nickname)
+        instance.profile_image = validated_data.pop('profile_image', instance.profile_image)
+        instance.category = validated_data.pop('category', instance.category)
+        instance.save()
+
+        return instance
+
+
+class CategoryFieldSerializer(serializers.ModelSerializer):
+    follow = serializers.SerializerMethodField()
+    unfollow = serializers.SerializerMethodField()
+
+    @staticmethod
+    def get_follow(user: User, req_data: dict) -> dict:
+        # TODO: model method로 사용하기
+        valid_data = {}
+        category_ids = list(user.category.keys())
+
+        for k, v in req_data.items():
+            if k in category_ids:
+                raise ValidationError(detail=_(f"exist_follow_{v}"))
+            valid_data[k] = v
+
+        return valid_data
+
+    @staticmethod
+    def get_unfollow(user: User, req_data: dict) -> dict:
+        # TODO: model method로 사용하기
+        valid_data = user.category
+        category_ids = list(valid_data.keys())
+
+        for k, v in req_data.items():
+            if k not in category_ids:
+                raise ValidationError(detail=_(f"no_exist_follow_{v}"))
+            valid_data.pop(k)
+
+        return valid_data
