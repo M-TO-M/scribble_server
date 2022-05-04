@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser, UserManager
 
-from apps.core.models import TimeStampModel
+from core.models import TimeStampModel
 from utils.validators import domain_allowlist, SpecificEmailDomainValidator
 
 
