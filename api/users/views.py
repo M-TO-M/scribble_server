@@ -77,6 +77,20 @@ class SignInView(generics.CreateAPIView):
         return Response(response, status=status.HTTP_201_CREATED)
 
 
+class SignOutView(generics.CreateAPIView):
+    serializer_class = SignOutSerializer
+
+    def post(self, request, *args, **kwargs):
+        data = json.loads(request.body)
+        data['user_id'] = request.user.id
+
+        logout_serializer = self.serializer_class(data=data)
+        logout_serializer.is_valid(raise_exception=True)
+        logout_serializer.save()
+
+        return Response(None, status=status.HTTP_204_NO_CONTENT)
+
+
 class UserView(generics.UpdateAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer

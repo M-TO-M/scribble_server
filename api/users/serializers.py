@@ -4,8 +4,11 @@ from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
+from rest_framework_simplejwt.exceptions import TokenError
+from rest_framework_simplejwt.serializers import TokenBlacklistSerializer
 
 from apps.users.models import User
+from scribble.authentication import CustomJWTAuthentication
 
 
 class UserValidationBaseSerializer(serializers.ModelSerializer):
@@ -39,6 +42,32 @@ class SignUpSerializer(UserValidationBaseSerializer):
     def create(self, validated_data):
         user = User.objects.create_user(**validated_data)
         return user
+
+
+class SignOutSerializer(TokenBlacklistSerializer):
+    user_id = serializers.IntegerField()
+    access = serializers.CharField(read_only=True)
+    refresh = serializers.CharField()
+
+    def validate(self, attrs):
+        self.refresh = self.token_class(attrs['refresh'])
+        access = str(self.refresh.access_token)
+
+        auth = CustomJWTAuthentication()
+        validated_token = auth.get_validated_token(access)
+        user = auth.get_user(validated_token)
+
+        if attrs['user_id'] != user.id:
+            raise ValidationError(detail=_("unauthorized_user"))
+
+        return attrs
+
+    def save(self):
+        try:
+            self.refresh.blacklist()
+        except TokenError:
+            raise ValidationError(detail=_("invalid_refresh_token"))
+        return {}
 
 
 class VerifySerializer(serializers.ModelSerializer):
