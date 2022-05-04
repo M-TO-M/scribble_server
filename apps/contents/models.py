@@ -1,9 +1,8 @@
 from django.db import models
 
-from utils.fields import ISBNField
-from apps.core.models import TimeStampModel
+from core.fields import ISBNField
+from core.models import TimeStampModel, Default
 from apps.users.models import User
-from apps.core.models import Default
 
 
 DEFAULT_MODEL_PK = Default(
