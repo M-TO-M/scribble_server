@@ -9,6 +9,7 @@ from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.response import Response
 
 from api.users.serializers import *
+from utils.exceptions import UserNotFound
 from utils.serializers import ScribbleTokenObtainPairSerializer
 
 
@@ -96,7 +97,11 @@ class UserView(generics.GenericAPIView, mixins.UpdateModelMixin, mixins.DestroyM
     serializer_class = UserSerializer
 
     def patch(self, request, *args, **kwargs):
-        user = self.get_object()
+        try:
+            user = self.get_object()
+        except Exception:
+            raise UserNotFound()
+
         if request.user and request.user.id != user.id:
             raise AuthenticationFailed(detail=_("unauthorized_user"))
 
@@ -112,7 +117,11 @@ class UserView(generics.GenericAPIView, mixins.UpdateModelMixin, mixins.DestroyM
         return Response(response, status=status.HTTP_201_CREATED)
 
     def delete(self, request, *args, **kwargs):
-        user = self.get_object()
+        try:
+            user = self.get_object()
+        except Exception:
+            raise UserNotFound()
+
         if request.user and request.user.id != user.id:
             raise AuthenticationFailed(detail=_("unauthorized_user"))
 
@@ -137,7 +146,11 @@ class CategoryView(generics.GenericAPIView, mixins.RetrieveModelMixin, mixins.Up
         return user_id, event
 
     def get(self, request, *args, **kwargs):
-        user = self.get_object()
+        try:
+            user = self.get_object()
+        except Exception:
+            raise UserNotFound()
+
         response = {"category": user.category}
 
         return Response(response, status=status.HTTP_200_OK)

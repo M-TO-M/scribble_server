@@ -10,15 +10,13 @@ class ResponseRenderer(renderers.JSONRenderer):
         response_context = renderer_context.get('response')
         code = response_context.status_code
 
-        response_case = {
-            'success': is_success(code),
-            'fail': is_client_error(code),
-            'error': is_server_error(code)
-        }
+        if is_success(code):
+            status_msg, data_key = 'success', 'data'
+        elif is_client_error(code):
+            status_msg, data_key = 'fail', 'fail_case'
+        elif is_server_error(code):
+            status_msg, data_key = 'error', 'message'
+        else:
+            status_msg, data_key = 'undefined', 'message'
 
-        renderer = 'success', 'data' if response_case['success'] \
-            else 'fail', 'fail_case' if response_case['fail'] \
-            else 'error', 'message' if response_case['error'] \
-            else 'undefined', 'message'
-
-        return json.dumps({'status': renderer[0], renderer[1]: data})
+        return json.dumps({'status': status_msg, data_key: data})
