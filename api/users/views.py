@@ -91,7 +91,7 @@ class SignOutView(generics.CreateAPIView):
         return Response(None, status=status.HTTP_204_NO_CONTENT)
 
 
-class UserView(generics.UpdateAPIView):
+class UserView(generics.GenericAPIView, mixins.UpdateModelMixin, mixins.DestroyModelMixin):
     queryset = User.objects.all()
     serializer_class = UserSerializer
 
@@ -110,6 +110,14 @@ class UserView(generics.UpdateAPIView):
         }
 
         return Response(response, status=status.HTTP_201_CREATED)
+
+    def delete(self, request, *args, **kwargs):
+        user = self.get_object()
+        if request.user and request.user.id != user.id:
+            raise AuthenticationFailed(detail=_("unauthorized_user"))
+
+        self.perform_destroy(user)
+        return Response(None, status=status.HTTP_204_NO_CONTENT)
 
 
 class CategoryView(generics.GenericAPIView, mixins.RetrieveModelMixin, mixins.UpdateModelMixin):
