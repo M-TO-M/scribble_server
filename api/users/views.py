@@ -1,9 +1,11 @@
 import json
+from typing import Union, Tuple
 
 from django.contrib.auth.hashers import check_password
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework import generics, mixins, status
+from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.response import Response
 
 from api.users.serializers import *
@@ -70,6 +72,103 @@ class SignInView(generics.CreateAPIView):
                 "access_token": str(token_data.access_token),
                 "refresh_token": str(token_data)
             }
+        }
+
+        return Response(response, status=status.HTTP_201_CREATED)
+
+
+class SignOutView(generics.CreateAPIView):
+    serializer_class = SignOutSerializer
+
+    def post(self, request, *args, **kwargs):
+        data = json.loads(request.body)
+        data['user_id'] = request.user.id
+
+        logout_serializer = self.serializer_class(data=data)
+        logout_serializer.is_valid(raise_exception=True)
+        logout_serializer.save()
+
+        return Response(None, status=status.HTTP_204_NO_CONTENT)
+
+
+class UserView(generics.GenericAPIView, mixins.UpdateModelMixin, mixins.DestroyModelMixin):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+
+    def patch(self, request, *args, **kwargs):
+        user = self.get_object()
+        if request.user and request.user.id != user.id:
+            raise AuthenticationFailed(detail=_("unauthorized_user"))
+
+        data = json.loads(request.body)
+        user_serializer = self.serializer_class(data=data, partial=True)
+        user_serializer.is_valid(raise_exception=True)
+        update_user = user_serializer.update(instance=user, validated_data=data)
+
+        response = {
+            "user": UserSerializer(instance=update_user).data
+        }
+
+        return Response(response, status=status.HTTP_201_CREATED)
+
+    def delete(self, request, *args, **kwargs):
+        user = self.get_object()
+        if request.user and request.user.id != user.id:
+            raise AuthenticationFailed(detail=_("unauthorized_user"))
+
+        self.perform_destroy(user)
+        return Response(None, status=status.HTTP_204_NO_CONTENT)
+
+
+class CategoryView(generics.GenericAPIView, mixins.RetrieveModelMixin, mixins.UpdateModelMixin):
+    queryset = User.objects.all()
+    serializer_class = CategoryFieldSerializer
+
+    def get_params_for_category(self, request) -> Union[Tuple[str, str], Response]:
+        params = self.request.GET
+        if not params:
+            return Response(None)
+
+        user_id = params.get('user', '')
+        event = params.get('event', '')
+        if not user_id or not event:
+            return Response(None)
+
+        return user_id, event
+
+    def get(self, request, *args, **kwargs):
+        user = self.get_object()
+        response = {"category": user.category}
+
+        return Response(response, status=status.HTTP_200_OK)
+
+    def patch(self, request, *args, **kwargs):
+        user_id, event = self.get_params_for_category(request)
+        try:
+            user = self.queryset.get(id=user_id)
+        except User.DoesNotExist:
+            raise ValidationError(detail=_("no_exist_user"))
+
+        if request.user and request.user.id != user.id:
+            raise AuthenticationFailed(detail=_("unauthorized_user"))
+
+        data = json.loads(request.body)
+
+        req_data = data['category']
+        if event == 'follow':
+            valid_data = self.serializer_class.get_follow(user=user, req_data=req_data)
+            valid_data.update(user.category)
+        elif event == 'unfollow':
+            valid_data = self.serializer_class.get_unfollow(user=user, req_data=req_data)
+        else:
+            return Response(None)
+
+        user_serializer = UserSerializer(data=valid_data, partial=True)
+        user_serializer.is_valid(raise_exception=True)
+        update_user = user_serializer.update(instance=user, validated_data={'category': valid_data})
+
+        response = {
+            "user": UserSerializer(instance=update_user).data
         }
 
         return Response(response, status=status.HTTP_201_CREATED)
