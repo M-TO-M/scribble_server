@@ -8,12 +8,13 @@ from rest_framework.exceptions import ValidationError
 from apps.users.models import User
 
 
-class SignUpSerializer(serializers.ModelSerializer):
+class UserValidationBaseSerializer(serializers.ModelSerializer):
+    email = serializers.CharField(error_messages={'unique': _('exist_email')})
     nickname = serializers.CharField(error_messages={'unique': _('exist_nickname')})
 
     class Meta:
         model = User
-        fields = ("id", "email", "password", "nickname", "category", "profile_image", "created_at", "updated_at")
+        fields = '__all__'
 
     def validate_email(self, value):
         try:
@@ -28,6 +29,12 @@ class SignUpSerializer(serializers.ModelSerializer):
             raise ValidationError(detail=_("exist_nickname"))
         except self.Meta.model.DoesNotExist:
             return value
+
+
+class SignUpSerializer(UserValidationBaseSerializer):
+    class Meta:
+        model = User
+        fields = ("id", "email", "password", "nickname", "category", "profile_image", "created_at", "updated_at")
 
     def create(self, validated_data):
         user = User.objects.create_user(**validated_data)
@@ -56,7 +63,7 @@ class VerifySerializer(serializers.ModelSerializer):
             return None
 
 
-class UserSerializer(serializers.ModelSerializer):
+class UserSerializer(UserValidationBaseSerializer):
     class Meta:
         model = User
         fields = ("id", "email", "password", "nickname", "category", "profile_image", "created_at", "updated_at")
