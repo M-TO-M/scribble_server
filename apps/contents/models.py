@@ -1,6 +1,6 @@
 from django.db import models
 
-from utils.fields import ISBNField
+from core.fields import ISBNField
 from core.models import TimeStampModel, Default
 from apps.users.models import User
 

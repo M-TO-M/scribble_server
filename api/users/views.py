@@ -9,8 +9,8 @@ from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.response import Response
 
 from api.users.serializers import *
-from utils.exceptions import UserNotFound
-from utils.serializers import ScribbleTokenObtainPairSerializer
+from core.exceptions import UserNotFound
+from core.serializers import ScribbleTokenObtainPairSerializer
 
 
 class SignUpView(generics.CreateAPIView):
