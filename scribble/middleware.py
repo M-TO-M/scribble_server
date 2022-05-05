@@ -6,7 +6,7 @@ from rest_framework.exceptions import APIException
 from scribble.authentication import CustomJWTAuthentication
 
 
-ALLOWED_PATH = ["/", "/users/new", "users/verify", "users/signin"]
+ALLOWED_PATH = ["/", "/users/new", "users/verify", "users/signin", "token/refresh"]
 
 
 class TokenAuthMiddleWare(MiddlewareMixin):
