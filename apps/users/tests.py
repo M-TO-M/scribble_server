@@ -20,8 +20,8 @@ class UserTestCase(APITestCase):
         self.url_prefix = "http://127.0.0.1:8000/api/users/"
         self.base_url = {
             "verify": self.url_prefix + "verify",
-            "verify_nickname": self.url_prefix + "verify?=nickname",
-            "verify_email": self.url_prefix + "verify?=email",
+            "verify_nickname": self.url_prefix + "verify?nickname=",
+            "verify_email": self.url_prefix + "verify?email=",
             "signup": self.url_prefix + "new",
             "signin": self.url_prefix + "signin",
             "signout": self.url_prefix + "signout",
@@ -145,7 +145,7 @@ class UserTestCase(APITestCase):
 
         response = self.client.post(path=self.base_url['signin'], data=data, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual("invalid_password" in response.data)
+        self.assertTrue("invalid_password" in response.data)
 
     def test_user_signin_success(self):
         data = {
