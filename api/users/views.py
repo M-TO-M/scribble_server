@@ -35,7 +35,7 @@ class VerifyView(generics.RetrieveAPIView):
     def get(self, request, *args, **kwargs):
         params = request.GET
         if not params:
-            return Response(None)
+            return Response(None, status=status.HTTP_204_NO_CONTENT)
 
         response = {}
         email = params.get('email', '')
@@ -136,12 +136,12 @@ class CategoryView(generics.GenericAPIView, mixins.RetrieveModelMixin, mixins.Up
     def get_params_for_category(self, request) -> Union[Tuple[str, str], Response]:
         params = self.request.GET
         if not params:
-            return Response(None)
+            return Response(None, status=status.HTTP_204_NO_CONTENT)
 
         user_id = params.get('user', '')
         event = params.get('event', '')
         if not user_id or not event:
-            return Response(None)
+            return Response(None, status=status.HTTP_204_NO_CONTENT)
 
         return user_id, event
 
@@ -174,7 +174,7 @@ class CategoryView(generics.GenericAPIView, mixins.RetrieveModelMixin, mixins.Up
         elif event == 'unfollow':
             valid_data = self.serializer_class.get_unfollow(user=user, req_data=req_data)
         else:
-            return Response(None)
+            return Response(None, status=status.HTTP_204_NO_CONTENT)
 
         user_serializer = UserSerializer(data=valid_data, partial=True)
         user_serializer.is_valid(raise_exception=True)
