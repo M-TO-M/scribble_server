@@ -37,6 +37,6 @@ class SpecificEmailDomainValidator(EmailValidator):
             return False
 
         if domain_part not in self.domain_allowlist:
-            raise ValidationError("사용할 수 없는 이메일 도메인입니다")
+            raise ValidationError(_("invalid_domain"))
 
         return True

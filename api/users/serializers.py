@@ -8,11 +8,15 @@ from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.serializers import TokenBlacklistSerializer
 
 from apps.users.models import User
+from core.validators import SpecificEmailDomainValidator, domain_allowlist
 from scribble.authentication import CustomJWTAuthentication
 
 
 class UserValidationBaseSerializer(serializers.ModelSerializer):
-    email = serializers.CharField(error_messages={'unique': _('exist_email')})
+    email = serializers.EmailField(
+        error_messages={'unique': _('exist_email')},
+        validators=[SpecificEmailDomainValidator(allowlist=domain_allowlist)]
+    )
     nickname = serializers.CharField(error_messages={'unique': _('exist_nickname')})
 
     class Meta:
@@ -80,7 +84,10 @@ class VerifySerializer(serializers.ModelSerializer):
             User.objects.get(email__exact=email)
             raise ValidationError(detail=_("exist_email"))
         except User.DoesNotExist:
-            return email.rsplit("@", 1)[1]
+            domain = email.rsplit("@", 1)[1]
+            if domain not in domain_allowlist:
+                raise ValidationError(detail=_("invalid_domain"))
+            return domain
 
     @staticmethod
     def get_nickname(nickname: str) -> None:
