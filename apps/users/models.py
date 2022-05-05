@@ -5,6 +5,23 @@ from core.models import TimeStampModel
 from core.validators import domain_allowlist, SpecificEmailDomainValidator
 
 
+category_choices = [
+  '국내소설',
+  '외국소설(유럽,북미등)',
+  '외국소설(아시아)',
+  '외국소설(아시아)',
+  '경제/경영',
+  '자기계발',
+  '역사',
+  '종교',
+  '정치/사회',
+  '예술/대중문화',
+  '과학',
+  '기술/공학',
+  '컴퓨터/IT'
+]
+
+
 class NewUserManager(UserManager):
     use_in_migrations = True
 

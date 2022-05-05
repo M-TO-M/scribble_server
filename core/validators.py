@@ -6,7 +6,16 @@ from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 
 
-domain_allowlist = ["naver.com", "daum.com", "gmail.com", "icloud.com"]
+domain_allowlist = [
+    "naver.com",
+    "gmail.com",
+    "outlook.com",
+    "daum.net",
+    "hanmail.net",
+    "nate.com",
+    "hotmail.com",
+    "icloud.com"
+]
 
 
 def ISBNValidator(input_isbn):
