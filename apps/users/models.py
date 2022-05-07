@@ -2,7 +2,24 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser, UserManager
 
 from core.models import TimeStampModel
-from core.validators import domain_allowlist, SpecificEmailDomainValidator
+from core.validators import domain_allowlist, SpecificEmailDomainValidator, CategoryDictValidator
+
+
+category_choices = [
+  '국내소설',
+  '외국소설(유럽,북미등)',
+  '외국소설(아시아)',
+  '외국소설(아시아)',
+  '경제/경영',
+  '자기계발',
+  '역사',
+  '종교',
+  '정치/사회',
+  '예술/대중문화',
+  '과학',
+  '기술/공학',
+  '컴퓨터/IT'
+]
 
 
 class NewUserManager(UserManager):
@@ -48,7 +65,8 @@ class User(AbstractUser, TimeStampModel):
         verbose_name='프로필 사진'
     )
     category = models.JSONField(
-        default=dict
+        default=dict,
+        validators=[CategoryDictValidator(category_choices)]
     )
 
     objects = NewUserManager()

@@ -1,12 +1,22 @@
 import re
 from stdnum import isbn
 
-from django.core.validators import EmailValidator
-from django.core.exceptions import ValidationError
+from django.core.validators import EmailValidator, BaseValidator
 from django.utils.translation import gettext_lazy as _
 
+from rest_framework.exceptions import ValidationError
 
-domain_allowlist = ["naver.com", "daum.com", "gmail.com", "icloud.com"]
+
+domain_allowlist = [
+    "naver.com",
+    "gmail.com",
+    "outlook.com",
+    "daum.net",
+    "hanmail.net",
+    "nate.com",
+    "hotmail.com",
+    "icloud.com"
+]
 
 
 def ISBNValidator(input_isbn):
@@ -28,6 +38,29 @@ class SpecificEmailDomainValidator(EmailValidator):
             return False
 
         if domain_part not in self.domain_allowlist:
-            raise ValidationError("사용할 수 없는 이메일 도메인입니다")
+            raise ValidationError(_("invalid_domain"))
 
         return True
+
+
+class CategoryDictValidator(BaseValidator):
+    message = _("Ensure this value is contained in given data dict.")
+    code = "limit_dict"
+
+    def __init__(self, limit_value, message=None):
+        super().__init__(limit_value, message)
+        self.limit_value = limit_value
+        if message:
+            self.message = message
+
+    def __call__(self, value):
+        cleaned = self.clean(value)
+        limit_value = self.limit_value \
+            if isinstance(self.limit_value, dict) else {i: val for i, val in enumerate(self.limit_value)}
+
+        for value in cleaned.values():
+            if self.compare(value, limit_value):
+                raise ValidationError({"detail": "invalid_category", "category_list": self.limit_value})
+
+    def compare(self, a, b):
+        return a not in list(b.values())

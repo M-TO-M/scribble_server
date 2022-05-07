@@ -35,7 +35,7 @@ class VerifyView(generics.RetrieveAPIView):
     def get(self, request, *args, **kwargs):
         params = request.GET
         if not params:
-            return Response(None)
+            return Response(None, status=status.HTTP_204_NO_CONTENT)
 
         response = {}
         email = params.get('email', '')
@@ -133,15 +133,15 @@ class CategoryView(generics.GenericAPIView, mixins.RetrieveModelMixin, mixins.Up
     queryset = User.objects.all()
     serializer_class = CategoryFieldSerializer
 
-    def get_params_for_category(self, request) -> Union[Tuple[str, str], Response]:
+    def get_params_for_category(self, request) -> Union[Tuple[str, str], Tuple[None, None]]:
         params = self.request.GET
-        if not params:
-            return Response(None)
+        if params is {}:
+            return None, None
 
         user_id = params.get('user', '')
         event = params.get('event', '')
         if not user_id or not event:
-            return Response(None)
+            return None, None
 
         return user_id, event
 
@@ -157,10 +157,14 @@ class CategoryView(generics.GenericAPIView, mixins.RetrieveModelMixin, mixins.Up
 
     def patch(self, request, *args, **kwargs):
         user_id, event = self.get_params_for_category(request)
+
+        if user_id is None or event is None:
+            return Response(None, status=status.HTTP_204_NO_CONTENT)
+
         try:
             user = self.queryset.get(id=user_id)
         except User.DoesNotExist:
-            raise ValidationError(detail=_("no_exist_user"))
+            raise UserNotFound()
 
         if request.user and request.user.id != user.id:
             raise AuthenticationFailed(detail=_("unauthorized_user"))
@@ -174,7 +178,7 @@ class CategoryView(generics.GenericAPIView, mixins.RetrieveModelMixin, mixins.Up
         elif event == 'unfollow':
             valid_data = self.serializer_class.get_unfollow(user=user, req_data=req_data)
         else:
-            return Response(None)
+            return Response(None, status=status.HTTP_204_NO_CONTENT)
 
         user_serializer = UserSerializer(data=valid_data, partial=True)
         user_serializer.is_valid(raise_exception=True)
