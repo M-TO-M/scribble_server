@@ -119,8 +119,15 @@ class UserTestCase(APITestCase):
         self.assertTrue('invalid_domain' in response.data)
 
     def test_user_signup_fail_with_invalid_category(self):
-        # TODO: category 저장 validation 추가하기
-        pass
+        data = {
+            "email": "test@naver.com",
+            "password": "password",
+            "nickname": "test_nickname",
+            "category": {0: "invalid_category"}
+        }
+        response = self.client.post(path=self.base_url['signup'], data=data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertTrue('invalid_category' in response.data)
 
     def test_user_signup_success(self):
         data = {
@@ -182,6 +189,14 @@ class UserTestCase(APITestCase):
         response = self.client.patch(path=base_url, data=data, format='json')
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
         self.assertTrue('no_exist_user' in response.data)
+
+    def test_user_edit_fail_with_invalid_category(self):
+        base_url = self.url_prefix + str(self.user.id) + "/edit"
+        data = {"category": {"1": "invalid_category"}}
+
+        response = self.client.patch(path=base_url, data=data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertTrue('invalid_category' in response.data)
 
     def test_user_edit_success(self):
         base_url = self.url_prefix + str(self.user.id) + "/edit"
