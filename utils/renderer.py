@@ -19,4 +19,11 @@ class ResponseRenderer(renderers.JSONRenderer):
         else:
             status_msg, data_key = 'undefined', 'message'
 
-        return json.dumps({'status': status_msg, data_key: data})
+        response_json = {'status': status_msg, data_key: data}
+        if data:
+            for i, d in enumerate(data):
+                if isinstance(d, dict):
+                    response_json.update(data.pop(i))
+                    response_json[data_key] = data
+
+        return json.dumps(response_json)

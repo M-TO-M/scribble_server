@@ -2,8 +2,9 @@ import re
 from stdnum import isbn
 
 from django.core.validators import EmailValidator, BaseValidator
-from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
+
+from rest_framework.exceptions import ValidationError
 
 
 domain_allowlist = [
@@ -59,7 +60,7 @@ class CategoryDictValidator(BaseValidator):
 
         for value in cleaned.values():
             if self.compare(value, limit_value):
-                raise ValidationError(_("invalid_category"))
+                raise ValidationError({"detail": "invalid_category", "category_list": self.limit_value})
 
     def compare(self, a, b):
         return a not in list(b.values())

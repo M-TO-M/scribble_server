@@ -94,7 +94,7 @@ class VerifySerializer(serializers.ModelSerializer):
         try:
             User.objects.get(nickname__exact=nickname)
             recommend = nickname + str(randint(1, 100))
-            raise ValidationError(detail={"fail_case": "exist_nickname", "recommend": recommend})
+            raise ValidationError(detail={"detail": "exist_nickname", "recommend": recommend})
         except User.DoesNotExist:
             return None
 
