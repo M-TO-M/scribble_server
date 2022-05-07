@@ -2,7 +2,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser, UserManager
 
 from core.models import TimeStampModel
-from core.validators import domain_allowlist, SpecificEmailDomainValidator
+from core.validators import domain_allowlist, SpecificEmailDomainValidator, CategoryDictValidator
 
 
 category_choices = [
@@ -65,7 +65,8 @@ class User(AbstractUser, TimeStampModel):
         verbose_name='프로필 사진'
     )
     category = models.JSONField(
-        default=dict
+        default=dict,
+        validators=[CategoryDictValidator(category_choices)]
     )
 
     objects = NewUserManager()

@@ -1,7 +1,7 @@
 import re
 from stdnum import isbn
 
-from django.core.validators import EmailValidator
+from django.core.validators import EmailValidator, BaseValidator
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 
@@ -40,3 +40,26 @@ class SpecificEmailDomainValidator(EmailValidator):
             raise ValidationError(_("invalid_domain"))
 
         return True
+
+
+class CategoryDictValidator(BaseValidator):
+    message = _("Ensure this value is contained in given data dict.")
+    code = "limit_dict"
+
+    def __init__(self, limit_value, message=None):
+        super().__init__(limit_value, message)
+        self.limit_value = limit_value
+        if message:
+            self.message = message
+
+    def __call__(self, value):
+        cleaned = self.clean(value)
+        limit_value = self.limit_value \
+            if isinstance(self.limit_value, dict) else {i: val for i, val in enumerate(self.limit_value)}
+
+        for value in cleaned.values():
+            if self.compare(value, limit_value):
+                raise ValidationError(_("invalid_category"))
+
+    def compare(self, a, b):
+        return a not in list(b.values())
