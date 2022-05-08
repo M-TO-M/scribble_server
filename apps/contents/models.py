@@ -15,7 +15,7 @@ DEFAULT_MODEL_PK = Default(
 
 
 class BookObject(TimeStampModel):
-    isbn = ISBNField(normalize_isbn=True)
+    isbn = ISBNField(normalize_isbn=True, unique=True)
     title = models.CharField(
         max_length=150,
         verbose_name='제목'
@@ -25,14 +25,14 @@ class BookObject(TimeStampModel):
         verbose_name='작가'
     )
     publisher = models.CharField(
-        max_length=7,
+        max_length=150,
         verbose_name='출판사'
     )
     category = models.JSONField(
         default=dict
     )
     thumbnail = models.URLField(
-        blank=False,
+        blank=True,
         null=False,
         verbose_name='도서 썸네일'
     )
