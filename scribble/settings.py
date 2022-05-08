@@ -18,6 +18,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+NAVER_API_CLIENT_ID = os.environ.get('NAVER_API_CLIENT_ID')
+NAVER_API_CLIENT_SECRET = os.environ.get('NAVER_API_CLIENT_SECRET')
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
