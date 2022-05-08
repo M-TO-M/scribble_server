@@ -23,11 +23,11 @@ def ISBNValidator(input_isbn):
     normalized = re.sub(" |-", "", input_isbn).upper()
 
     if not isinstance(normalized, str):
-        raise ValidationError(_(u'invalid ISBN: not a string'))
-    if len(normalized) != 10 or len(normalized) != 13:
-        raise ValidationError(_(u'invalid ISBN: wrong length'))
+        raise ValidationError(_("invalid_isbn_not_string"))
+    if len(normalized) != 10 and len(normalized) != 13:
+        raise ValidationError(_("invalid_isbn_wrong_length"))
     if not isbn.is_valid(normalized):
-        raise ValidationError(_(u'invalid ISBN: failed checksum'))
+        raise ValidationError(_("invalid_isbn_failed_checksum"))
 
     return True
 
