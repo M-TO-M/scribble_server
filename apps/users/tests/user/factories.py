@@ -8,7 +8,7 @@ from django.utils import timezone
 from django.contrib.auth.hashers import make_password
 
 from core.validators import domain_allowlist
-from .models import User, category_choices
+from apps.users.models import User, category_choices
 
 
 class UserFactory(factory.django.DjangoModelFactory):

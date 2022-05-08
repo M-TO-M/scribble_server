@@ -5,7 +5,7 @@ from typing import Union
 from rest_framework import status
 from rest_framework.test import APIClient, APITestCase
 
-from .models import category_choices
+from apps.users.models import category_choices
 from .factories import UserFactory
 from core.serializers import ScribbleTokenObtainPairSerializer
 
