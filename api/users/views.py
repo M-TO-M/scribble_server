@@ -171,15 +171,21 @@ class CategoryView(generics.GenericAPIView, mixins.RetrieveModelMixin, mixins.Up
 
         data = json.loads(request.body)
 
-        req_data = data['category']
+        raw_data = data.get('category', '')
+        if raw_data is None:
+            return Response(None, status=status.HTTP_204_NO_CONTENT)
+
+        req_data = raw_data if isinstance(raw_data, list) else list(raw_data.values())
+
         if event == 'follow':
             valid_data = self.serializer_class.get_follow(user=user, req_data=req_data)
-            valid_data.update(user.category)
+            valid_data.extend(list(user.category.values()))
         elif event == 'unfollow':
             valid_data = self.serializer_class.get_unfollow(user=user, req_data=req_data)
         else:
             return Response(None, status=status.HTTP_204_NO_CONTENT)
 
+        valid_data = self.serializer_class.get_category(valid_data)
         user_serializer = UserSerializer(data=valid_data, partial=True)
         user_serializer.is_valid(raise_exception=True)
         update_user = user_serializer.update(instance=user, validated_data={'category': valid_data})

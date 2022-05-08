@@ -1,4 +1,5 @@
 from random import randint
+from typing import Union
 
 from django.utils.translation import gettext_lazy as _
 
@@ -7,8 +8,8 @@ from rest_framework.exceptions import ValidationError
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.serializers import TokenBlacklistSerializer
 
-from apps.users.models import User
-from core.validators import SpecificEmailDomainValidator, domain_allowlist
+from apps.users.models import User, category_choices
+from core.validators import SpecificEmailDomainValidator, domain_allowlist, CategoryDictValidator
 from scribble.authentication import CustomJWTAuthentication
 
 
@@ -18,6 +19,9 @@ class UserValidationBaseSerializer(serializers.ModelSerializer):
         validators=[SpecificEmailDomainValidator(allowlist=domain_allowlist)]
     )
     nickname = serializers.CharField(error_messages={'unique': _('exist_nickname')})
+    category = serializers.JSONField(
+        validators=[CategoryDictValidator(limit_value=category_choices)]
+    )
 
     class Meta:
         model = User
@@ -36,6 +40,14 @@ class UserValidationBaseSerializer(serializers.ModelSerializer):
             raise ValidationError(detail=_("exist_nickname"))
         except self.Meta.model.DoesNotExist:
             return value
+
+    def validate_category(self, value):
+        ret = {}
+        for val in value:
+            if val not in category_choices:
+                raise ValidationError(detail={"detail": "invalid_category", "category_list": category_choices})
+            ret[category_choices.index(val)] = val
+        return ret
 
 
 class SignUpSerializer(UserValidationBaseSerializer):
@@ -86,7 +98,7 @@ class VerifySerializer(serializers.ModelSerializer):
         except User.DoesNotExist:
             domain = email.rsplit("@", 1)[1]
             if domain not in domain_allowlist:
-                raise ValidationError(detail=_("invalid_domain"))
+                raise ValidationError(detail={"detail": "invalid_domain", "domain_allowlist": domain_allowlist})
             return domain
 
     @staticmethod
@@ -116,29 +128,36 @@ class UserSerializer(UserValidationBaseSerializer):
 class CategoryFieldSerializer(serializers.ModelSerializer):
     follow = serializers.SerializerMethodField()
     unfollow = serializers.SerializerMethodField()
+    category = serializers.SerializerMethodField()
 
     @staticmethod
-    def get_follow(user: User, req_data: dict) -> dict:
-        # TODO: model method로 사용하기
-        valid_data = {}
-        category_ids = list(user.category.keys())
-
-        for k, v in req_data.items():
-            if k in category_ids:
-                raise ValidationError(detail=_(f"exist_follow_{v}"))
-            valid_data[k] = v
+    def get_follow(user: User, req_data: list) -> list:
+        valid_data = []
+        user_category_values = list(user.category.values())
+        for value in req_data:
+            if value in user_category_values:
+                raise ValidationError(detail=_(f"exist_follow_{value}"))
+            valid_data.append(value)
 
         return valid_data
 
     @staticmethod
-    def get_unfollow(user: User, req_data: dict) -> dict:
-        # TODO: model method로 사용하기
-        valid_data = user.category
-        category_ids = list(valid_data.keys())
-
-        for k, v in req_data.items():
-            if k not in category_ids:
-                raise ValidationError(detail=_(f"no_exist_follow_{v}"))
-            valid_data.pop(k)
-
+    def get_unfollow(user: User, req_data: list) -> list:
+        valid_data = list(user.category.values())
+        for value in req_data:
+            if value not in valid_data:
+                raise ValidationError(detail=_(f"no_exist_unfollow_{value}"))
+            valid_data.remove(value)
         return valid_data
+
+    @staticmethod
+    def get_category(value: Union[list, dict]):
+        if isinstance(value, dict):
+            return value
+        if isinstance(value, list):
+            ret = {}
+            for val in value:
+                if val not in category_choices:
+                    raise ValidationError(detail={"detail": "invalid_category", "category_list": category_choices})
+                ret[category_choices.index(val)] = val
+            return ret
