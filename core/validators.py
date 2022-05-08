@@ -38,7 +38,7 @@ class SpecificEmailDomainValidator(EmailValidator):
             return False
 
         if domain_part not in self.domain_allowlist:
-            raise ValidationError(_("invalid_domain"))
+            raise ValidationError({"detail": "invalid_domain", "domain_allowlist": self.domain_allowlist})
 
         return True
 
@@ -54,11 +54,11 @@ class CategoryDictValidator(BaseValidator):
             self.message = message
 
     def __call__(self, value):
-        cleaned = self.clean(value)
+        cleaned = self.clean(value) if isinstance(self.clean(value), list) else self.clean(value).values()
         limit_value = self.limit_value \
             if isinstance(self.limit_value, dict) else {i: val for i, val in enumerate(self.limit_value)}
 
-        for value in cleaned.values():
+        for value in cleaned:
             if self.compare(value, limit_value):
                 raise ValidationError({"detail": "invalid_category", "category_list": self.limit_value})
 
