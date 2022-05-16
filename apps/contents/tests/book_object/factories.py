@@ -1,6 +1,4 @@
-import uuid
 import random
-import base64
 import factory
 from faker import Faker
 from faker.providers.isbn import Provider
@@ -18,7 +16,7 @@ class BookObjectFactory(factory.django.DjangoModelFactory):
     title = factory.Sequence(lambda n: f'title_{n}')
     author = factory.Sequence(lambda n: f'author_{n}')
     publisher = factory.Sequence(lambda n: f'publisher_{n}')
-    thumbnail = factory.LazyAttribute(lambda n: base64.urlsafe_b64encode(uuid.uuid4().bytes))
+    thumbnail = Faker().image_url()
 
     @factory.lazy_attribute_sequence
     def category(self, n):
