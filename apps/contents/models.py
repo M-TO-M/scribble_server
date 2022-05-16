@@ -69,6 +69,10 @@ class Note(TimeStampModel):
         verbose_name = '필사 노트'
         verbose_name_plural = verbose_name
 
+    def update_note_hit(self):
+        self.hit += 1
+        self.save()
+
 
 class NoteLikesRelation(TimeStampModel):
     like_user = models.ForeignKey(
