@@ -1,8 +1,7 @@
-import uuid
 import random
-import base64
 import factory
 from factory import fuzzy
+from faker import Faker
 
 from django.utils import timezone
 from django.contrib.auth.hashers import make_password
@@ -18,7 +17,7 @@ class UserFactory(factory.django.DjangoModelFactory):
 
     nickname = fuzzy.FuzzyText(length=10)
     password = make_password('password')
-    profile_image = factory.LazyAttribute(lambda n: base64.urlsafe_b64encode(uuid.uuid4().bytes))
+    profile_image = Faker().image_url()
     created_at = timezone.now()
     updated_at = timezone.now()
     is_staff = False
