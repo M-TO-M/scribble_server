@@ -11,5 +11,5 @@ urlpatterns = [
     path('notes/<int:pk>', NoteView.as_view(), name='note_detail'),
     path('notes/<int:pk>/delete', NoteView.as_view(), name='note_delete'),
     path('notes/<int:pk>/like', NoteLikeView.as_view(), name='note_like'),
-    path('notes/<int:pk>/like/cancel', NoteLikeCancelView.as_view(), name='note_like_cancel'),
+    path('notes/<int:pk>/like/cancel', NoteLikeView.as_view(), name='note_like_cancel'),
 ]

@@ -19,23 +19,6 @@ class BookObjectSerializer(serializers.ModelSerializer):
         model = BookObject
         fields = '__all__'
 
-    @staticmethod
-    def get_or_create_book_by_given_isbn(isbn):
-        try:
-            ISBNValidator(isbn)
-        except ValidationError:
-            raise ValidationError(detail=_("invalid_isbn"))
-
-        try:
-            book = BookObject.objects.get(isbn__exact=isbn)
-        except BookObject.DoesNotExist:
-            data = NaverSearchAPI()(isbn)
-            book_serializer = BookObjectSerializer(data=data[0])
-            book_serializer.is_valid(raise_exception=True)
-            book = book_serializer.create(validated_data=book_serializer.validated_data)
-
-        return book
-
     def validate_isbn(self, value):
         try:
             self.Meta.model.objects.get(isbn__exact=value)
@@ -43,8 +26,31 @@ class BookObjectSerializer(serializers.ModelSerializer):
         except self.Meta.model.DoesNotExist:
             return value
 
+
+class BookCreateSerializer(serializers.ModelSerializer):
+    isbn = serializers.SerializerMethodField()
+
+    class Meta:
+        model = BookObject
+        fields = ['title', 'author', 'publisher', 'category', 'thumbnail']
+
+    def get_isbn(self, value):
+        try:
+            ISBNValidator(value)
+        except ValidationError:
+            raise ValidationError(detail=_("invalid_isbn"))
+
+        self.isbn = value
+        return self.isbn
+
     def create(self, validated_data):
-        book = BookObject.objects.create(**validated_data)
+        self.get_isbn(validated_data.pop('isbn'))
+
+        try:
+            book = BookObject.objects.get(isbn__exact=self.isbn)
+        except BookObject.DoesNotExist:
+            book_object_data = NaverSearchAPI()(self.isbn)[0]
+            book = BookObject.objects.create(**book_object_data)
         return book
 
 
@@ -53,19 +59,50 @@ class NoteSerializer(serializers.ModelSerializer):
         model = Note
         fields = '__all__'
 
-    # TODO: like 구체화
-    def to_representation(self, instance):
+    # TODO: like 구체화, isinstance로 구체화
+    def to_representation(self, instance: Note):
         return {
             'id': instance.id,
             'note_author': UserSerializer(instance=instance.user).data,
             'book': BookObjectSerializer(instance=instance.book).data,
-            'likes': instance.note_likes_relation.count(),
-            'hit': instance.hit
+            'likes_count': instance.note_likes_relation.count(),
+            'hit': instance.hit,
+            'pages': PageSerializer(instance=instance.page.all(), many=True).data
         }
 
+
+class NoteCreateSerializer(serializers.ModelSerializer):
+    user = UserSerializer()
+    isbn = serializers.SerializerMethodField()
+    book = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Note
+        fields = ['user']
+
+    def get_isbn(self, value):
+        try:
+            ISBNValidator(value)
+        except ValidationError:
+            raise ValidationError(detail=_("invalid_isbn"))
+
+        self.isbn = value
+        return self.isbn
+
+    def get_book(self) -> BookObject:
+        data = {"isbn": self.isbn}
+
+        book_create_serializer = BookCreateSerializer()
+        self.book = book_create_serializer.create(validated_data=data)
+
+        return self.book
+
     def create(self, validated_data):
-        note = Note.objects.create(**validated_data)
-        return note
+        user = validated_data.pop('user')
+        self.get_isbn(validated_data.pop('isbn'))
+        self.get_book()
+
+        return Note.objects.create(user=user, book=self.book)
 
 
 class NoteLikesRelationSerializer(serializers.ModelSerializer):

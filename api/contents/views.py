@@ -13,16 +13,15 @@ from core.exceptions import NoteNotFound
 
 
 class BookView(generics.CreateAPIView):
-    serializer_class = BookObjectSerializer
+    serializer_class = BookCreateSerializer
 
     def post(self, request, *args, **kwargs):
         data = json.loads(request.body)
-        book_object_serializer = self.serializer_class(data=data)
-        book_object_serializer.is_valid(raise_exception=True)
-        self.perform_create(book_object_serializer)
+        book_create_serializer = self.serializer_class()
+        book = book_create_serializer.create(validated_data=data)
 
         response = {
-            "book": book_object_serializer.validated_data
+            "book": BookObjectSerializer(instance=book).data
         }
         return Response(response, status=status.HTTP_201_CREATED)
 
@@ -53,17 +52,15 @@ class NoteView(generics.GenericAPIView, mixins.RetrieveModelMixin, mixins.Create
         else:
             if 'book_isbn' not in data:
                 raise ValidationError(detail=_("no_book_in_req_body"))
-            book = BookObjectSerializer.get_or_create_book_by_given_isbn(data['book_isbn'])
 
-        _data = {"user": request.user.pk, "book": book.pk}
-        note_serializer = self.serializer_class(data=_data, partial=True)
-        note_serializer.is_valid(raise_exception=True)
-        self.perform_create(note_serializer)
+            data = {"user": request.user, "isbn": data['book_isbn']}
+            note_create_serializer = NoteCreateSerializer()
+            note = note_create_serializer.create(validated_data=data)
 
-        response = {
-            "note": note_serializer.data
-        }
-        return Response(response, status=status.HTTP_201_CREATED)
+            response = {
+                "note": self.serializer_class(instance=note).data
+            }
+            return Response(response, status=status.HTTP_201_CREATED)
 
     def delete(self, request, *args, **kwargs):
         try:
@@ -78,7 +75,7 @@ class NoteView(generics.GenericAPIView, mixins.RetrieveModelMixin, mixins.Create
         return Response(None, status=status.HTTP_204_NO_CONTENT)
 
 
-class NoteLikeView(generics.CreateAPIView):
+class NoteLikeView(generics.GenericAPIView, mixins.CreateModelMixin, mixins.DestroyModelMixin):
     queryset = Note.objects.all()
     serializer_class = NoteLikesRelationSerializer
 
@@ -104,11 +101,6 @@ class NoteLikeView(generics.CreateAPIView):
         }
 
         return Response(response, status=status.HTTP_201_CREATED)
-
-
-class NoteLikeCancelView(generics.DestroyAPIView):
-    queryset = Note.objects.all()
-    serializer_class = NoteLikesRelationSerializer
 
     def delete(self, request, *args, **kwargs):
         try:
