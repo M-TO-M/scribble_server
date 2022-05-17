@@ -12,4 +12,11 @@ urlpatterns = [
     path('notes/<int:pk>/delete', NoteView.as_view(), name='note_delete'),
     path('notes/<int:pk>/like', NoteLikeView.as_view(), name='note_like'),
     path('notes/<int:pk>/like/cancel', NoteLikeView.as_view(), name='note_like_cancel'),
+
+    path('pages/new', PageView.as_view(), name='page_new'),
+    path('pages/<int:pk>', PageView.as_view(), name='page_detail'),
+    path('pages/<int:pk>/edit', PageView.as_view(), name='page_edit'),
+    path('pages/<int:pk>/delete', PageView.as_view(), name='page_delete'),
+    path('pages/<int:pk>/like', PageLikeView.as_view(), name='page_like'),
+    path('pages/<int:pk>/like/cancel', PageLikeView.as_view(), name='page_like_cancel'),
 ]

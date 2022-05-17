@@ -3,7 +3,7 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from apps.contents.models import BookObject, Note, NoteLikesRelation
+from apps.contents.models import BookObject, Note, NoteLikesRelation, Page, PageLikesRelation
 from api.users.serializers import UserSerializer
 from core.validators import ISBNValidator
 from utils.naver_api import NaverSearchAPI
@@ -113,3 +113,44 @@ class NoteLikesRelationSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         note_relation = NoteLikesRelation.objects.create(**validated_data)
         return note_relation.note, note_relation
+
+
+class PageBulkCreateUpdateSerializer(serializers.ListSerializer):
+    def create(self, validated_data):
+        page_data = [Page(**item) for item in validated_data]
+        return Page.objects.bulk_create(page_data)
+
+    def update(self, instance, validated_data):
+        instance.transcript = validated_data.pop('transcript', instance.transcript)
+        instance.phrase = validated_data.pop('phrase', instance.phrase)
+        instance.note_index = validated_data.pop('category', instance.note_index)
+        instance.save()
+
+        return instance
+
+
+class PageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Page
+        fields = '__all__'
+        list_serializer_class = PageBulkCreateUpdateSerializer
+
+    def to_representation(self, instance: Page):
+        return {
+            'id': instance.id,
+            'note_index': instance.note_index,
+            'transcript': instance.transcript,
+            'phrase': instance.phrase,
+            'hit': instance.hit,
+            'note_id': instance.note.id
+        }
+
+
+class PageLikesRelationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PageLikesRelation
+        fields = '__all__'
+
+    def create(self, validated_data):
+        page_relation = PageLikesRelation.objects.create(**validated_data)
+        return page_relation.page, page_relation
