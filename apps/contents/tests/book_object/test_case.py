@@ -56,7 +56,7 @@ class BookObjectTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data["book"]["isbn"], data["isbn"])
 
-    def test_given_registered_isbn_expect_book_new_fail(self):
+    def test_given_registered_isbn_expect_book_new_success(self):
         base_url = self.url_prefix + "new"
         data = {
             "isbn": self.book.isbn,
@@ -67,8 +67,8 @@ class BookObjectTestCase(APITestCase):
         }
 
         response = self.client.post(path=base_url, data=data, format='json')
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertTrue('exist_book' in response.data)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data["book"]["isbn"], data["isbn"])
 
     def test_invalid_isbn_expect_book_new_fail(self):
         base_url = self.url_prefix + "new"

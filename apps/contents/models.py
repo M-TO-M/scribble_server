@@ -127,6 +127,10 @@ class Page(TimeStampModel):
         verbose_name_plural = verbose_name
         ordering = ['created_at']
 
+    def update_page_hit(self):
+        self.hit += 1
+        self.save()
+
 
 class PageLikesRelation(TimeStampModel):
     like_user = models.ForeignKey(
