@@ -19,4 +19,9 @@ urlpatterns = [
     path('pages/<int:pk>/delete', PageView.as_view(), name='page_delete'),
     path('pages/<int:pk>/like', PageLikeView.as_view(), name='page_like'),
     path('pages/<int:pk>/like/cancel', PageLikeView.as_view(), name='page_like_cancel'),
+
+    path('page_comments/new', PageCommentView.as_view(), name='page_comment_new'),
+    path('page_comments/<int:pk>', PageCommentView.as_view(), name='page_comment_detail'),
+    path('page_comments/<int:pk>/edit', PageCommentView.as_view(), name='page_comment_edit'),
+    path('page_comments/<int:pk>/delete', PageCommentView.as_view(), name='page_comment_delete'),
 ]
