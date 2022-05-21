@@ -7,10 +7,21 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import generics, mixins, status
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.response import Response
+from rest_framework_tracking.mixins import LoggingMixin
 
+from apps.users.models import UserLoginLog
 from api.users.serializers import *
 from core.exceptions import UserNotFound
 from core.serializers import ScribbleTokenObtainPairSerializer
+
+
+class SignInLoggingMixin(LoggingMixin):
+    def initial(self, request, *args, **kwargs):
+        super(LoggingMixin, self).initial(request, *args, **kwargs)
+        self.log['user_agent'] = request.META.get('HTTP_USER_AGENT')
+
+    def handle_log(self):
+        UserLoginLog(**self.log).save()
 
 
 class SignUpView(generics.CreateAPIView):
@@ -50,7 +61,8 @@ class VerifyView(generics.RetrieveAPIView):
         return Response(response, status=status.HTTP_200_OK)
 
 
-class SignInView(generics.CreateAPIView):
+class SignInView(SignInLoggingMixin, generics.CreateAPIView):
+    logging_methods = ['POST']
     queryset = User.objects.all()
     serializer_class = ScribbleTokenObtainPairSerializer
 
@@ -66,7 +78,6 @@ class SignInView(generics.CreateAPIView):
 
         user_data = SignUpSerializer(instance=user).data
         token_data = self.serializer_class.get_token(user)
-        # auth.login()
         response = {
             "user": user_data,
             "auth": {
