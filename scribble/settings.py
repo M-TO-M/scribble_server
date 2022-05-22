@@ -198,4 +198,8 @@ SIMPLE_JWT = {
 
     "TOKEN_OBTAIN_SERIALIZER": "utils.serializers.ScribbleTokenObtainPairSerializer",
     "TOKEN_REFRESH_SERIALIZER": "rest_framework_simplejwt.serializers.TokenRefreshSerializer",
+
+    "AUTH_COOKIE": "SCRIB_TOKEN",
+    "AUTH_COOKIE_SECURE": True,
+    "AUTH_COOKIE_HTTP_ONLY": True
 }

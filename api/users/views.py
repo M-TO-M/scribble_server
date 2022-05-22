@@ -11,14 +11,22 @@ from rest_framework_tracking.mixins import LoggingMixin
 
 from apps.users.models import UserLoginLog
 from api.users.serializers import *
+
+from core.views import ScribbleTokenObtainView
 from core.exceptions import UserNotFound
 from core.serializers import ScribbleTokenObtainPairSerializer
+
+from scribble import settings
 
 
 class SignInLoggingMixin(LoggingMixin):
     def initial(self, request, *args, **kwargs):
         super(LoggingMixin, self).initial(request, *args, **kwargs)
-        self.log['user_agent'] = request.META.get('HTTP_USER_AGENT')
+
+        user_agent = request.META.get('HTTP_USER_AGENT')
+        if user_agent is None:
+            user_agent = 'test'
+        self.log['user_agent'] = user_agent
 
     def handle_log(self):
         UserLoginLog(**self.log).save()
@@ -61,7 +69,7 @@ class VerifyView(generics.RetrieveAPIView):
         return Response(response, status=status.HTTP_200_OK)
 
 
-class SignInView(SignInLoggingMixin, generics.CreateAPIView):
+class SignInView(SignInLoggingMixin, ScribbleTokenObtainView):
     logging_methods = ['POST']
     queryset = User.objects.all()
     serializer_class = ScribbleTokenObtainPairSerializer
@@ -69,22 +77,15 @@ class SignInView(SignInLoggingMixin, generics.CreateAPIView):
     def post(self, request, *args, **kwargs):
         data = json.loads(request.body)
         try:
-            user = self.queryset.get(email__exact=data['email'])
+            self.user = self.queryset.get(email__exact=data['email'])
         except User.DoesNotExist:
             raise ValidationError(detail=_("no_exist_email"))
 
-        if check_password(data['password'], user.password) is False:
+        if check_password(data['password'], self.user.password) is False:
             raise ValidationError(detail=_("invalid_password"))
 
-        user_data = SignUpSerializer(instance=user).data
-        token_data = self.serializer_class.get_token(user)
-        response = {
-            "user": user_data,
-            "auth": {
-                "access_token": str(token_data.access_token),
-                "refresh_token": str(token_data)
-            }
-        }
+        user_data = SignUpSerializer(instance=self.user).data
+        response = {"user": user_data}
 
         return Response(response, status=status.HTTP_201_CREATED)
 
@@ -93,14 +94,22 @@ class SignOutView(generics.CreateAPIView):
     serializer_class = SignOutSerializer
 
     def post(self, request, *args, **kwargs):
-        data = json.loads(request.body)
-        data['user_id'] = request.user.id
+        data = {
+            'refresh': request.COOKIES[settings.SIMPLE_JWT["AUTH_COOKIE"]],
+            'user_id': request.user.id
+        }
 
         logout_serializer = self.serializer_class(data=data)
         logout_serializer.is_valid(raise_exception=True)
         logout_serializer.save()
 
         return Response(None, status=status.HTTP_204_NO_CONTENT)
+
+    def finalize_response(self, request, response, *args, **kwargs):
+        super(SignOutView, self).finalize_response(request, response, *args, **kwargs)
+        response.delete_cookie(settings.SIMPLE_JWT["AUTH_COOKIE"])
+
+        return response
 
 
 class UserView(generics.GenericAPIView, mixins.UpdateModelMixin, mixins.DestroyModelMixin):
