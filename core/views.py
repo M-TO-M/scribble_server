@@ -1,5 +1,5 @@
 import json
-
+from django.core.cache import caches
 from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenViewBase
@@ -7,6 +7,28 @@ from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 
 from core.serializers import ScribbleTokenObtainPairSerializer
 from scribble import settings
+
+
+def cache_key_function(key, key_prefix, version):
+    return key_prefix + ":" + str(key)
+
+
+def get_or_set_token_cache(request, user):
+    # TODO: key_timeout
+    cache = caches['default']
+    key = str(user.id)
+
+    cache_ip_addr = cache.get(key)
+    remote_addr = request.META.get('REMOTE_ADDR')
+
+    if cache_ip_addr is None:
+        cache.set(key, remote_addr)
+        return False, "ip_does_not_exist"
+
+    if cache_ip_addr == remote_addr:
+        return True, "success"
+
+    return False, "invalid_ip"
 
 
 class ScribbleTokenObtainView(generics.CreateAPIView):
@@ -21,12 +43,10 @@ class ScribbleTokenObtainView(generics.CreateAPIView):
         if response.status_code >= 400:
             return response
 
+        cached, msg = get_or_set_token_cache(request=request, user=self.user)
+
         token = self.serializer_class.get_token(self.user)
-
-        # access token을 browser의 private 변수로 사용하도록 응답 데이터로 전달
         response.data['access'] = str(token.access_token)
-
-        # refresh token을 cookie에 저장
         response.set_cookie(
             key=settings.SIMPLE_JWT["AUTH_COOKIE"],
             value=str(token),
@@ -35,8 +55,6 @@ class ScribbleTokenObtainView(generics.CreateAPIView):
             httponly=settings.SIMPLE_JWT["AUTH_COOKIE_HTTP_ONLY"]
         )
 
-        # TODO: cache db에 refresh token을 key로, request ip_addr/user_agent를 value로 저장
-        # TODO: access token 발급 시, 검증
         return response
 
 
@@ -52,6 +70,11 @@ class ScribbleTokenRefreshView(TokenViewBase):
 
     def finalize_response(self, request, response, *args, **kwargs):
         super(ScribbleTokenRefreshView, self).finalize_response(request, response, *args, **kwargs)
+
+        cached, msg = get_or_set_token_cache(request=request, user=request.user)
+        if cached is False:
+            response.status_code = 401
+            return response
 
         refresh = response.data.pop('refresh')
         response.set_cookie(
