@@ -6,6 +6,8 @@ from api.contents.views import *
 app_name = 'contents'
 
 urlpatterns = [
+    path('naver/search', NaverSearchAPIView.as_view(), name='naver_search'),
+
     path('book/new', BookView.as_view(), name='book_new'),
     path('notes/new', NoteView.as_view(), name='note_new'),
     path('notes/<int:pk>', NoteView.as_view(), name='note_detail'),
