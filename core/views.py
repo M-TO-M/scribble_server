@@ -1,34 +1,13 @@
 import json
-from django.core.cache import caches
+
 from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenViewBase
 from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 
 from core.serializers import ScribbleTokenObtainPairSerializer
+from utils.cache import get_or_set_token_cache
 from scribble import settings
-
-
-def cache_key_function(key, key_prefix, version):
-    return key_prefix + ":" + str(key)
-
-
-def get_or_set_token_cache(request, user):
-    # TODO: key_timeout
-    cache = caches['default']
-    key = str(user.id)
-
-    cache_ip_addr = cache.get(key)
-    remote_addr = request.META.get('REMOTE_ADDR')
-
-    if cache_ip_addr is None:
-        cache.set(key, remote_addr)
-        return False, "ip_does_not_exist"
-
-    if cache_ip_addr == remote_addr:
-        return True, "success"
-
-    return False, "invalid_ip"
 
 
 class ScribbleTokenObtainView(generics.CreateAPIView):
