@@ -12,8 +12,8 @@ class NaverSearchAPI:
     default_display = 5
 
     def __init__(self, display=None):
-        self.query_url = "https://openapi.naver.com/v1/search/book_adv?d_isbn="
-        self.isbn_url = "https://openapi.naver.com/v1/search/book.json?query="
+        self.isbn_url = "https://openapi.naver.com/v1/search/book_adv?d_isbn="
+        self.query_url = "https://openapi.naver.com/v1/search/book.json?query="
 
         if display is None:
             self.display = self.default_display
@@ -67,8 +67,8 @@ class NaverSearchAPI:
         if param == '':
             return None
 
-        query_params = parse.quote('{}'.format(param))
-        req_url = self.query_url + query_params + "?display=" + str(display)
+        query_params = parse.quote(param)
+        req_url = self.query_url + query_params + "&display=" + str(display)
         return self.send_request(req_url=req_url)
 
     def search_book_with_isbn_value(self, isbn) -> Union[dict, None]:
