@@ -135,7 +135,7 @@ CACHES = {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
         },
         "KEY_PREFIX": "token",
-        "KEY_FUNCTION": "core.views.cache_key_function",
+        "KEY_FUNCTION": "utils.cache.cache_key_function",
     }
 }
 # Password validation
