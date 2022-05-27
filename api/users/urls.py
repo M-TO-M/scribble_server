@@ -1,5 +1,6 @@
 from django.urls import path
 
+from api.contents.views import UserMainView
 from api.users.views import *
 
 
@@ -14,4 +15,6 @@ urlpatterns = [
     path('<int:pk>/edit', UserView.as_view(), name='user_edit'),
     path('<int:pk>/category', CategoryView.as_view(), name='user_category'),
     path('category', CategoryView.as_view(), name='category_follow_unfollow'),
+
+    path('<int:pk>/main', UserMainView.as_view(), name='user_main'),
 ]

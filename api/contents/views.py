@@ -1,5 +1,6 @@
 import json
 
+from django.db.models import Q
 from django.utils.translation import gettext_lazy as _
 from django.utils.translation.trans_null import gettext_lazy
 
@@ -9,7 +10,8 @@ from rest_framework.response import Response
 
 from api.contents.serializers import *
 from apps.contents.models import Note, NoteLikesRelation, Page, PageComment
-from core.exceptions import NoteNotFound, PageNotFound, PageCommentNotFound
+from core.exceptions import NoteNotFound, PageNotFound, PageCommentNotFound, UserNotFound
+from core.views import TemplateMainView
 
 
 class BookView(generics.CreateAPIView):
@@ -320,3 +322,35 @@ class PageCommentView(generics.GenericAPIView,
 
         self.perform_destroy(page_comment)
         return Response(None, status=status.HTTP_204_NO_CONTENT)
+
+
+class MainView(TemplateMainView):
+    queryset = Page.objects.all()
+    serializer_class = PageSerializer
+
+    def __init__(self):
+        super(MainView, self).__init__()
+        self.pagination_class.data_key = 'pages'
+
+    def get(self, request, *args, **kwargs):
+        data = self.get_paginated_data(self.get_queryset())
+        return self.get_paginated_response(data)
+
+
+class UserMainView(TemplateMainView):
+    queryset = Note.objects.all().select_related('user')
+    serializer_class = NoteSerializer
+
+    def __init__(self):
+        super(UserMainView, self).__init__()
+        self.pagination_class.data_key = 'notes'
+
+    def get(self, request, *args, **kwargs):
+        try:
+            user = self.get_object()
+        except Exception:
+            raise UserNotFound()
+
+        notes = self.get_queryset().filter(user_id=user.id)
+        data = self.get_paginated_data(notes)
+        return self.get_paginated_response(data)

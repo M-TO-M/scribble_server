@@ -6,6 +6,8 @@ from api.contents.views import *
 app_name = 'contents'
 
 urlpatterns = [
+    path('main', MainView.as_view(), name='main'),
+
     path('book/new', BookView.as_view(), name='book_new'),
     path('notes/new', NoteView.as_view(), name='note_new'),
     path('notes/<int:pk>', NoteView.as_view(), name='note_detail'),
