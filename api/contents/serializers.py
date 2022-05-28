@@ -56,17 +56,27 @@ class BookCreateSerializer(serializers.ModelSerializer):
 
 
 class NoteSerializer(serializers.ModelSerializer):
+    like_user = serializers.SerializerMethodField()
+
     class Meta:
         model = Note
         fields = '__all__'
 
-    # TODO: like 구체화, isinstance로 구체화
+    @staticmethod
+    def get_like_user(instance):
+        like_user = []
+        relation = instance.note_likes_relation.all()
+        for r in relation:
+            like_user.append(UserSerializer(instance=r.like_user).data)
+        return like_user
+
     def to_representation(self, instance: Note):
         return {
             'id': instance.id,
             'note_author': UserSerializer(instance=instance.user).data,
             'book': BookObjectSerializer(instance=instance.book).data,
-            'likes_count': instance.note_likes_relation.count(),
+            'like_count': instance.note_likes_relation.count(),
+            'like_user': self.get_like_user(instance),
             'hit': instance.hit,
             'pages': PageSerializer(instance=instance.page.all(), many=True).data
         }
@@ -131,19 +141,32 @@ class PageBulkCreateUpdateSerializer(serializers.ListSerializer):
 
 
 class PageSerializer(serializers.ModelSerializer):
+    like_user = serializers.SerializerMethodField()
+
     class Meta:
         model = Page
         fields = '__all__'
         list_serializer_class = PageBulkCreateUpdateSerializer
 
+    @staticmethod
+    def get_like_user(instance):
+        like_user = []
+        relation = instance.page_likes_relation.all()
+        for r in relation:
+            like_user.append(UserSerializer(instance=r.like_user).data)
+        return like_user
+
     def to_representation(self, instance: Page):
         return {
             'id': instance.id,
+            'note_id': instance.note.id,
             'note_index': instance.note_index,
             'transcript': instance.transcript,
             'phrase': instance.phrase,
             'hit': instance.hit,
-            'note_id': instance.note.id
+            'like_count': instance.page_likes_relation.count(),
+            'like_user': self.get_like_user(instance),
+            'reviews_count': instance.page_comment.count()
         }
 
 

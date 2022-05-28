@@ -22,7 +22,7 @@ class ResponseRenderer(renderers.JSONRenderer):
         response_json = {'status': status_msg, data_key: data}
         if data:
             for i, d in enumerate(data):
-                if isinstance(d, dict):
+                if isinstance(d, dict) and status_msg != 'success':
                     response_json.update(data.pop(i))
                     response_json[data_key] = data
 
