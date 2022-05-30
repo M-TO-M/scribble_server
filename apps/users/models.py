@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser, UserManager
+from rest_framework_tracking.models import APIRequestLog
 
 from core.models import TimeStampModel
 from core.validators import domain_allowlist, SpecificEmailDomainValidator, CategoryDictValidator
@@ -77,3 +78,20 @@ class User(AbstractUser, TimeStampModel):
         verbose_name = '사용자'
         verbose_name_plural = verbose_name
         ordering = ['created_at']
+
+
+class UserLoginLog(TimeStampModel, APIRequestLog):
+    user_agent = models.CharField(
+        max_length=300,
+        verbose_name='http_user_agent'
+    )
+
+    class Meta:
+        db_table = 'user_login_log'
+        verbose_name = 'user_login_log'
+        verbose_name_plural = verbose_name
+        ordering = ['created_at']
+        get_latest_by = ['created_at']
+
+    def __str__(self):
+        return '%s: %s' % (self.user, self.remote_addr)

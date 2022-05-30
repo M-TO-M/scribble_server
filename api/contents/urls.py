@@ -1,12 +1,15 @@
 from django.urls import path
 
-from api.contents.views import *
+from api.contents.book_object.views import *
+from api.contents.note.views import *
+from api.contents.page.views import *
+from api.contents.page_comment.views import *
 
 
 app_name = 'contents'
 
 urlpatterns = [
-    path('main', MainView.as_view(), name='main'),
+    path('naver/search', NaverSearchAPIView.as_view(), name='naver_search'),
 
     path('book/new', BookView.as_view(), name='book_new'),
     path('notes/new', NoteView.as_view(), name='note_new'),

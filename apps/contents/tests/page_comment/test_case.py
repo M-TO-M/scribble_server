@@ -107,7 +107,7 @@ class PageCommentTestCase(UserTestCase):
         self.assertTrue("unauthorized_user" in response.data)
 
     def test_given_exist_page_comment_pk_with_authorized_user_expect_page_comment_edit_success(self):
-        page_comment = PageCommentFactory.create(page__note__user=self.user)
+        page_comment = PageCommentFactory.create(comment_user=self.user)
         base_url = self.url_prefix + str(page_comment.id) + "/edit"
         data = {"content": "new_content"}
 
@@ -132,7 +132,7 @@ class PageCommentTestCase(UserTestCase):
         self.assertTrue("unauthorized_user" in response.data)
 
     def test_given_exist_page_comment_pk_with_authorized_user_expect_page_comment_delete_success(self):
-        page_comment = PageCommentFactory.create(page__note__user=self.user)
+        page_comment = PageCommentFactory.create(comment_user=self.user)
         base_url = self.url_prefix + str(page_comment.id) + "/delete"
 
         response = self.client.delete(path=base_url)

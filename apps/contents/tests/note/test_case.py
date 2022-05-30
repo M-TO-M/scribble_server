@@ -139,7 +139,7 @@ class NoteTestCase(APITestCase):
 
         response = self.client.post(path=url)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(note_with_self_user.note_likes_relation.count(), response.data['note']['likes'])
+        self.assertEqual(note_with_self_user.note_likes_relation.count(), response.data['note']['like_count'])
 
         new_user = UserFactory.create()
         note_with_other_user = NoteFactory.create(user=new_user)
@@ -147,7 +147,7 @@ class NoteTestCase(APITestCase):
 
         response = self.client.post(path=new_url)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(note_with_other_user.note_likes_relation.count(), response.data['note']['likes'])
+        self.assertEqual(note_with_other_user.note_likes_relation.count(), response.data['note']['like_count'])
 
     def test_with_no_exist_like_relation_expect_note_like_cancel_fail(self):
         note_with_self_user = NoteFactory.create(user=self.user)

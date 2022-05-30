@@ -15,6 +15,7 @@ class BookObjectTestCase(APITestCase):
         self.client = APIClient()
         self.book = BookObjectFactory.create()
 
+        self.test_isbn = "9791166832598"
         self.url_prefix = "http://127.0.0.1:8000/api/contents/book/"
         self.naver_api = NaverSearchAPI()
 
@@ -45,7 +46,7 @@ class BookObjectTestCase(APITestCase):
     def test_valid_isbn_expect_book_new_success(self):
         base_url = self.url_prefix + "new"
         data = {
-            "isbn": Provider(generator=Faker()).isbn13(separator=''),
+            "isbn": self.test_isbn,
             "title": "book_title",
             "author": "book_author",
             "publisher": "book_publisher"[:7],
