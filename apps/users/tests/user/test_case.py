@@ -32,6 +32,7 @@ class UserTestCase(APITestCase):
         self.client.credentials(
             HTTP_AUTHORIZATION=f'Bearer {self.access}'
         )
+        self.client.cookies['SCRIB_TOKEN'] = self.refresh
 
     @classmethod
     def pick_rand_category_item(cls, item: Union[list, dict]) -> Union[None, list]:
@@ -166,10 +167,6 @@ class UserSignInOutTestCase(UserTestCase):
         }
         response = self.client.post(path=self.signin_url, data=data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-
-        token = response.data.get('auth', '')
-        self.assertTrue('access_token' in token)
-        self.assertTrue('refresh_token' in token)
 
     def test_given_valid_auth_credentials_expect_user_signout_success(self):
         data = {"refresh": self.refresh}

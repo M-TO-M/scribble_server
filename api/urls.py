@@ -1,10 +1,10 @@
 from django.urls import include, path
-from rest_framework_simplejwt.views import token_refresh
+from core.views import ScribbleTokenRefreshView
 
 
 urlpatterns = [
     path('users/', include('api.users.urls')),
     path('contents/', include('api.contents.urls')),
-    path('token/refresh', token_refresh, name='token_refresh'),
     path('main/', include('api.main.urls')),
+    path('token/refresh', ScribbleTokenRefreshView.as_view(), name='token_refresh'),
 ]
