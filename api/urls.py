@@ -6,4 +6,5 @@ urlpatterns = [
     path('users/', include('api.users.urls')),
     path('contents/', include('api.contents.urls')),
     path('token/refresh', token_refresh, name='token_refresh'),
+    path('main/', include('api.main.urls')),
 ]
