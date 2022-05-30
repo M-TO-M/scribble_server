@@ -154,6 +154,14 @@ class PageLikesRelation(TimeStampModel):
 
 
 class PageComment(TimeStampModel):
+    comment_user = models.ForeignKey(
+        User,
+        on_delete=models.SET_DEFAULT,
+        default=DEFAULT_MODEL_PK.page_comment,
+        related_name='page_comment',
+        verbose_name='작성자'
+    )
+
     page = models.ForeignKey(
         Page,
         on_delete=models.SET_DEFAULT,

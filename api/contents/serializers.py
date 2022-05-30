@@ -194,6 +194,7 @@ class PageCommentSerializer(serializers.ModelSerializer):
             rep_parent = PageCommentSerializer(instance=parent_comment_instance).data
         return {
             'id': instance.id,
+            'comment_user': instance.comment_user.id,
             'depth': instance.depth,
             'parent': rep_parent,
             'content': instance.content,
@@ -202,6 +203,7 @@ class PageCommentSerializer(serializers.ModelSerializer):
 
 
 class PageCommentCreateUpdateSerializer(serializers.ModelSerializer):
+    comment_user = UserSerializer()
     page = serializers.SerializerMethodField()
     parent = serializers.SerializerMethodField()
     depth = serializers.IntegerField(default=0)
@@ -236,6 +238,7 @@ class PageCommentCreateUpdateSerializer(serializers.ModelSerializer):
         return self.parent
 
     def create(self, validated_data):
+        comment_user = validated_data.pop('comment_user')
         page_id = validated_data.pop('page')
         parent_comment_id = validated_data.pop('parent')
 
@@ -243,6 +246,7 @@ class PageCommentCreateUpdateSerializer(serializers.ModelSerializer):
         self.get_parent(parent_comment_id)
 
         data = {
+            "comment_user": comment_user,
             "page": self.page,
             "depth": self.depth,
             "parent": self.parent,

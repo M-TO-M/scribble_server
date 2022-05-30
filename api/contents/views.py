@@ -266,7 +266,7 @@ class PageCommentView(generics.GenericAPIView,
         return page_comment
 
     def authentication(self, obj: PageComment) -> bool:
-        if self.request.user.id != obj.page.note.user.id:
+        if self.request.user.id != obj.comment_user.id:
             raise AuthenticationFailed(detail=_("unauthorized_user"))
         return True
 
@@ -287,6 +287,7 @@ class PageCommentView(generics.GenericAPIView,
             raise ValidationError(detail=_("no_page_pk_in_body"))
 
         page_comment_data = {
+            "comment_user": self.request.user,
             "page": data["page"],
             "parent": data.pop('parent', 0),
             "content": data["content"]
@@ -301,9 +302,7 @@ class PageCommentView(generics.GenericAPIView,
         return Response(response, status=status.HTTP_201_CREATED)
 
     def patch(self, request, *args, **kwargs):
-        print('patcj')
         page_comment = self.get_page_comment_object()
-        print('obj')
         self.authentication(page_comment)
 
         data = json.loads(request.body)
