@@ -7,7 +7,18 @@ from api.contents.book_object.serializers import BookObjectSerializer, BookCreat
 from api.contents.page.serializers import PageSerializer
 from api.users.serializers import UserSerializer
 from apps.contents.models import Note, BookObject, NoteLikesRelation
+from core.serializers import StringListField
 from core.validators import ISBNValidator
+
+
+class NoteSchemaSerializer(serializers.Serializer):
+    id = serializers.IntegerField(help_text='노트 id', read_only=True)
+    note_author = UserSerializer(help_text='작성자', read_only=True)
+    book = BookObjectSerializer(help_text='도서명', read_only=True)
+    like_count = serializers.IntegerField(help_text='좋아요 수', read_only=True)
+    like_user = StringListField(help_text='좋아요를 누른 사용자 list', read_only=True)
+    hit = serializers.IntegerField(help_text='조회수', read_only=True)
+    pages = PageSerializer(many=True, help_text='노트에 등록된 페이지 정보', read_only=True)
 
 
 class NoteSerializer(serializers.ModelSerializer):

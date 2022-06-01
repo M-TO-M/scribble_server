@@ -1,6 +1,11 @@
 from datetime import datetime
 
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework import serializers
+
+
+class StringListField(serializers.ListField):
+    child = serializers.CharField()
 
 
 class ScribbleTokenObtainPairSerializer(TokenObtainPairSerializer):

@@ -5,7 +5,16 @@ from rest_framework.exceptions import ValidationError
 
 from apps.contents.models import Page, PageComment
 from api.users.serializers import UserSerializer
-from core.exceptions import PageNotFound
+from core.exceptions import PageNotFound, PageCommentNotFound
+
+
+class PageCommentSchemaSerializer(serializers.Serializer):
+    id = serializers.IntegerField(help_text='페이지 코멘트 id', read_only=True)
+    page_id = serializers.IntegerField(help_text='페이지 id', read_only=True)
+    comment_user = serializers.IntegerField(help_text='코멘트 작성자 id', read_only=True)
+    depth = serializers.IntegerField(help_text='코멘트 depth (0 ~)', read_only=True)
+    parent = serializers.IntegerField(help_text='상위 코멘트 id (default=0)', read_only=True)
+    content = serializers.CharField(help_text='코멘트 내용', read_only=True)
 
 
 class PageCommentSerializer(serializers.ModelSerializer):
@@ -57,7 +66,7 @@ class PageCommentCreateUpdateSerializer(serializers.ModelSerializer):
             try:
                 parent_comment = PageComment.objects.get(id=value)
             except PageComment.DoesNotExist:
-                raise ValidationError(detail=_("no_exist_parent_comment"))
+                raise PageCommentNotFound(detail=_("no_exist_parent_comment"))
             else:
                 if parent_comment.page.id != self.page.id:
                     raise ValidationError(detail=_("invalid_parent_comment_pk"))

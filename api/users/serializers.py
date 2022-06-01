@@ -125,7 +125,7 @@ class UserSerializer(UserValidationBaseSerializer):
         return instance
 
 
-class CategoryFieldSerializer(serializers.ModelSerializer):
+class CategoryFieldSerializer(serializers.Serializer):
     follow = serializers.SerializerMethodField()
     unfollow = serializers.SerializerMethodField()
     category = serializers.SerializerMethodField()

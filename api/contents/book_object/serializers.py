@@ -1,3 +1,5 @@
+from drf_yasg.utils import swagger_serializer_method
+
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
@@ -31,8 +33,9 @@ class BookCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = BookObject
-        fields = ['title', 'author', 'publisher', 'category', 'thumbnail']
+        fields = ['isbn', 'title', 'author', 'publisher', 'category', 'thumbnail']
 
+    @swagger_serializer_method(serializer_or_field=serializers.CharField(help_text='isbn'))
     def get_isbn(self, value):
         try:
             ISBNValidator(value)
