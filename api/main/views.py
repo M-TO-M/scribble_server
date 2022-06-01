@@ -82,8 +82,9 @@ class UserMainView(TemplateMainView):
         }
     )
     def get(self, request, *args, **kwargs):
+        user_id = self.kwargs[self.lookup_field]
         try:
-            user = self.get_object()
+            user = User.objects.get(id=user_id)
         except Exception:
             raise UserNotFound()
 
