@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
     'rest_framework_tracking',
+    'drf_yasg',
 ]
 
 MIDDLEWARE = [
@@ -215,4 +216,14 @@ SIMPLE_JWT = {
     "AUTH_COOKIE": "SCRIB_TOKEN",
     "AUTH_COOKIE_SECURE": True,
     "AUTH_COOKIE_HTTP_ONLY": True
+}
+
+SWAGGER_SETTINGS = {
+   'SECURITY_DEFINITIONS': {
+      'Bearer': {
+            'type': 'apiKey',
+            'name': 'Authorization',
+            'in': 'header'
+      }
+   }
 }
