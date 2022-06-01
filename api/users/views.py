@@ -1,6 +1,9 @@
 import json
 from typing import Union, Tuple
 
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema, no_body
+
 from django.contrib.auth.hashers import check_password
 from django.utils.translation import gettext_lazy as _
 
@@ -15,6 +18,9 @@ from api.users.serializers import *
 from core.views import ScribbleTokenObtainView
 from core.exceptions import UserNotFound
 from core.serializers import ScribbleTokenObtainPairSerializer
+from utils.swagger import swagger_response, swagger_parameter, \
+    swagger_schema_with_properties, swagger_schema_with_description, swagger_schema_with_items, \
+    UserFailCaseCollection as user_fail_case, user_response_example, user_response_example_with_access
 
 from scribble import settings
 
@@ -35,6 +41,33 @@ class SignInLoggingMixin(LoggingMixin):
 class SignUpView(generics.CreateAPIView):
     serializer_class = SignUpSerializer
 
+    @swagger_auto_schema(
+        operation_id='sign_up',
+        operation_description='회원가입을 수행합니다.',
+        request_body=swagger_schema_with_properties(
+            openapi.TYPE_OBJECT,
+            {
+                "email": swagger_schema_with_description(openapi.FORMAT_EMAIL, "이메일"),
+                "password": swagger_schema_with_description(openapi.FORMAT_PASSWORD, "비밀번호"),
+                "nickname": swagger_schema_with_description(openapi.TYPE_STRING, "닉네임"),
+                "category": swagger_schema_with_items(openapi.TYPE_ARRAY, openapi.TYPE_STRING, "추가/삭제할 카테고리 list"),
+                "profile_image": swagger_schema_with_description(openapi.FORMAT_URI, "프로필 사진")
+            }
+        ),
+        responses={
+            201: swagger_response(
+                description='USER_201_SIGN_UP',
+                schema=serializer_class,
+                examples=user_response_example,
+            ),
+            400:
+                user_fail_case.USER_400_VERIFY_EXIST_EMAIL.as_md() +
+                user_fail_case.USER_400_VERIFY_EXIST_NICKNAME.as_md() +
+                user_fail_case.USER_400_VERIFY_INVALID_DOMAIN.as_md() +
+                user_fail_case.USER_400_INVALID_CATEGORY.as_md()
+        },
+        security=[]
+    )
     def post(self, request, *args, **kwargs):
         data = json.loads(request.body)
         sign_up_serializer = self.serializer_class(data=data, partial=True)
@@ -51,6 +84,23 @@ class VerifyView(generics.RetrieveAPIView):
     queryset = User.objects.all()
     serializer_class = VerifySerializer
 
+    @swagger_auto_schema(
+        operation_id='verify',
+        operation_description='중복 검사(이메일, 닉네임)를 수행합니다.',
+        manual_parameters=[
+            swagger_parameter('nickname', openapi.IN_QUERY, '닉네임', openapi.TYPE_STRING),
+            swagger_parameter('email', openapi.IN_QUERY, '이메일', openapi.FORMAT_EMAIL),
+        ],
+        responses={
+            200: swagger_response(description='USER_200_VERIFY', examples={"status": "success", "provider": "naver.com"}),
+            204: swagger_response(description='USER_204_VERIFY_NO_PARAMS'),
+            400:
+                user_fail_case.USER_400_VERIFY_EXIST_EMAIL.as_md() +
+                user_fail_case.USER_400_VERIFY_EXIST_NICKNAME.as_md() +
+                user_fail_case.USER_400_VERIFY_INVALID_DOMAIN.as_md()
+        },
+        security=[]
+    )
     def get(self, request, *args, **kwargs):
         params = request.GET
         if not params:
@@ -74,6 +124,28 @@ class SignInView(SignInLoggingMixin, ScribbleTokenObtainView):
     queryset = User.objects.all()
     serializer_class = ScribbleTokenObtainPairSerializer
 
+    @swagger_auto_schema(
+        operation_id='sign_in',
+        operation_description='로그인을 수행합니다.',
+        request_body=swagger_schema_with_properties(
+            openapi.TYPE_OBJECT,
+            {
+                'email': swagger_schema_with_description(openapi.FORMAT_EMAIL, description='이메일'),
+                'password': swagger_schema_with_description(openapi.FORMAT_PASSWORD, description='비밀번호')
+            }
+        ),
+        responses={
+            200: swagger_response(
+                description='USER_201_SIGN_IN',
+                schema=SignUpSerializer,
+                examples=user_response_example_with_access
+            ),
+            400:
+                user_fail_case.USER_400_SIGN_IN_NO_EXIST_EMAIL.as_md() +
+                user_fail_case.USER_400_SIGN_IN_INVALID_PASSWORD.as_md()
+        },
+        security=[]
+    )
     def post(self, request, *args, **kwargs):
         data = json.loads(request.body)
         try:
@@ -93,6 +165,17 @@ class SignInView(SignInLoggingMixin, ScribbleTokenObtainView):
 class SignOutView(generics.CreateAPIView):
     serializer_class = SignOutSerializer
 
+    @swagger_auto_schema(
+        operation_id='sign_out',
+        operation_description='로그아웃을 수행합니다.\n 요청시, cookie에 blacklist에 등록할 refresh_token을 담아야 합니다.',
+        request_body=no_body,
+        responses={
+            204: swagger_response(description='USER_204_SIGN_OUT'),
+            400: user_fail_case.USER_400_SIGN_OUT_INVALID_REFRESH_TOKEN.as_md(),
+            401: user_fail_case.USER_401_UNAUTHORIZED.as_md(),
+            404: user_fail_case.USER_404_DOES_NOT_EXIST.as_md()
+        }
+    )
     def post(self, request, *args, **kwargs):
         data = {
             'refresh': request.COOKIES[settings.SIMPLE_JWT["AUTH_COOKIE"]],
@@ -116,6 +199,20 @@ class UserView(generics.GenericAPIView, mixins.UpdateModelMixin, mixins.DestroyM
     queryset = User.objects.all()
     serializer_class = UserSerializer
 
+    @swagger_auto_schema(
+        operation_id='user_edit',
+        operation_description='사용자 정보를 수정합니다.',
+        responses={
+            201: swagger_response(
+                description='USER_201_EDIT',
+                schema=serializer_class,
+                examples=user_response_example,
+            ),
+            400: user_fail_case.USER_400_EDIT_VALIDATION_ERROR.as_md(),
+            401: user_fail_case.USER_401_UNAUTHORIZED.as_md(),
+            404: user_fail_case.USER_404_DOES_NOT_EXIST.as_md()
+        }
+    )
     def patch(self, request, *args, **kwargs):
         try:
             user = self.get_object()
@@ -136,6 +233,15 @@ class UserView(generics.GenericAPIView, mixins.UpdateModelMixin, mixins.DestroyM
 
         return Response(response, status=status.HTTP_201_CREATED)
 
+    @swagger_auto_schema(
+        operation_id='user_delete',
+        operation_description='사용자 탈퇴 기능을 수행합니다.',
+        responses={
+            204: swagger_response(description='USER_204_DELETE'),
+            401: user_fail_case.USER_401_UNAUTHORIZED.as_md(),
+            404: user_fail_case.USER_404_DOES_NOT_EXIST.as_md()
+        }
+    )
     def delete(self, request, *args, **kwargs):
         try:
             user = self.get_object()
@@ -165,6 +271,14 @@ class CategoryView(generics.GenericAPIView, mixins.RetrieveModelMixin, mixins.Up
 
         return user_id, event
 
+    @swagger_auto_schema(
+        operation_id='user_category',
+        operation_description='사용자가 선택한 관심분야/카테고리 정보를 조회합니다.',
+        responses={
+            200: swagger_response(description='USER_200_CATEGORY_VIEW', examples={"category": {'9': '과학'}}),
+            404: user_fail_case.USER_404_DOES_NOT_EXIST.as_md()
+        }
+    )
     def get(self, request, *args, **kwargs):
         try:
             user = self.get_object()
@@ -175,6 +289,32 @@ class CategoryView(generics.GenericAPIView, mixins.RetrieveModelMixin, mixins.Up
 
         return Response(response, status=status.HTTP_200_OK)
 
+    @swagger_auto_schema(
+        operation_id='category_follow_unfollow',
+        operation_description='관심분야/카테고리 정보를 수정합니다.',
+        request_body=swagger_schema_with_properties(
+            openapi.TYPE_OBJECT,
+            {'category': swagger_schema_with_items(openapi.TYPE_ARRAY, openapi.TYPE_STRING, "추가/삭제할 카테고리 list")}
+        ),
+        manual_parameters=[
+            swagger_parameter('user_id', openapi.IN_QUERY, '사용자 id', openapi.TYPE_INTEGER),
+            swagger_parameter('event', openapi.IN_QUERY, '추가/삭제', openapi.TYPE_STRING, pattern=['follow / unfollow']),
+        ],
+        responses={
+            201: swagger_response(
+                description='USER_201_CATEGORY_FOLLOW_UNFOLLOW',
+                schema=UserSerializer,
+                examples=user_response_example
+            ),
+            204: swagger_response(description='USER_204_CATEGORY_PARAMS_NO_EXIST_OR_INVALID'),
+            400:
+                user_fail_case.USER_400_INVALID_CATEGORY.as_md() +
+                user_fail_case.USER_400_FOLLOW_EXIST_CATEGORY.as_md() +
+                user_fail_case.USER_400_FOLLOW_CANCEL_NO_EXIST_CATEGORY.as_md(),
+            401: user_fail_case.USER_401_UNAUTHORIZED.as_md(),
+            404: user_fail_case.USER_404_DOES_NOT_EXIST.as_md()
+        }
+    )
     def patch(self, request, *args, **kwargs):
         user_id, event = self.get_params_for_category(request)
 

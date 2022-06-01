@@ -1,3 +1,5 @@
+from drf_yasg.utils import swagger_auto_schema, no_body
+
 from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenViewBase
@@ -6,6 +8,7 @@ from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 from core.pagination import MainViewPagination
 from core.serializers import ScribbleTokenObtainPairSerializer
 from utils.cache import get_or_set_token_cache
+from utils.swagger import swagger_response, swagger_schema_with_properties, swagger_schema_with_description
 from scribble import settings
 
 
@@ -67,6 +70,15 @@ class ScribbleTokenObtainView(generics.CreateAPIView):
 class ScribbleTokenRefreshView(TokenViewBase):
     serializer_class = TokenRefreshSerializer
 
+    @swagger_auto_schema(
+        operation_id='token_refresh',
+        operation_description='토큰을 재발급합니다.\n 요청시, cookie에 blacklist에 등록할 refresh_token을 담아야 합니다.',
+        request_body=no_body,
+        responses={
+            201: swagger_response(description='AUTH_201_TOKEN_REFRESH', schema=serializer_class)
+        },
+        security=[]
+    )
     def post(self, request, *args, **kwargs):
         data = {'refresh': request.COOKIES[settings.SIMPLE_JWT["AUTH_COOKIE"]]}
         serializer = self.get_serializer(data=data)
