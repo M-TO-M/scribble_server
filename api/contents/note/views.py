@@ -1,5 +1,8 @@
 import json
 
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema, no_body
+
 from django.utils.translation import gettext_lazy as _
 from django.utils.translation.trans_null import gettext_lazy
 
@@ -7,15 +10,30 @@ from rest_framework import generics, mixins, status
 from rest_framework.exceptions import ValidationError, AuthenticationFailed
 from rest_framework.response import Response
 
-from api.contents.note.serializers import NoteSerializer, NoteCreateSerializer, NoteLikesRelationSerializer
+from api.contents.note.serializers import *
 from apps.contents.models import Note, NoteLikesRelation
 from core.exceptions import NoteNotFound
+from utils.swagger import swagger_response, note_response_example, \
+    swagger_schema_with_properties, swagger_schema_with_description, \
+    NoteFailCaseCollection as note_fail_case, UserFailCaseCollection as user_fail_case
 
 
 class NoteView(generics.GenericAPIView, mixins.RetrieveModelMixin, mixins.CreateModelMixin, mixins.DestroyModelMixin):
     queryset = Note.objects.all()
     serializer_class = NoteSerializer
 
+    @swagger_auto_schema(
+        operation_id='note_detail',
+        operation_description='노트를 조회합니다',
+        responses={
+            200: swagger_response(
+                description='NOTE_200_DETAIL',
+                schema=NoteSchemaSerializer,
+                examples=note_response_example
+            ),
+            404: note_fail_case.NOTE_404_DOES_NOT_EXIST.as_md()
+        }
+    )
     def get(self, request, *args, **kwargs):
         try:
             note = self.get_object()
@@ -30,6 +48,22 @@ class NoteView(generics.GenericAPIView, mixins.RetrieveModelMixin, mixins.Create
         response = {"note": note_data}
         return Response(response, status.HTTP_200_OK)
 
+    @swagger_auto_schema(
+        operation_id='note_new',
+        operation_description='새로운 노트를 생성합니다.',
+        request_body=swagger_schema_with_properties(
+            openapi.TYPE_OBJECT,
+            {"book_isbn": swagger_schema_with_description(openapi.TYPE_STRING, "도서 isbn 문자열")}
+        ),
+        responses={
+            201: swagger_response(
+                'NOTE_201_NEW',
+                schema=NoteSchemaSerializer,
+                examples=note_response_example
+            ),
+            400: note_fail_case.NOTE_400_NO_BOOK_INFO_IN_REQUEST_BODY.as_md()
+        }
+    )
     def post(self, request, *args, **kwargs):
         try:
             data = json.loads(request.body)
@@ -48,6 +82,15 @@ class NoteView(generics.GenericAPIView, mixins.RetrieveModelMixin, mixins.Create
             }
             return Response(response, status=status.HTTP_201_CREATED)
 
+    @swagger_auto_schema(
+        operation_id='note_delete',
+        operation_description='노트를 삭제합니다.',
+        responses={
+            204: swagger_response('NOTE_204_DELETE'),
+            401: user_fail_case.USER_401_UNAUTHORIZED.as_md(),
+            404: note_fail_case.NOTE_404_DOES_NOT_EXIST.as_md()
+        }
+    )
     def delete(self, request, *args, **kwargs):
         try:
             note = self.get_object()
@@ -65,6 +108,20 @@ class NoteLikeView(generics.GenericAPIView, mixins.CreateModelMixin, mixins.Dest
     queryset = Note.objects.all()
     serializer_class = NoteLikesRelationSerializer
 
+    @swagger_auto_schema(
+        operation_id='note_like',
+        operation_description='노트에 좋아요를 등록합니다.',
+        request_body=no_body,
+        responses={
+            201: swagger_response(
+                'NOTE_201_LIKE',
+                schema=NoteSchemaSerializer,
+                examples=note_response_example
+            ),
+            400: note_fail_case.NOTE_400_LIKE_EXIST_LIKE_RELATION.as_md(),
+            404: note_fail_case.NOTE_404_DOES_NOT_EXIST.as_md()
+        }
+    )
     def post(self, request, *args, **kwargs):
         try:
             note = self.get_object()
@@ -88,6 +145,15 @@ class NoteLikeView(generics.GenericAPIView, mixins.CreateModelMixin, mixins.Dest
 
         return Response(response, status=status.HTTP_201_CREATED)
 
+    @swagger_auto_schema(
+        operation_id='note_like_cancel',
+        operation_description='노트의 좋아요를 취소합니다.',
+        responses={
+            204: swagger_response(description='NOTE_204_LIKE_CANCEL'),
+            400: note_fail_case.NOTE_400_LIKE_CANCEL_NO_EXIST_LIKE_RELATION.as_md(),
+            404: note_fail_case.NOTE_404_DOES_NOT_EXIST.as_md()
+        }
+    )
     def delete(self, request, *args, **kwargs):
         try:
             note = self.get_object()

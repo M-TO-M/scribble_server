@@ -1,4 +1,8 @@
 import json
+from collections import OrderedDict
+
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema, no_body
 
 from django.utils.translation import gettext_lazy as _
 from django.utils.translation.trans_null import gettext_lazy
@@ -8,9 +12,11 @@ from rest_framework.exceptions import ValidationError, AuthenticationFailed
 from rest_framework.response import Response
 
 from api.contents.note.serializers import NoteCreateSerializer
-from api.contents.page.serializers import PageSerializer, PageLikesRelationSerializer
+from api.contents.page.serializers import PageSerializer, PageLikesRelationSerializer, PageSchemaSerializer
 from apps.contents.models import Note, Page, PageLikesRelation
 from core.exceptions import PageNotFound
+from utils.swagger import swagger_response, swagger_schema_with_description, swagger_schema_with_properties, \
+    page_response_example, PageFailCaseCollection as page_fail_case, UserFailCaseCollection as user_fail_case
 
 
 class PageView(generics.GenericAPIView,
@@ -21,6 +27,18 @@ class PageView(generics.GenericAPIView,
     queryset = Page.objects.all().select_related('note__user', 'note__book')
     serializer_class = PageSerializer
 
+    @swagger_auto_schema(
+        operation_id='page_detail',
+        operation_description='페이지를 조회합니다.',
+        responses={
+            200: swagger_response(
+                description='PAGE_200_DETAIL',
+                schema=PageSchemaSerializer,
+                examples=page_response_example
+            ),
+            404: page_fail_case.PAGE_404_DOES_NOT_EXIST.as_md()
+        }
+    )
     def get(self, request, *args, **kwargs):
         try:
             page = self.get_object()
@@ -36,6 +54,41 @@ class PageView(generics.GenericAPIView,
 
         return Response(response, status.HTTP_200_OK)
 
+    @swagger_auto_schema(
+        operation_id='page_new',
+        operation_description='새로운 페이지를 등록합니다.',
+        request_body=swagger_schema_with_properties(
+            openapi.TYPE_OBJECT,
+            {
+                'note': swagger_schema_with_description(openapi.TYPE_BOOLEAN, '노트 등록여부'),
+                'note_pk': swagger_schema_with_description(openapi.TYPE_INTEGER, '"note=True"인 경우 노트 객체의 id값'),
+                'book_isbn': swagger_schema_with_description(openapi.TYPE_STRING, '"note=False"인 경우 전달해야 하는 도서 isbn값'),
+                'pages': swagger_schema_with_properties(
+                    openapi.TYPE_OBJECT,
+                    {
+                        'page_key': openapi.Schema(
+                            type=openapi.TYPE_OBJECT,
+                            properties=OrderedDict((
+                                    ('phrase', swagger_schema_with_description(openapi.TYPE_STRING, '필사 구절 text')),
+                                    ('transcript', swagger_schema_with_description(openapi.TYPE_STRING, '필사 이미지 url'))
+                            )),
+                            description='등록할 페이지 정보 dict'
+                        ),
+                    }
+                )
+            }
+        ),
+        responses={
+            201: swagger_response(
+                description='PAGE_201_NEW',
+                schema=PageSchemaSerializer,
+                examples=page_response_example
+            ),
+            400:
+                page_fail_case.PAGE_400_NO_NOTE_PK_IN_REQUEST_BODY.as_md() +
+                page_fail_case.PAGE_400_NO_BOOK_ISBN_IN_REQUEST_BODY.as_md()
+        }
+    )
     def post(self, request, *args, **kwargs):
         try:
             data = json.loads(request.body)
@@ -69,6 +122,20 @@ class PageView(generics.GenericAPIView,
         }
         return Response(response, status.HTTP_201_CREATED)
 
+    @swagger_auto_schema(
+        operation_id='page_edit',
+        operation_description='페이지를 수정합니다.',
+        responses={
+            201: swagger_response(
+                description='PAGE_201_EDIT',
+                schema=PageSchemaSerializer,
+                examples=page_response_example
+            ),
+            400: page_fail_case.PAGE_400_EDIT_VALIDATION_ERROR.as_md(),
+            401: user_fail_case.USER_401_UNAUTHORIZED.as_md(),
+            404: page_fail_case.PAGE_404_DOES_NOT_EXIST.as_md()
+        }
+    )
     def patch(self, request, *args, **kwargs):
         try:
             page = self.get_object()
@@ -88,6 +155,15 @@ class PageView(generics.GenericAPIView,
         }
         return Response(response, status=status.HTTP_201_CREATED)
 
+    @swagger_auto_schema(
+        operation_id='page_delete',
+        operation_description='페이지를 삭제합니다.',
+        responses={
+            204: swagger_response(description='PAGE_204_DELETE'),
+            401: user_fail_case.USER_401_UNAUTHORIZED.as_md(),
+            404: page_fail_case.PAGE_404_DOES_NOT_EXIST.as_md()
+        }
+    )
     def delete(self, request, *args, **kwargs):
         try:
             page = self.get_object()
@@ -105,6 +181,20 @@ class PageLikeView(generics.GenericAPIView, mixins.CreateModelMixin, mixins.Dest
     queryset = Page.objects.all()
     serializer_class = PageLikesRelationSerializer
 
+    @swagger_auto_schema(
+        operation_id='page_like',
+        operation_description='페이지에 좋아요를 표시합니다.',
+        request_body=no_body,
+        responses={
+            201: swagger_response(
+                'PAGE_201_LIKE',
+                schema=PageSchemaSerializer,
+                examples=page_response_example
+            ),
+            400: page_fail_case.PAGE_400_LIKE_EXIST_LIKE_RELATION.as_md(),
+            404: page_fail_case.PAGE_404_DOES_NOT_EXIST.as_md()
+        }
+    )
     def post(self, request, *args, **kwargs):
         try:
             page = self.get_object()
@@ -128,6 +218,15 @@ class PageLikeView(generics.GenericAPIView, mixins.CreateModelMixin, mixins.Dest
 
         return Response(response, status=status.HTTP_201_CREATED)
 
+    @swagger_auto_schema(
+        operation_id='page_like_cancel',
+        operation_description='페이지에 표시한 좋아요를 취소합니다.',
+        responses={
+            204: swagger_response(description='PAGE_204_LIKE_CANCEL'),
+            400: page_fail_case.PAGE_400_LIKE_CANCEL_NO_EXIST_LIKE_RELATION.as_md(),
+            404: page_fail_case.PAGE_404_DOES_NOT_EXIST.as_md()
+        }
+    )
     def delete(self, request, *args, **kwargs):
         try:
             page = self.get_object()
