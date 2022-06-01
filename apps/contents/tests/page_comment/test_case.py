@@ -20,6 +20,14 @@ class PageCommentTestCase(UserTestCase):
         response = self.client.get(path=base_url)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
+    def test_with_page_comment_pk_in_url_expect_page_comment_success(self):
+        page_comment = PageCommentFactory.create()
+        base_url = self.url_prefix + str(page_comment.id)
+
+        response = self.client.get(path=base_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(page_comment.id, response.data['page_comment']['id'])
+
     def test_given_no_exist_page_expect_page_comment_new_fail(self):
         base_url = self.url_prefix + "new"
         data = {
@@ -56,7 +64,7 @@ class PageCommentTestCase(UserTestCase):
         }
 
         response = self.client.post(path=base_url, data=data, format='json')
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
         self.assertTrue("no_exist_parent_comment" in response.data)
 
     def test_given_exist_page_and_exist_but_invalid_parent_comment_expect_page_comment_new_fail(self):

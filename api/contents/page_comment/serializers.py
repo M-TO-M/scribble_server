@@ -66,7 +66,7 @@ class PageCommentCreateUpdateSerializer(serializers.ModelSerializer):
             try:
                 parent_comment = PageComment.objects.get(id=value)
             except PageComment.DoesNotExist:
-                raise ValidationError(detail=_("no_exist_parent_comment"))
+                raise PageCommentNotFound(detail=_("no_exist_parent_comment"))
             else:
                 if parent_comment.page.id != self.page.id:
                     raise ValidationError(detail=_("invalid_parent_comment_pk"))
