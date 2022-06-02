@@ -1,0 +1,43 @@
+version: "2"
+services:
+  backend:
+    container_name: backend
+    image: scribble:v2
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    networks:
+      - redis_network
+
+  nginx:
+    image: nginx:v2
+    container_name: nginx
+    build:
+      context: ./config/nginx
+      dockerfile: Dockerfile
+    volumes:
+      - .:/app
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+  redis:
+    image: "redis:3.2"
+    restart: always
+    container_name: redis
+    hostname: redis
+    command: --port 6379
+    networks:
+      - redis_network
+    expose:
+      - "6379"
+    ports:
+      - "6379:6379"
+
+networks:
+  redis_network:
+    driver: bridge
