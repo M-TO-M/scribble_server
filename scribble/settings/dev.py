@@ -1,12 +1,10 @@
 import os
 
-from scribble.settings import BASE_DIR
+from scribble.settings import BASE_DIR, DEV_ALLOWED_HOSTS
 
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0']
-
-
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0', DEV_ALLOWED_HOSTS]
 
 CACHES = {
     "default": {

@@ -65,7 +65,7 @@ db.sqlite3-journal
 static
 
 # ignore migration logs of all apps
-apps/**/migrations/*.py
+#apps/**/migrations/*.py
 
 # Flask stuff:
 instance/
