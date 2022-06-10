@@ -9,7 +9,7 @@ from core.pagination import MainViewPagination
 from core.serializers import ScribbleTokenObtainPairSerializer
 from utils.cache import get_or_set_token_cache
 from utils.swagger import swagger_response, swagger_schema_with_properties, swagger_schema_with_description
-from scribble import settings
+import scribble.settings.base as settings
 
 
 class TemplateMainView(generics.ListAPIView):
