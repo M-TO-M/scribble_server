@@ -24,7 +24,7 @@ urlpatterns = [
     path('contents/', include('api.contents.urls')),
     path('main/', include('api.main.urls')),
     path('token/refresh', ScribbleTokenRefreshView.as_view(), name='token_refresh'),
-    path('scribble/swagger', schema_view.with_ui('swagger', cache_timeout = 0), name='schema-swagger-ui'),
-    path('scribble/docs', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
+    path('swagger', schema_view.with_ui('swagger', cache_timeout = 0), name='schema-swagger-ui'),
+    path('docs', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
 ]
 
