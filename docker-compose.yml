@@ -25,6 +25,8 @@ services:
       - "80:80"
     depends_on:
       - backend
+    env_file:
+      - scribble/.env
   redis:
     image: "redis:3.2"
     restart: always
