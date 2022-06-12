@@ -23,7 +23,10 @@ class NaverSearchAPI:
             'isbn': lambda x: self.search_book_with_isbn_value(isbn=x)
         }
 
-    def __call__(self, param):
+    def __call__(self, param, display=None):
+        if display:
+            self.display = display
+
         option = 'isbn'
         try:
             ISBNValidator(param)
@@ -36,15 +39,15 @@ class NaverSearchAPI:
 
     @staticmethod
     def custom_search_result_data(items):
-        result = {}
+        result = []
         for i, item in enumerate(items):
-            result[i] = {
+            result.append({
                 "isbn": re.sub('<.+?>', '', item["isbn"]).rsplit(" ", 1)[1],
                 "title": re.sub('<.+?>', '', item["title"]),
                 "author": re.sub('<.+?>', '', item["author"]),
                 "publisher": re.sub('<.+?>', '', item["publisher"]),
                 "thumbnail": item["image"].rsplit("?", 1)[0]
-            }
+            })
 
         return result
 
