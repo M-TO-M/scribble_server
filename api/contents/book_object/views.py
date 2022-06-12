@@ -72,6 +72,7 @@ class NaverSearchAPIView(generics.RetrieveAPIView):
         manual_parameters=[
             swagger_parameter('query', openapi.IN_QUERY, '검색어', openapi.TYPE_STRING),
             swagger_parameter('isbn', openapi.IN_QUERY, 'isbn 문자열', openapi.TYPE_STRING),
+            swagger_parameter('display', openapi.IN_QUERY, '검색결과 수', openapi.TYPE_INTEGER),
         ],
         responses={
             200: swagger_response(
@@ -96,6 +97,7 @@ class NaverSearchAPIView(generics.RetrieveAPIView):
             return Response(None, status=status.HTTP_204_NO_CONTENT)
 
         query = param.get('query', '') or param.get('isbn', '')
-        result = self.search_class(query)
+        display = param.get('display', '')
+        result = self.search_class(query, display)
 
         return Response(result, status=status.HTTP_200_OK)
