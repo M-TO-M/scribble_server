@@ -8,6 +8,7 @@ from rest_framework import generics, mixins
 from api.main.serializers import MainSchemaSerializer, UserMainSchemaSerializer
 from api.contents.note.serializers import NoteSerializer
 from api.contents.page.serializers import PageSerializer
+from api.users.serializers import UserSerializer
 
 from apps.contents.models import Note, Page, BookObject
 from apps.users.models import User
@@ -90,7 +91,8 @@ class UserMainView(TemplateMainView):
 
         notes = self.get_queryset().filter(user_id=user.id)
         data = self.get_paginated_data(notes)
-        return self.get_paginated_response(data)
+
+        return self.paginator.get_paginated_response(data=data, user=UserSerializer(instance=user).data)
 
 
 class SearchView(generics.GenericAPIView, mixins.RetrieveModelMixin):

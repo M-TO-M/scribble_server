@@ -20,10 +20,13 @@ class MainViewPagination(LimitOffsetPagination):
             return None
         return max(self.offset - self.limit, 0)
 
-    def get_paginated_response(self, data):
-        return Response(OrderedDict([
+    def get_paginated_response(self, data, **kwargs):
+        response = OrderedDict([
             ('count', self.count),
             ('previous_offset', self.get_previous_offset()),
             ('next_offset', self.get_next_offset()),
             (self.data_key, data)
-        ]))
+        ])
+        response.update(kwargs)
+
+        return Response(response)
