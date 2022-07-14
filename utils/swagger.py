@@ -342,7 +342,8 @@ user_main_response_example = {
             "hit": 0,
             "pages": []
         }
-    ]
+    ],
+    "user": user_response_example
 }
 
 
