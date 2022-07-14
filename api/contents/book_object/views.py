@@ -65,6 +65,7 @@ class BookView(generics.CreateAPIView):
 class NaverSearchAPIView(generics.RetrieveAPIView):
     search_class = NaverSearchAPI()
     serializer_class = None
+    queryset = None
 
     @swagger_auto_schema(
         operation_id='naver_search',
