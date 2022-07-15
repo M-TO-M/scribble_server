@@ -346,6 +346,21 @@ user_main_response_example = {
     "user": user_response_example
 }
 
+main_book_list_response_example = [
+    {
+        "isbn": "9781501923579",
+        "datetime": "2022-07-14T13:07:05.350Z"
+    },
+    {
+        "isbn": "9781088978511",
+        "datetime": "2022-07-14T13:07:05.323Z"
+    },
+    {
+        "isbn": "9780357355565",
+        "datetime": "2022-07-14T13:07:05.296Z"
+    }
+]
+
 
 def swagger_response(description=None, schema=None, examples=None):
     return openapi.Response(
