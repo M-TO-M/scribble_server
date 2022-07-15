@@ -54,3 +54,9 @@ class BookCreateSerializer(serializers.ModelSerializer):
             book_object_data = NaverSearchAPI()(self.isbn)[0]
             book = BookObject.objects.create(**book_object_data)
         return book
+
+
+class SimpleBookListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BookObject
+        fields = ['isbn']

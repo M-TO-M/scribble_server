@@ -1,10 +1,14 @@
+import json
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 
-from django.db.models import Q
+from django.db.models import Q, F
+from django.core.serializers.json import DjangoJSONEncoder
 
-from rest_framework import generics, mixins
+from rest_framework import generics, mixins, status
+from rest_framework.response import Response
 
+from api.contents.book_object.serializers import SimpleBookListSerializer
 from api.main.serializers import MainSchemaSerializer, UserMainSchemaSerializer
 from api.contents.note.serializers import NoteSerializer
 from api.contents.page.serializers import PageSerializer
@@ -105,3 +109,22 @@ class SearchView(generics.GenericAPIView, mixins.RetrieveModelMixin):
         )
 
         return None
+
+
+class BookListView(generics.RetrieveAPIView):
+    queryset = Note.objects.all().select_related('book__isbn')
+    serializer_class = SimpleBookListSerializer
+
+    def get(self, request, *args, **kwargs):
+        user_id = self.kwargs[self.lookup_field]
+        try:
+            user = User.objects.get(id=user_id)
+        except Exception:
+            raise UserNotFound()
+
+        queryset = self.get_queryset().filter(user=user)\
+            .annotate(isbn=F('book__isbn'), datetime=F('created_at'))\
+            .values('isbn', 'datetime').order_by('-datetime')
+        book_list = json.dumps(list(queryset), cls=DjangoJSONEncoder)
+
+        return Response(json.loads(book_list), status=status.HTTP_200_OK)
