@@ -1,11 +1,15 @@
+import json
 from drf_yasg import openapi
-from drf_yasg.utils import swagger_auto_schema
+from drf_yasg.utils import swagger_auto_schema, no_body
 
-from django.db.models import Q
+from django.db.models import Q, F
+from django.core.serializers.json import DjangoJSONEncoder
 
-from rest_framework import generics, mixins
+from rest_framework import generics, mixins, status
+from rest_framework.response import Response
 
-from api.main.serializers import MainSchemaSerializer, UserMainSchemaSerializer
+from api.contents.book_object.serializers import SimpleBookListSerializer
+from api.main.serializers import MainSchemaSerializer, UserMainSchemaSerializer, MainBookListSchemaSerializer
 from api.contents.note.serializers import NoteSerializer
 from api.contents.page.serializers import PageSerializer
 from api.users.serializers import UserSerializer
@@ -16,7 +20,7 @@ from core.exceptions import UserNotFound
 from core.views import TemplateMainView
 
 from utils.swagger import swagger_response, swagger_parameter, main_response_example, user_main_response_example, \
-    UserFailCaseCollection as user_fail_case
+    UserFailCaseCollection as user_fail_case, main_book_list_response_example
 
 
 class MainView(TemplateMainView):
@@ -105,3 +109,35 @@ class SearchView(generics.GenericAPIView, mixins.RetrieveModelMixin):
         )
 
         return None
+
+
+class BookListView(generics.RetrieveAPIView):
+    queryset = Note.objects.all().select_related('book__isbn')
+    serializer_class = SimpleBookListSerializer
+
+    @swagger_auto_schema(
+        operation_id='main_book_list',
+        operation_description='사용자가 등록한 책 정보(isbn, 등록일)를 조회합니다.',
+        request_body=no_body,
+        manual_parameters=[swagger_parameter('id', openapi.IN_PATH, '사용자 id', openapi.TYPE_INTEGER)],
+        responses={
+            200: swagger_response(
+                description='MAIN_BOOK_LIST_200',
+                schema=MainBookListSchemaSerializer,
+                examples=main_book_list_response_example
+            )
+        }
+    )
+    def get(self, request, *args, **kwargs):
+        user_id = self.kwargs[self.lookup_field]
+        try:
+            user = User.objects.get(id=user_id)
+        except Exception:
+            raise UserNotFound()
+
+        queryset = self.get_queryset().filter(user=user)\
+            .annotate(isbn=F('book__isbn'), datetime=F('created_at'))\
+            .values('isbn', 'datetime').order_by('-datetime')
+        book_list = json.dumps(list(queryset), cls=DjangoJSONEncoder)
+
+        return Response(json.loads(book_list), status=status.HTTP_200_OK)
