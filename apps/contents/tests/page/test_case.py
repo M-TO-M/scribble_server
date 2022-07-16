@@ -13,23 +13,23 @@ from apps.users.tests.user.test_case import UserTestCase
 class PageTestCase(UserTestCase):
     def setUp(self):
         super(PageTestCase, self).setUp()
-        self.url_prefix = "http://127.0.0.1:8000/api/contents/pages/"
+        self.url_prefix = "http://127.0.0.1:8000/v1/contents/pages/"
 
         self.test_isbn = "9791166832598"
-        self.test_page_data = {
-            0: {
+        self.test_page_data = [
+            {
                 "transcript": Faker().image_url(),
                 "phrase": fuzzy.FuzzyText().fuzz()
             },
-            1: {
+            {
                 "transcript": Faker().image_url(),
                 "phrase": fuzzy.FuzzyText().fuzz()
             },
-            2: {
+            {
                 "transcript": Faker().image_url(),
                 "phrase": fuzzy.FuzzyText().fuzz()
             }
-        }
+        ]
 
     def test_given_no_exist_note_and_invalid_isbn_expect_page_new_fail(self):
         base_url = self.url_prefix + "new"
@@ -53,6 +53,7 @@ class PageTestCase(UserTestCase):
         data = {"note": True, "note_pk": note.pk, "pages": self.test_page_data}
 
         response = self.client.post(path=base_url, data=data, format='json')
+        print(response.data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(len(self.test_page_data), len(response.data['pages']))
 
@@ -76,7 +77,7 @@ class PageTestCase(UserTestCase):
 
         response = self.client.get(path=base_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(page.id, response.data["page"]["id"])
+        self.assertEqual(page.id, response.data["page_detail"]["id"])
 
     def test_given_no_exist_page_pk_expect_page_edit_fail(self):
         base_url = self.url_prefix + str(1) + "/edit"
@@ -102,7 +103,7 @@ class PageTestCase(UserTestCase):
         response = self.client.patch(path=base_url, data=data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(page.id, response.data["page"]["id"])
-        self.assertEqual(page.note.id, response.data["page"]["note_id"])
+        self.assertEqual(page.note.id, response.data["note"]["id"])
         self.assertEqual(data["transcript"], response.data["page"]["transcript"])
         self.assertEqual(data["phrase"], response.data["page"]["phrase"])
 

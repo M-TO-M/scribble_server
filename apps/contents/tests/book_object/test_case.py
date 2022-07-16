@@ -16,7 +16,7 @@ class BookObjectTestCase(APITestCase):
         self.book = BookObjectFactory.create()
 
         self.test_isbn = "9791166832598"
-        self.url_prefix = "http://127.0.0.1:8000/api/contents/book/"
+        self.url_prefix = "http://127.0.0.1:8000/v1/contents/book/"
         self.naver_api = NaverSearchAPI()
 
     def test_given_empty_param_for_naver_api_expect_no_content(self):
