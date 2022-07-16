@@ -51,7 +51,6 @@ class PageSerializer(serializers.ModelSerializer):
     def to_representation(self, instance: Page):
         return {
             'id': instance.id,
-            'note_id': instance.note.id,
             'note_index': instance.note_index,
             'transcript': instance.transcript,
             'phrase': instance.phrase,

@@ -11,6 +11,7 @@ from rest_framework.exceptions import ValidationError, AuthenticationFailed
 from rest_framework.response import Response
 
 from api.contents.note.serializers import *
+from api.contents.page.serializers import PageSerializer
 from apps.contents.models import Note, NoteLikesRelation
 from core.exceptions import NoteNotFound
 from utils.swagger import swagger_response, note_response_example, \
@@ -45,7 +46,13 @@ class NoteView(generics.GenericAPIView, mixins.RetrieveModelMixin, mixins.Create
             note.save()
 
         note_data = self.serializer_class(instance=note).data
+
+        pages = self.serializer_class.get_note_pages(instance=note)
+        pages_data = PageSerializer(instance=pages, many=True).data
+
+        note_data['pages'] = pages_data
         response = {"note": note_data}
+
         return Response(response, status.HTTP_200_OK)
 
     @swagger_auto_schema(
