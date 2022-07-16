@@ -10,6 +10,15 @@ from core.serializers import StringListField
 from core.validators import ISBNValidator
 
 
+class NoteWithoutBookSchemaSerializer(serializers.Serializer):
+    id = serializers.IntegerField(help_text='노트 id', read_only=True)
+    note_author = UserSerializer(help_text='작성자', read_only=True)
+    like_count = serializers.IntegerField(help_text='좋아요 수', read_only=True)
+    like_user = StringListField(help_text='좋아요를 누른 사용자 list', read_only=True)
+    hit = serializers.IntegerField(help_text='조회수', read_only=True)
+    pages_count = serializers.IntegerField(help_text='노트에 저장된 페이지 수', read_only=True)
+
+
 class NoteSchemaSerializer(serializers.Serializer):
     id = serializers.IntegerField(help_text='노트 id', read_only=True)
     note_author = UserSerializer(help_text='작성자', read_only=True)

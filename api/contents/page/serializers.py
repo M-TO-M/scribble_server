@@ -1,20 +1,28 @@
 from rest_framework import serializers
 
+from api.contents.book_object.serializers import BookObjectSerializer
+from api.contents.note.serializers import NoteWithoutBookSchemaSerializer
 from api.users.serializers import UserSerializer
 from apps.contents.models import Page, PageLikesRelation
 from core.serializers import StringListField
 
 
-class PageSchemaSerializer(serializers.Serializer):
+class PageDetailSchemaSerialzer(serializers.Serializer):
     id = serializers.IntegerField(help_text='페이지 id', read_only=True)
-    note_id = serializers.IntegerField(help_text='노트 id', read_only=True)
     note_index = serializers.IntegerField(help_text='페이지의 노트 index', read_only=True)
     transcript = serializers.URLField(help_text='필사 이미지 URL', read_only=True)
     phrase = serializers.CharField(help_text='필사 구절', read_only=True)
     hit = serializers.IntegerField(help_text='조회수', read_only=True)
+    book_page = serializers.IntegerField(help_text='도서의 페이지(쪽)', read_only=True)
     like_count = serializers.IntegerField(help_text='좋아요 수', read_only=True)
     like_user = StringListField(help_text='좋아요를 누른 사용자 list', read_only=True)
     reviews_count = serializers.IntegerField(help_text='리뷰 수', read_only=True)
+
+
+class PageSchemaSerializer(serializers.Serializer):
+    note = NoteWithoutBookSchemaSerializer(help_text='페이지가 등록된 노트', read_only=True)
+    book = BookObjectSerializer(help_text='도서 정보', read_only=True)
+    page_detail = PageDetailSchemaSerialzer(help_text='페이지 세부정보', read_only=True)
 
 
 class PageBulkCreateUpdateSerializer(serializers.ListSerializer):
