@@ -81,14 +81,77 @@ note_response_example = {
         'like_count': 0,
         'like_user': [],
         'hit': 0,
+        'pages_count': 0
+    }
+}
+
+note_detail_response_example = {
+    'note': {
+        'id': 1,
+        'note_author': {
+            "id": 1,
+            "email": "test@naver.com",
+            "password": "pbkdf2_sha256$320000$9fPcOoSTXi4XGZHCvAX5L4$LY44j0p+vEp8FvJdFBPqWMhIwj52bur+MKefaDYRJgk=",
+            "nickname": "nickname",
+            "category": {
+                "9": "과학"
+            },
+            "profile_image": "https://placekitten.com/101/37",
+            "created_at": "2022-06-01T01:48:27.252426Z",
+            "updated_at": "2022-06-01T01:48:27.252439Z"
+        },
+        'book': {
+            'id': 1,
+            'isbn': '9791166832598',
+            'created_at': '2022-06-01T03:42:31.404789Z',
+            'updated_at': '2022-06-01T03:42:31.404808Z',
+            'title': 'title_0',
+            'author': 'author_0',
+            'publisher': 'publisher_0',
+            'category': {},
+            'thumbnail': 'https://placekitten.com/38/611'
+        },
+        'like_count': 0,
+        'like_user': [],
+        'hit': 0,
+        'pages_count': 0,
         'pages': []
     }
 }
 
 page_response_example = {
-    'page': {
+    'note': {
         'id': 1,
-        'note_id': 1,
+        'note_author': {
+            "id": 1,
+            "email": "test@naver.com",
+            "password": "pbkdf2_sha256$320000$9fPcOoSTXi4XGZHCvAX5L4$LY44j0p+vEp8FvJdFBPqWMhIwj52bur+MKefaDYRJgk=",
+            "nickname": "nickname",
+            "category": {
+                "9": "과학"
+            },
+            "profile_image": "https://placekitten.com/101/37",
+            "created_at": "2022-06-01T01:48:27.252426Z",
+            "updated_at": "2022-06-01T01:48:27.252439Z"
+        },
+        'like_count': 0,
+        'like_user': [],
+        'hit': 0,
+        'pages_count': 0
+    },
+    'book': {
+        'id': 1,
+        'isbn': '9791166832598',
+        'created_at': '2022-06-01T03:42:31.404789Z',
+        'updated_at': '2022-06-01T03:42:31.404808Z',
+        'title': 'title_0',
+        'author': 'author_0',
+        'publisher': 'publisher_0',
+        'category': {},
+        'thumbnail': 'https://placekitten.com/38/611'
+    },
+    'page_detail': {
+        'id': 1,
         'note_index': 0,
         'transcript': 'https://placeimg.com/77/365/any',
         'phrase': 'TFlmetrbwdCF',
@@ -195,41 +258,7 @@ user_main_response_example = {
             "like_count": 0,
             "like_user": [],
             "hit": 0,
-            "pages": [
-                {
-                    "id": 1,
-                    "note_id": 1,
-                    "note_index": 0,
-                    "transcript": "https://placeimg.com/840/441/any",
-                    "phrase": "VSEuOBRMeRHp",
-                    "hit": 0,
-                    "like_count": 0,
-                    "like_user": [],
-                    "reviews_count": 0
-                },
-                {
-                    "id": 2,
-                    "note_id": 1,
-                    "note_index": 0,
-                    "transcript": "https://placeimg.com/840/441/any",
-                    "phrase": "lpLCMBgEuImP",
-                    "hit": 0,
-                    "like_count": 0,
-                    "like_user": [],
-                    "reviews_count": 0
-                },
-                {
-                    "id": 3,
-                    "note_id": 1,
-                    "note_index": 0,
-                    "transcript": "https://placeimg.com/840/441/any",
-                    "phrase": "yodgUxllcjPP",
-                    "hit": 0,
-                    "like_count": 0,
-                    "like_user": [],
-                    "reviews_count": 0
-                }
-            ]
+            "pages_count": 0
         },
         {
             "id": 2,
@@ -261,19 +290,7 @@ user_main_response_example = {
             "like_count": 0,
             "like_user": [],
             "hit": 0,
-            "pages": [
-                {
-                    "id": 4,
-                    "note_id": 2,
-                    "note_index": 0,
-                    "transcript": "https://placeimg.com/840/441/any",
-                    "phrase": "FkRwKSAyMXtW",
-                    "hit": 0,
-                    "like_count": 0,
-                    "like_user": [],
-                    "reviews_count": 0
-                }
-            ]
+            "pages_count": 0
         },
         {
             "id": 3,
@@ -306,7 +323,7 @@ user_main_response_example = {
             "like_count": 0,
             "like_user": [],
             "hit": 0,
-            "pages": []
+            "pages_count": 0
         },
         {
             "id": 4,
@@ -340,7 +357,7 @@ user_main_response_example = {
             "like_count": 0,
             "like_user": [],
             "hit": 0,
-            "pages": []
+            "pages_count": 0
         }
     ],
     "user": user_response_example
@@ -348,14 +365,17 @@ user_main_response_example = {
 
 main_book_list_response_example = [
     {
+        "note_id": 1,
         "isbn": "9781501923579",
         "datetime": "2022-07-14T13:07:05.350Z"
     },
     {
+        "note_id": 2,
         "isbn": "9781088978511",
         "datetime": "2022-07-14T13:07:05.323Z"
     },
     {
+        "note_id": 3,
         "isbn": "9780357355565",
         "datetime": "2022-07-14T13:07:05.296Z"
     }

@@ -18,7 +18,7 @@ class UserTestCase(APITestCase):
         self.user = UserFactory.create()
         self.set_credentials()
 
-        self.url_prefix = "http://127.0.0.1:8000/api/users/"
+        self.url_prefix = "http://127.0.0.1:8000/v1/users/"
 
     def tearDown(self):
         super(UserTestCase, self).tearDown()

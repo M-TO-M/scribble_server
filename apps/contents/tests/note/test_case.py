@@ -16,7 +16,7 @@ class NoteTestCase(APITestCase):
         self.user = UserFactory.create()
         self.set_credentials()
 
-        self.url_prefix = "http://127.0.0.1:8000/api/contents/notes/"
+        self.url_prefix = "http://127.0.0.1:8000/v1/contents/notes/"
 
     def tearDown(self):
         super(NoteTestCase, self).tearDown()

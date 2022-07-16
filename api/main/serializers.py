@@ -21,6 +21,7 @@ class UserMainSchemaSerializer(serializers.Serializer):
 
 
 class MainBookListSchemaSerializer(serializers.Serializer):
+    note_id = serializers.IntegerField(help_text='노트 id', read_only=True)
     isbn = serializers.CharField(help_text='도서 isbn 문자열', read_only=True)
     datetime = serializers.DateTimeField(help_text='등록일자', read_only=True)
 

@@ -12,7 +12,7 @@ from apps.users.tests.user.test_case import UserTestCase
 class PageCommentTestCase(UserTestCase):
     def setUp(self):
         super(PageCommentTestCase, self).setUp()
-        self.url_prefix = "http://127.0.0.1:8000/api/contents/page_comments/"
+        self.url_prefix = "http://127.0.0.1:8000/v1/contents/page_comments/"
 
     def test_with_no_page_comment_pk_in_url_expect_page_comment_fail(self):
         base_url = self.url_prefix

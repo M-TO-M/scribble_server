@@ -120,6 +120,11 @@ class Page(TimeStampModel):
         default=0,
         verbose_name='조회수'
     )
+    book_page = models.PositiveSmallIntegerField(
+        default=0,
+        verbose_name='책페이지',
+        blank=True
+    )
 
     class Meta:
         db_table = 'page'

@@ -11,11 +11,12 @@ from rest_framework.exceptions import ValidationError, AuthenticationFailed
 from rest_framework.response import Response
 
 from api.contents.note.serializers import *
+from api.contents.page.serializers import PageSerializer
 from apps.contents.models import Note, NoteLikesRelation
 from core.exceptions import NoteNotFound
 from utils.swagger import swagger_response, note_response_example, \
     swagger_schema_with_properties, swagger_schema_with_description, \
-    NoteFailCaseCollection as note_fail_case, UserFailCaseCollection as user_fail_case
+    NoteFailCaseCollection as note_fail_case, UserFailCaseCollection as user_fail_case, note_detail_response_example
 
 
 class NoteView(generics.GenericAPIView, mixins.RetrieveModelMixin, mixins.CreateModelMixin, mixins.DestroyModelMixin):
@@ -29,7 +30,7 @@ class NoteView(generics.GenericAPIView, mixins.RetrieveModelMixin, mixins.Create
             200: swagger_response(
                 description='NOTE_200_DETAIL',
                 schema=NoteSchemaSerializer,
-                examples=note_response_example
+                examples=note_detail_response_example
             ),
             404: note_fail_case.NOTE_404_DOES_NOT_EXIST.as_md()
         }
@@ -45,7 +46,13 @@ class NoteView(generics.GenericAPIView, mixins.RetrieveModelMixin, mixins.Create
             note.save()
 
         note_data = self.serializer_class(instance=note).data
+
+        pages = self.serializer_class.get_note_pages(instance=note)
+        pages_data = PageSerializer(instance=pages, many=True).data
+
+        note_data['pages'] = pages_data
         response = {"note": note_data}
+
         return Response(response, status.HTTP_200_OK)
 
     @swagger_auto_schema(
