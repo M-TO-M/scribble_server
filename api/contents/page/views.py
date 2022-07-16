@@ -16,7 +16,8 @@ from api.contents.page.serializers import PageSerializer, PageLikesRelationSeria
 from apps.contents.models import Note, Page, PageLikesRelation
 from core.exceptions import PageNotFound
 from utils.swagger import swagger_response, swagger_schema_with_description, swagger_schema_with_properties, \
-    page_response_example, PageFailCaseCollection as page_fail_case, UserFailCaseCollection as user_fail_case
+    page_response_example, PageFailCaseCollection as page_fail_case, UserFailCaseCollection as user_fail_case, \
+    swagger_schema_with_items
 
 
 class PageView(generics.GenericAPIView,
@@ -63,19 +64,17 @@ class PageView(generics.GenericAPIView,
                 'note': swagger_schema_with_description(openapi.TYPE_BOOLEAN, '노트 등록여부'),
                 'note_pk': swagger_schema_with_description(openapi.TYPE_INTEGER, '"note=True"인 경우 노트 객체의 id값'),
                 'book_isbn': swagger_schema_with_description(openapi.TYPE_STRING, '"note=False"인 경우 전달해야 하는 도서 isbn값'),
-                'pages': swagger_schema_with_properties(
-                    openapi.TYPE_OBJECT,
-                    {
-                        'page_key': openapi.Schema(
+                'pages': swagger_schema_with_items(
+                    openapi.TYPE_ARRAY,
+                        openapi.Schema(
                             type=openapi.TYPE_OBJECT,
                             properties=OrderedDict((
                                     ('phrase', swagger_schema_with_description(openapi.TYPE_STRING, '필사 구절 text')),
                                     ('transcript', swagger_schema_with_description(openapi.TYPE_STRING, '필사 이미지 url')),
                                     ('book_page', swagger_schema_with_description(openapi.TYPE_INTEGER, '필사하려는 도서의 페이지 번호')),
                             )),
-                            description='등록할 페이지 정보 dict'
                         ),
-                    }
+                    description='등록할 페이지 정보 dict의 list'
                 )
             }
         ),
@@ -112,7 +111,6 @@ class PageView(generics.GenericAPIView,
         page_data = data["pages"]
         for page in page_data:
             page.update({'note': note.id})
-        print(page_data)
 
         page_serializer = self.serializer_class(data=page_data, many=True)
         page_serializer.is_valid(raise_exception=True)
