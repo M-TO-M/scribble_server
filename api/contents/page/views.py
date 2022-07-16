@@ -70,7 +70,8 @@ class PageView(generics.GenericAPIView,
                             type=openapi.TYPE_OBJECT,
                             properties=OrderedDict((
                                     ('phrase', swagger_schema_with_description(openapi.TYPE_STRING, '필사 구절 text')),
-                                    ('transcript', swagger_schema_with_description(openapi.TYPE_STRING, '필사 이미지 url'))
+                                    ('transcript', swagger_schema_with_description(openapi.TYPE_STRING, '필사 이미지 url')),
+                                    ('book_page', swagger_schema_with_description(openapi.TYPE_INTEGER, '필사하려는 도서의 페이지 번호')),
                             )),
                             description='등록할 페이지 정보 dict'
                         ),
@@ -107,13 +108,13 @@ class PageView(generics.GenericAPIView,
             note_data = {"user": request.user, "isbn": data["book_isbn"]}
             note_create_serializer = NoteCreateSerializer()
             note = note_create_serializer.create(validated_data=note_data)
-
+        # todo: page의 note_index 갱신하면 생성
         page_data = data["pages"]
-        for k, v in page_data.items():
-            page_data[k]['note'] = note.id
-        page_data_list = list(page_data.values())
+        for page in page_data:
+            page.update({'note': note.id})
+        print(page_data)
 
-        page_serializer = self.serializer_class(data=page_data_list, many=True)
+        page_serializer = self.serializer_class(data=page_data, many=True)
         page_serializer.is_valid(raise_exception=True)
         pages = page_serializer.create(page_serializer.validated_data)
 

@@ -25,7 +25,8 @@ class PageBulkCreateUpdateSerializer(serializers.ListSerializer):
     def update(self, instance, validated_data):
         instance.transcript = validated_data.pop('transcript', instance.transcript)
         instance.phrase = validated_data.pop('phrase', instance.phrase)
-        instance.note_index = validated_data.pop('category', instance.note_index)
+        instance.note_index = validated_data.pop('note_index', instance.note_index)
+        instance.book_page = validated_data.pop('book_page', instance.book_page)
         instance.save()
 
         return instance
@@ -54,6 +55,7 @@ class PageSerializer(serializers.ModelSerializer):
             'note_index': instance.note_index,
             'transcript': instance.transcript,
             'phrase': instance.phrase,
+            'book_page': instance.book_page,
             'hit': instance.hit,
             'like_count': instance.page_likes_relation.count(),
             'like_user': self.get_like_user(instance),
