@@ -365,14 +365,17 @@ user_main_response_example = {
 
 main_book_list_response_example = [
     {
+        "note_id": 1,
         "isbn": "9781501923579",
         "datetime": "2022-07-14T13:07:05.350Z"
     },
     {
+        "note_id": 2,
         "isbn": "9781088978511",
         "datetime": "2022-07-14T13:07:05.323Z"
     },
     {
+        "note_id": 3,
         "isbn": "9780357355565",
         "datetime": "2022-07-14T13:07:05.296Z"
     }

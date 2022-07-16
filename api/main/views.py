@@ -136,8 +136,8 @@ class BookListView(generics.RetrieveAPIView):
             raise UserNotFound()
 
         queryset = self.get_queryset().filter(user=user)\
-            .annotate(isbn=F('book__isbn'), datetime=F('created_at'))\
-            .values('isbn', 'datetime').order_by('-datetime')
+            .annotate(note_id=F('id'), isbn=F('book__isbn'), datetime=F('created_at'))\
+            .values('note_id', 'isbn', 'datetime').order_by('-datetime')
         book_list = json.dumps(list(queryset), cls=DjangoJSONEncoder)
 
         return Response(json.loads(book_list), status=status.HTTP_200_OK)
