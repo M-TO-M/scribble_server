@@ -15,9 +15,12 @@ from api.contents.note.serializers import NoteCreateSerializer, NoteSerializer
 from api.contents.page.serializers import PageSerializer, PageLikesRelationSerializer, PageSchemaSerializer, \
     PageDetailSerializer
 from apps.contents.models import Note, Page, PageLikesRelation
-from core.exceptions import PageNotFound
+from core.exceptions import PageNotFound, NoteNotFound
 from utils.swagger import swagger_response, swagger_schema_with_description, swagger_schema_with_properties, \
-    page_response_example, PageFailCaseCollection as page_fail_case, UserFailCaseCollection as user_fail_case, \
+    page_response_example, \
+    PageFailCaseCollection as page_fail_case, \
+    UserFailCaseCollection as user_fail_case, \
+    NoteFailCaseCollection as note_fail_case, \
     swagger_schema_with_items
 
 
@@ -85,7 +88,8 @@ class PageView(generics.GenericAPIView,
             ),
             400:
                 page_fail_case.PAGE_400_NO_NOTE_PK_IN_REQUEST_BODY.as_md() +
-                page_fail_case.PAGE_400_NO_BOOK_ISBN_IN_REQUEST_BODY.as_md()
+                page_fail_case.PAGE_400_NO_BOOK_ISBN_IN_REQUEST_BODY.as_md() +
+                note_fail_case.NOTE_404_DOES_NOT_EXIST.as_md()
         }
     )
     def post(self, request, *args, **kwargs):
@@ -98,7 +102,10 @@ class PageView(generics.GenericAPIView,
         if note_exists:
             if "note_pk" not in data:
                 raise ValidationError(detail=_("no_note_pk_in_req_body"))
-            note = Note.objects.get(id=data['note_pk'])
+            try:
+                note = Note.objects.get(id=data['note_pk'])
+            except Exception:
+                raise NoteNotFound()
         else:
             if "book_isbn" not in data:
                 raise ValidationError(detail=_("no_book_in_req_body"))
