@@ -178,50 +178,7 @@ main_response_example = {
     'previous_offset': 0,
     'next_offset': 4,
     'pages': [
-        {
-            'hit': 0,
-            'id': 1,
-            'like_count': 0,
-            'like_user': [],
-            'note_id': 1,
-            'note_index': 0,
-            'phrase': 'ULZCEYUnuLxk',
-            'reviews_count': 1,
-            'transcript': 'https://picsum.photos/29/309'
-        },
-        {
-            'hit': 0,
-            'id': 2,
-            'like_count': 0,
-            'like_user': [],
-            'note_id': 2,
-            'note_index': 0,
-            'phrase': 'ExgBTMFoVjgk',
-            'reviews_count': 1,
-            'transcript': 'https://picsum.photos/29/309'
-        },
-        {
-            'hit': 0,
-            'id': 3,
-            'like_count': 0,
-            'like_user': [],
-            'note_id': 3,
-            'note_index': 0,
-            'phrase': 'QySISsfnhjka',
-            'reviews_count': 1,
-            'transcript': 'https://picsum.photos/29/309'
-        },
-        {
-            'hit': 0,
-            'id': 4,
-            'like_count': 0,
-            'like_user': [],
-            'note_id': 4,
-            'note_index': 0,
-            'phrase': 'YknNvkQQfqNw',
-            'reviews_count': 1,
-            'transcript': 'https://picsum.photos/29/309'
-        }
+        page_response_example,
     ],
 }
 
