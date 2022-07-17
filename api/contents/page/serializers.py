@@ -1,5 +1,7 @@
 from collections import OrderedDict
 
+from django.db import transaction
+from django.db.models import Count
 from rest_framework import serializers
 
 from api.contents.book_object.serializers import BookObjectSerializer
@@ -28,9 +30,19 @@ class PageSchemaSerializer(serializers.Serializer):
 
 
 class PageBulkCreateUpdateSerializer(serializers.ListSerializer):
-    def create(self, validated_data):
-        page_data = [Page(**item) for item in validated_data]
-        return Page.objects.bulk_create(page_data)
+    def create(self, validated_data, *args):
+        with transaction.atomic():
+            obj_data = [Page(**item) for item in validated_data]
+            pages = Page.objects.bulk_create(obj_data)
+
+            note_index = Page.objects.values('note_id').annotate(count=Count('note_id')).filter(note_id=args[0])[0]
+            note_index['count'] -= len(obj_data)
+            for p in pages:
+                p.note_index = note_index['count'] + 1
+                note_index['count'] += 1
+
+            Page.objects.bulk_update(pages, ['note_index'])
+            return pages
 
     def update(self, instance, validated_data):
         instance.transcript = validated_data.pop('transcript', instance.transcript)

@@ -113,15 +113,17 @@ class PageView(generics.GenericAPIView,
             note_data = {"user": request.user, "isbn": data["book_isbn"]}
             note_create_serializer = NoteCreateSerializer()
             note = note_create_serializer.create(validated_data=note_data)
-        # todo: page의 note_index 갱신하면 생성
+
         page_data = data["pages"]
         for page in page_data:
             page.update({'note': note.id})
 
         page_serializer = self.serializer_class(data=page_data, many=True)
         page_serializer.is_valid(raise_exception=True)
-        pages = page_serializer.create(page_serializer.validated_data)
-
+        pages = page_serializer.create(
+            page_serializer.validated_data,
+            note.id
+        )
         response = {
             "pages": self.serializer_class(instance=pages, many=True).data
         }
@@ -141,6 +143,7 @@ class PageView(generics.GenericAPIView,
             404: page_fail_case.PAGE_404_DOES_NOT_EXIST.as_md()
         }
     )
+    # TODO: page 재정렬/배치 기능 구현하기 (note_index field 활용)
     def patch(self, request, *args, **kwargs):
         try:
             page = self.get_object()
