@@ -1,10 +1,18 @@
 import os
 
-from scribble.settings import BASE_DIR, ALLOWED_HOSTS as allowed_env_hosts
+from scribble.settings import BASE_DIR, ALLOWED_HOSTS as dev_env_hosts
 
 DEBUG = True
 
-ALLOWED_HOSTS = allowed_env_hosts
+ALLOWED_HOSTS = dev_env_hosts
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
+}
+
 
 CACHES = {
     "default": {
