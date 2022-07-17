@@ -136,6 +136,12 @@ class Page(TimeStampModel):
         self.hit += 1
         self.save()
 
+    def save_new_note_index(self):
+        index_list = Page.objects.filter(note_id=self.note.id).values_list('note_index', flat=True)
+        value = max(index_list) + 1 if index_list else 0
+        self.note_index = value
+        self.save()
+
 
 class PageLikesRelation(TimeStampModel):
     like_user = models.ForeignKey(

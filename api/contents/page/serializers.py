@@ -1,7 +1,11 @@
+from collections import OrderedDict
+
+from django.db import transaction
+from django.db.models import Count
 from rest_framework import serializers
 
 from api.contents.book_object.serializers import BookObjectSerializer
-from api.contents.note.serializers import NoteWithoutBookSchemaSerializer
+from api.contents.note.serializers import NoteWithoutBookSchemaSerializer, NoteSerializer
 from api.users.serializers import UserSerializer
 from apps.contents.models import Page, PageLikesRelation
 from core.serializers import StringListField
@@ -26,9 +30,19 @@ class PageSchemaSerializer(serializers.Serializer):
 
 
 class PageBulkCreateUpdateSerializer(serializers.ListSerializer):
-    def create(self, validated_data):
-        page_data = [Page(**item) for item in validated_data]
-        return Page.objects.bulk_create(page_data)
+    def create(self, validated_data, *args):
+        with transaction.atomic():
+            obj_data = [Page(**item) for item in validated_data]
+            pages = Page.objects.bulk_create(obj_data)
+
+            note_index = Page.objects.values('note_id').annotate(count=Count('note_id')).filter(note_id=args[0])[0]
+            note_index['count'] -= len(obj_data)
+            for p in pages:
+                p.note_index = note_index['count'] + 1
+                note_index['count'] += 1
+
+            Page.objects.bulk_update(pages, ['note_index'])
+            return pages
 
     def update(self, instance, validated_data):
         instance.transcript = validated_data.pop('transcript', instance.transcript)
@@ -68,6 +82,23 @@ class PageSerializer(serializers.ModelSerializer):
             'like_user': self.get_like_user(instance),
             'reviews_count': instance.page_comment.count()
         }
+
+
+class PageDetailSerializer(PageSerializer):
+    @staticmethod
+    def get_note_data(instance: Page):
+        return NoteSerializer(instance=instance.note).data
+
+    def to_representation(self, instance):
+        note_data = self.get_note_data(instance)
+        book_data = note_data.pop('book')
+        page_data = super(PageDetailSerializer, self).to_representation(instance)
+
+        return OrderedDict([
+            ('note', note_data),
+            ('book', book_data),
+            ('page_detail', page_data)
+        ])
 
 
 class PageLikesRelationSerializer(serializers.ModelSerializer):

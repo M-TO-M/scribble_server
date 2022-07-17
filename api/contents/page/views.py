@@ -12,11 +12,15 @@ from rest_framework.exceptions import ValidationError, AuthenticationFailed
 from rest_framework.response import Response
 
 from api.contents.note.serializers import NoteCreateSerializer, NoteSerializer
-from api.contents.page.serializers import PageSerializer, PageLikesRelationSerializer, PageSchemaSerializer
+from api.contents.page.serializers import PageSerializer, PageLikesRelationSerializer, PageSchemaSerializer, \
+    PageDetailSerializer
 from apps.contents.models import Note, Page, PageLikesRelation
-from core.exceptions import PageNotFound
+from core.exceptions import PageNotFound, NoteNotFound
 from utils.swagger import swagger_response, swagger_schema_with_description, swagger_schema_with_properties, \
-    page_response_example, PageFailCaseCollection as page_fail_case, UserFailCaseCollection as user_fail_case, \
+    page_response_example, \
+    PageFailCaseCollection as page_fail_case, \
+    UserFailCaseCollection as user_fail_case, \
+    NoteFailCaseCollection as note_fail_case, \
     swagger_schema_with_items
 
 
@@ -26,7 +30,7 @@ class PageView(generics.GenericAPIView,
                mixins.UpdateModelMixin,
                mixins.DestroyModelMixin):
     queryset = Page.objects.all().select_related('note', 'note__user', 'note__book')
-    serializer_class = PageSerializer
+    serializer_class = PageDetailSerializer
 
     @swagger_auto_schema(
         operation_id='page_detail',
@@ -50,15 +54,7 @@ class PageView(generics.GenericAPIView,
             page.update_page_hit()
             page.save()
 
-        note_data = NoteSerializer(instance=page.note).data
-        book_data = note_data.pop('book')
-        page_data = self.serializer_class(instance=page).data
-        response = {
-            "note": note_data,
-            "book": book_data,
-            "page_detail": page_data
-        }
-
+        response = self.serializer_class(instance=page).data
         return Response(response, status.HTTP_200_OK)
 
     @swagger_auto_schema(
@@ -92,7 +88,8 @@ class PageView(generics.GenericAPIView,
             ),
             400:
                 page_fail_case.PAGE_400_NO_NOTE_PK_IN_REQUEST_BODY.as_md() +
-                page_fail_case.PAGE_400_NO_BOOK_ISBN_IN_REQUEST_BODY.as_md()
+                page_fail_case.PAGE_400_NO_BOOK_ISBN_IN_REQUEST_BODY.as_md() +
+                note_fail_case.NOTE_404_DOES_NOT_EXIST.as_md()
         }
     )
     def post(self, request, *args, **kwargs):
@@ -105,7 +102,10 @@ class PageView(generics.GenericAPIView,
         if note_exists:
             if "note_pk" not in data:
                 raise ValidationError(detail=_("no_note_pk_in_req_body"))
-            note = Note.objects.get(id=data['note_pk'])
+            try:
+                note = Note.objects.get(id=data['note_pk'])
+            except Exception:
+                raise NoteNotFound()
         else:
             if "book_isbn" not in data:
                 raise ValidationError(detail=_("no_book_in_req_body"))
@@ -113,15 +113,17 @@ class PageView(generics.GenericAPIView,
             note_data = {"user": request.user, "isbn": data["book_isbn"]}
             note_create_serializer = NoteCreateSerializer()
             note = note_create_serializer.create(validated_data=note_data)
-        # todo: page의 note_index 갱신하면 생성
+
         page_data = data["pages"]
         for page in page_data:
             page.update({'note': note.id})
 
         page_serializer = self.serializer_class(data=page_data, many=True)
         page_serializer.is_valid(raise_exception=True)
-        pages = page_serializer.create(page_serializer.validated_data)
-
+        pages = page_serializer.create(
+            page_serializer.validated_data,
+            note.id
+        )
         response = {
             "pages": self.serializer_class(instance=pages, many=True).data
         }
@@ -141,6 +143,7 @@ class PageView(generics.GenericAPIView,
             404: page_fail_case.PAGE_404_DOES_NOT_EXIST.as_md()
         }
     )
+    # TODO: page 재정렬/배치 기능 구현하기 (note_index field 활용)
     def patch(self, request, *args, **kwargs):
         try:
             page = self.get_object()
@@ -155,14 +158,7 @@ class PageView(generics.GenericAPIView,
         page_serializer.is_valid(raise_exception=True)
         update_page = page_serializer.update(instance=page, validated_data=data)
 
-        note_data = NoteSerializer(instance=page.note).data
-        book_data = note_data.pop('book')
-        response = {
-            "note": note_data,
-            "book": book_data,
-            "page": self.serializer_class(instance=update_page).data
-        }
-
+        response = self.serializer_class(instance=update_page).data
         return Response(response, status=status.HTTP_201_CREATED)
 
     @swagger_auto_schema(
