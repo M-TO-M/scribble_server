@@ -11,7 +11,7 @@ from rest_framework.response import Response
 from api.contents.book_object.serializers import SimpleBookListSerializer
 from api.main.serializers import MainSchemaSerializer, UserMainSchemaSerializer, MainBookListSchemaSerializer
 from api.contents.note.serializers import NoteSerializer
-from api.contents.page.serializers import PageSerializer
+from api.contents.page.serializers import PageSerializer, PageDetailSerializer
 from api.users.serializers import UserSerializer
 
 from apps.contents.models import Note, Page, BookObject
@@ -24,8 +24,8 @@ from utils.swagger import swagger_response, swagger_parameter, main_response_exa
 
 
 class MainView(TemplateMainView):
-    queryset = Page.objects.all()
-    serializer_class = PageSerializer
+    queryset = Page.objects.all().select_related('note', 'note__book')
+    serializer_class = PageDetailSerializer
 
     def __init__(self):
         super(MainView, self).__init__()
@@ -53,7 +53,7 @@ class MainView(TemplateMainView):
         security=[]
     )
     def get(self, request, *args, **kwargs):
-        data = self.get_paginated_data(self.get_queryset())
+        data = self.get_paginated_data(self.get_queryset().order_by('-created_at'))
         return self.get_paginated_response(data)
 
 

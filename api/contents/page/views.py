@@ -12,7 +12,8 @@ from rest_framework.exceptions import ValidationError, AuthenticationFailed
 from rest_framework.response import Response
 
 from api.contents.note.serializers import NoteCreateSerializer, NoteSerializer
-from api.contents.page.serializers import PageSerializer, PageLikesRelationSerializer, PageSchemaSerializer
+from api.contents.page.serializers import PageSerializer, PageLikesRelationSerializer, PageSchemaSerializer, \
+    PageDetailSerializer
 from apps.contents.models import Note, Page, PageLikesRelation
 from core.exceptions import PageNotFound
 from utils.swagger import swagger_response, swagger_schema_with_description, swagger_schema_with_properties, \
@@ -26,7 +27,7 @@ class PageView(generics.GenericAPIView,
                mixins.UpdateModelMixin,
                mixins.DestroyModelMixin):
     queryset = Page.objects.all().select_related('note', 'note__user', 'note__book')
-    serializer_class = PageSerializer
+    serializer_class = PageDetailSerializer
 
     @swagger_auto_schema(
         operation_id='page_detail',
@@ -50,15 +51,7 @@ class PageView(generics.GenericAPIView,
             page.update_page_hit()
             page.save()
 
-        note_data = NoteSerializer(instance=page.note).data
-        book_data = note_data.pop('book')
-        page_data = self.serializer_class(instance=page).data
-        response = {
-            "note": note_data,
-            "book": book_data,
-            "page_detail": page_data
-        }
-
+        response = self.serializer_class(instance=page).data
         return Response(response, status.HTTP_200_OK)
 
     @swagger_auto_schema(
@@ -155,14 +148,7 @@ class PageView(generics.GenericAPIView,
         page_serializer.is_valid(raise_exception=True)
         update_page = page_serializer.update(instance=page, validated_data=data)
 
-        note_data = NoteSerializer(instance=page.note).data
-        book_data = note_data.pop('book')
-        response = {
-            "note": note_data,
-            "book": book_data,
-            "page": self.serializer_class(instance=update_page).data
-        }
-
+        response = self.serializer_class(instance=update_page).data
         return Response(response, status=status.HTTP_201_CREATED)
 
     @swagger_auto_schema(

@@ -1,7 +1,9 @@
+from collections import OrderedDict
+
 from rest_framework import serializers
 
 from api.contents.book_object.serializers import BookObjectSerializer
-from api.contents.note.serializers import NoteWithoutBookSchemaSerializer
+from api.contents.note.serializers import NoteWithoutBookSchemaSerializer, NoteSerializer
 from api.users.serializers import UserSerializer
 from apps.contents.models import Page, PageLikesRelation
 from core.serializers import StringListField
@@ -68,6 +70,23 @@ class PageSerializer(serializers.ModelSerializer):
             'like_user': self.get_like_user(instance),
             'reviews_count': instance.page_comment.count()
         }
+
+
+class PageDetailSerializer(PageSerializer):
+    @staticmethod
+    def get_note_data(instance: Page):
+        return NoteSerializer(instance=instance.note).data
+
+    def to_representation(self, instance):
+        note_data = self.get_note_data(instance)
+        book_data = note_data.pop('book')
+        page_data = super(PageDetailSerializer, self).to_representation(instance)
+
+        return OrderedDict([
+            ('note', note_data),
+            ('book', book_data),
+            ('page_detail', page_data)
+        ])
 
 
 class PageLikesRelationSerializer(serializers.ModelSerializer):
