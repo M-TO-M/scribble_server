@@ -161,3 +161,17 @@ class CategoryFieldSerializer(serializers.Serializer):
                     raise ValidationError(detail={"detail": "invalid_category", "category_list": category_choices})
                 ret[category_choices.index(val)] = val
             return ret
+
+
+class PasswordChangeSerializer(serializers.Serializer):
+    old_passwd = serializers.CharField(required=True)
+    new_passwd = serializers.CharField(required=True)
+
+    def check_passwd(self, obj: User):
+        if not obj.check_password(self.data.get('old_passwd')):
+            raise ValidationError(detail=_(f"wrong_passwd"))
+        new_passwd = self.data.get('new_passwd')
+        if new_passwd:
+            obj.set_password(new_passwd)
+            obj.save()
+            return obj
