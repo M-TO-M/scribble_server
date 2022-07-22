@@ -355,3 +355,48 @@ class CategoryView(generics.GenericAPIView, mixins.RetrieveModelMixin, mixins.Up
         }
 
         return Response(response, status=status.HTTP_201_CREATED)
+
+
+class PasswordView(generics.GenericAPIView, mixins.UpdateModelMixin):
+    queryset = User.objects.all()
+    serializer_class = PasswordChangeSerializer
+
+    @swagger_auto_schema(
+        operation_id='passwd_change',
+        operation_description='비밀번호를 변경합니다.',
+        request_body=swagger_schema_with_properties(
+            openapi.TYPE_OBJECT,
+            {
+                'old_passwd': swagger_schema_with_description(openapi.TYPE_STRING, description='기존 비밀번호'),
+                'new_passwd': swagger_schema_with_description(openapi.TYPE_STRING, description='변경할 비밀번호')
+            }
+        ),
+        responses={
+            201: swagger_response(
+                description='USER_201_PASSWD_CHANGE',
+                schema=UserSerializer,
+                examples=user_response_example
+            ),
+            401: user_fail_case.USER_401_UNAUTHORIZED.as_md(),
+            404: user_fail_case.USER_404_DOES_NOT_EXIST.as_md()
+        }
+    )
+    def put(self, request, *args, **kwargs):
+        try:
+            user = self.get_object()
+        except Exception:
+            raise UserNotFound()
+
+        if request.user and request.user.id != user.id:
+            raise AuthenticationFailed(detail=_("unauthorized_user"))
+
+        data = json.loads(request.body)
+
+        serializer = self.serializer_class(data=data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.check_passwd(obj=user)
+
+        response = {
+            "user": UserSerializer(instance=user).data
+        }
+        return Response(response, status=status.HTTP_201_CREATED)

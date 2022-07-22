@@ -14,4 +14,5 @@ urlpatterns = [
     path('<int:pk>/edit', UserView.as_view(http_method_names=['patch']), name='user_edit'),
     path('<int:pk>/category', CategoryView.as_view(http_method_names=['get']), name='user_category'),
     path('category', CategoryView.as_view(http_method_names=['patch']), name='category_follow_unfollow'),
+    path('<int:pk>/passwd/change', PasswordView.as_view(), name='passwd_change'),
 ]
