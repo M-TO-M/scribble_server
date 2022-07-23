@@ -150,13 +150,6 @@ SWAGGER_SETTINGS = {
    }
 }
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}
-
 if RUN_ENV == "dev":
     from .dev import *
 else:
