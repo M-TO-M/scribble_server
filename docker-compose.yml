@@ -8,10 +8,11 @@ services:
       dockerfile: Dockerfile
     volumes:
       - .:/app
-    ports:
-      - "8000:8000"
+    expose:
+      - "8000"
     networks:
       - redis_network
+      - nginx_network
 
   nginx:
     image: nginx:v2
@@ -22,11 +23,13 @@ services:
     volumes:
       - .:/app
     ports:
-      - "80:80"
+      - "8084:80"
     depends_on:
       - backend
     env_file:
       - scribble/.env
+    networks:
+      - nginx_network
   redis:
     image: "redis:3.2"
     restart: always
@@ -43,3 +46,6 @@ services:
 networks:
   redis_network:
     driver: bridge
+  nginx_network:
+    driver: bridge
+
