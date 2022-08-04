@@ -41,8 +41,9 @@ class NaverSearchAPI:
     def custom_search_result_data(items):
         result = []
         for i, item in enumerate(items):
+            isbn = re.sub('<.+?>', '', item["isbn"]).rsplit(" ", 1)
             result.append({
-                "isbn": re.sub('<.+?>', '', item["isbn"]).rsplit(" ", 1)[1],
+                "isbn": isbn[1] if len(isbn) > 1 else isbn[0],
                 "title": re.sub('<.+?>', '', item["title"]),
                 "author": re.sub('<.+?>', '', item["author"]),
                 "publisher": re.sub('<.+?>', '', item["publisher"]),

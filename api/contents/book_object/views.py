@@ -6,6 +6,7 @@ from rest_framework import generics, status
 from rest_framework.response import Response
 
 from api.contents.book_object.serializers import BookCreateSerializer, BookObjectSerializer
+from apps.contents.models import BookObject
 from utils.naver_api import NaverSearchAPI
 from utils.swagger import swagger_response, swagger_schema_with_properties, swagger_schema_with_description, \
     BookObjectFailCaseCollection as book_fail_case, swagger_parameter
@@ -65,7 +66,7 @@ class BookView(generics.CreateAPIView):
 class NaverSearchAPIView(generics.RetrieveAPIView):
     search_class = NaverSearchAPI()
     serializer_class = None
-    queryset = None
+    queryset = BookObject.objects.all()
 
     @swagger_auto_schema(
         operation_id='naver_search',
