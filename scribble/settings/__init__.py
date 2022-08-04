@@ -13,9 +13,13 @@ NAVER_API_CLIENT_SECRET = os.environ.get('NAVER_API_CLIENT_SECRET')
 SECRET_KEY = os.environ.get('SECRET_KEY')
 
 RUN_ENV = os.environ.get('RUN_ENV')
-
 HOST_KEY = 'DEV_ALLOWED_HOSTS' if RUN_ENV == 'dev' else 'PROD_ALLOWED_HOSTS'
+
+# ALLOWED_HOSTS according to RUN_ENV('dev', 'prod') environment variable
 ALLOWED_HOSTS = json.loads(os.environ.get(HOST_KEY))
+
+# CORS Access Allow Origin
+CORS_ORIGIN_WHITELIST = json.loads(os.environ.get('CORS_ORIGIN_WHITELIST'))
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
