@@ -22,12 +22,13 @@ services:
       dockerfile: Dockerfile
     volumes:
       - .:/app
+      - /etc/letsencrypt:/etc/letsencrypt
+    restart: always
     ports:
       - "8084:80"
+      - "443:443"
     depends_on:
       - backend
-    env_file:
-      - scribble/.env
     networks:
       - nginx_network
   redis:
