@@ -32,3 +32,8 @@ STATIC_ROOT = os.path.join(BASE_DIR.parent, 'static')
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR.parent, 'media')
 
+ACCOUNT_DEFAULT_HTTP_PROTOCOL = "http"
+SECURE_SSL_REDIRECT = False
+SESSION_COOKIE_SECURE = False
+CSRF_COOKIE_SECURE = False
+
