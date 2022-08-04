@@ -1,6 +1,6 @@
 from datetime import timedelta
 
-from scribble.settings import BASE_DIR, RUN_ENV, SECRET_KEY, CORS_ORIGIN_WHITELIST as cors_origin_whitelist
+from scribble.settings import BASE_DIR, RUN_ENV, SECRET_KEY
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -14,7 +14,6 @@ INSTALLED_APPS = [
     'apps.contents',
     'rest_framework',
     'rest_framework_simplejwt.token_blacklist',
-    'corsheaders',
     'rest_framework_tracking',
     'drf_yasg',
 ]
@@ -31,30 +30,6 @@ MIDDLEWARE = [
     'scribble.middleware.TokenAuthMiddleWare',
 ]
 
-
-CORS_ORIGIN_WHITELIST = cors_origin_whitelist
-
-CORS_ALLOW_CREDENTIALS = True
-
-CORS_ALLOW_METHODS = (
-    'GET',
-    'POST',
-    'PUT',
-    'PATCH',
-    'DELETE'
-)
-
-CORS_ALLOW_HEADERS = (
-    'accept',
-    'accept-encoding',
-    'authorization',
-    'content-type',
-    'dnt',
-    'origin',
-    'user-agent',
-    'x-csrftoken',
-    'x-requested-with',
-)
 
 ROOT_URLCONF = 'scribble.urls'
 
