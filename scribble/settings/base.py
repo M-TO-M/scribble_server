@@ -31,6 +31,11 @@ MIDDLEWARE = [
     'scribble.middleware.TokenAuthMiddleWare',
 ]
 
+
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+SECURE_SSL_REDIRECT = True
+
 CORS_ORIGIN_WHITELIST = cors_origin_whitelist
 
 CORS_ALLOW_CREDENTIALS = True
