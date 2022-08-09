@@ -347,14 +347,16 @@ def swagger_response(description=None, schema=None, examples=None):
     )
 
 
-def swagger_parameter(name, in_, description, type_, pattern=None):
-    return openapi.Parameter(
+def swagger_parameter(name, in_, description, type_, pattern=None, required=None):
+    param = openapi.Parameter(
         name=name,
         in_=in_,
         description=description,
         type=type_,
         pattern=pattern
     )
+    param.required = True if in_ == openapi.IN_PATH else (required or False)
+    return param
 
 
 def swagger_schema_with_properties(type_, properties):

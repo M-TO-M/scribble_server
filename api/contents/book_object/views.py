@@ -74,8 +74,8 @@ class TaggingBookSearchAPIView(generics.RetrieveAPIView):
                               'parameter로는 검색어 또는 isbn 문자열 중 하나의 값만 전달할 수 있습니다.\n\n'
                               '두 개의 값을 모두 전달할 경우, 검색어가 우선 적용됩니다.',
         manual_parameters=[
-            swagger_parameter('query', openapi.IN_QUERY, '검색어', openapi.TYPE_STRING),
-            swagger_parameter('isbn', openapi.IN_QUERY, 'isbn 문자열', openapi.TYPE_STRING),
+            swagger_parameter('query', openapi.IN_QUERY, '검색어', openapi.TYPE_STRING, required=True),
+            swagger_parameter('isbn', openapi.IN_QUERY, 'isbn 문자열', openapi.TYPE_STRING, required=True),
             swagger_parameter('display', openapi.IN_QUERY, '검색결과 수', openapi.TYPE_INTEGER),
         ],
         responses={
