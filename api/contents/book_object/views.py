@@ -68,6 +68,15 @@ class TaggingBookSearchAPIView(generics.RetrieveAPIView):
     serializer_class = DetailBookListSerializer
     queryset = BookObject.objects.all()
 
+    def get_search_class_result(self, request):
+        param = self.request.GET
+        if param is {}:
+            return None
+
+        q = param.get('query', '') or param.get('isbn', '')
+        display = param.get('display', '')
+        return self.search_class(q, display)
+
     @swagger_auto_schema(
         operation_id='tagging_book_search',
         operation_description='페이지 생성시 등록할 도서에 대한 검색을 수행합니다.\n\n'
@@ -96,15 +105,6 @@ class TaggingBookSearchAPIView(generics.RetrieveAPIView):
         },
         security=[]
     )
-    def get_search_class_result(self, request):
-        param = self.request.GET
-        if param is {}:
-            return None
-
-        q = param.get('query', '') or param.get('isbn', '')
-        display = param.get('display', '')
-        return self.search_class(q, display)
-
     def get(self, request, *args, **kwargs):
         result = self.get_search_class_result(request)
         if result is None:
