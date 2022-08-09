@@ -400,3 +400,28 @@ class PasswordView(generics.GenericAPIView, mixins.UpdateModelMixin):
             "user": UserSerializer(instance=user).data
         }
         return Response(response, status=status.HTTP_201_CREATED)
+
+
+class UserInfoByTokenView(generics.GenericAPIView, mixins.RetrieveModelMixin):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+
+    @swagger_auto_schema(
+        operation_id='user_info',
+        operation_description='token값으로 사용자 정보를 조회합니다.',
+        responses={
+            200: swagger_response(
+                description='USER_200_INFO_BY_TOKEN',
+                schema=UserSerializer,
+                examples=user_response_example
+            ),
+            404: user_fail_case.USER_404_DOES_NOT_EXIST.as_md()
+        }
+    )
+    def get(self, request, *args, **kwargs):
+        user = request.user
+        if not user:
+            raise UserNotFound()
+
+        response = {"user": UserSerializer(user).data}
+        return Response(response, status=status.HTTP_200_OK)
