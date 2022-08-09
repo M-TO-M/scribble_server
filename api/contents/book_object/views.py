@@ -5,6 +5,8 @@ from drf_yasg.utils import swagger_auto_schema
 from rest_framework import generics, status
 from rest_framework.response import Response
 
+from django.db.models import Q
+
 from api.contents.book_object.serializers import BookCreateSerializer, BookObjectSerializer, DetailBookListSerializer
 from apps.contents.models import BookObject, Note
 from utils.naver_api import NaverSearchAPI
@@ -68,14 +70,15 @@ class TaggingBookSearchAPIView(generics.RetrieveAPIView):
     serializer_class = DetailBookListSerializer
     queryset = BookObject.objects.all()
 
-    def get_search_class_result(self, request):
+    def get_params(self, request):
         param = self.request.GET
         if param is {}:
             return None
 
         q = param.get('query', '') or param.get('isbn', '')
         display = param.get('display', '')
-        return self.search_class(q, display)
+
+        return q, display
 
     @swagger_auto_schema(
         operation_id='tagging_book_search',
@@ -106,7 +109,8 @@ class TaggingBookSearchAPIView(generics.RetrieveAPIView):
         security=[]
     )
     def get(self, request, *args, **kwargs):
-        result = self.get_search_class_result(request)
+        q, display = self.get_params(request)
+        result = self.search_class(q, display)
         if result is None:
             return Response(None, status=status.HTTP_204_NO_CONTENT)
 
@@ -128,7 +132,21 @@ class NavbarBookSearchAPIView(TaggingBookSearchAPIView):
         responses={}
     )
     def get(self, request, *args, **kwargs):
-        results = self.get_search_class_result(request)
+        q, display = self.get_params(request)
+        db_search_result = self.queryset.filter(
+            Q(title__contains=q) |
+            Q(author__contains=q) |
+            Q(publisher__contains=q) |
+            Q(isbn__exact=q)
+        )
+        api_search_result = self.search_class(q, display)
+
+        results = self.serializer_class(instance=db_search_result, many=True).data
+        db_search_isbn_keys = [re['isbn'] for re in results]
+        for api_re in api_search_result:
+            if api_re['isbn'] not in db_search_isbn_keys:
+                results.append(api_re)
+
         if results is None:
             return Response(None, status=status.HTTP_204_NO_CONTENT)
 
