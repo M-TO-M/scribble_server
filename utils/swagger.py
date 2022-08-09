@@ -320,7 +320,7 @@ user_main_response_example = {
     "user": user_response_example
 }
 
-main_book_list_response_example = [
+main_note_list_response_example = [
     {
         "note_id": 1,
         "isbn": "9781501923579",
