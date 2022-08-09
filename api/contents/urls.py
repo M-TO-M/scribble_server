@@ -10,6 +10,7 @@ app_name = 'contents'
 
 urlpatterns = [
     path('tagging/search', TaggingBookSearchAPIView.as_view(), name='tagging_book_search'),
+    path('navbar/search', NavbarBookSearchAPIView.as_view(), name='navbar_book_search'),
 
     path('book/new', BookView.as_view(), name='book_new'),
     path('notes/new', NoteView.as_view(http_method_names=['post']), name='note_new'),

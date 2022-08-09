@@ -111,3 +111,31 @@ class TaggingBookSearchAPIView(generics.RetrieveAPIView):
             return Response(None, status=status.HTTP_204_NO_CONTENT)
 
         return Response(result, status=status.HTTP_200_OK)
+
+
+class NavbarBookSearchAPIView(TaggingBookSearchAPIView):
+    @swagger_auto_schema(
+        operation_id='navbar_book_search',
+        operation_description='네브바에서 모든 도서에 대한 검색을 수행합니다.'
+                              '필사된 노트가 많은 책 순으로 정렬한 결과를 리턴합니다.\n\n'
+                              'parameter로는 검색어 또는 isbn 문자열 중 하나의 값만 전달할 수 있습니다.\n\n'
+                              '두 개의 값을 모두 전달할 경우, 검색어가 우선 적용됩니다.',
+        manual_parameters=[
+            swagger_parameter('query', openapi.IN_QUERY, '검색어', openapi.TYPE_STRING, required=True),
+            swagger_parameter('isbn', openapi.IN_QUERY, 'isbn 문자열', openapi.TYPE_STRING, required=True),
+            swagger_parameter('display', openapi.IN_QUERY, '검색결과 수', openapi.TYPE_INTEGER),
+        ],
+        responses={}
+    )
+    def get(self, request, *args, **kwargs):
+        results = self.get_search_class_result(request)
+        if results is None:
+            return Response(None, status=status.HTTP_204_NO_CONTENT)
+
+        # TODO: async
+        for result in results:
+            note_cnt = Note.objects.filter(book__isbn__exact=result['isbn']).count()
+            result.update({'note_cnt': note_cnt})
+        results.sort(key=lambda x: x['note_cnt'], reverse=True)
+
+        return Response(results, status=status.HTTP_200_OK)
