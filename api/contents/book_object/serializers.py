@@ -66,3 +66,6 @@ class DetailBookListSerializer(serializers.ModelSerializer):
     class Meta:
         model = BookObject
         fields = ['isbn', 'title', 'author', 'publisher', 'thumbnail']
+
+    def to_representation(self, instance):
+        return dict(super(DetailBookListSerializer, self).to_representation(instance))
