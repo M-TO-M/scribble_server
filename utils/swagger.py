@@ -30,7 +30,6 @@ class ScribbleOpenAPISchemaGenerator(OpenAPISchemaGenerator):
 user_response_example = {
     "id": 1,
     "email": "test@naver.com",
-    "password": "pbkdf2_sha256$320000$9fPcOoSTXi4XGZHCvAX5L4$LY44j0p+vEp8FvJdFBPqWMhIwj52bur+MKefaDYRJgk=",
     "nickname": "nickname",
     "category": {
         "9": "과학"
@@ -43,13 +42,14 @@ user_response_example = {
 user_response_example_with_access = {
     "id": 1,
     "email": "user@email.com",
-    "password": "password",
     "nickname": "user_nickname",
     "category": {
         "9": "과학"
     },
     "profile_image": "https://placekitten.com/101/37",
-    "access": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ0b2tlbl90eXB.."
+    "access": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ0b2tlbl90eXB..",
+    "created_at": "2022-06-01T01:48:27.252426Z",
+    "updated_at": "2022-06-01T01:48:27.252439Z"
 }
 
 note_response_example = {
@@ -58,7 +58,6 @@ note_response_example = {
         'note_author': {
             "id": 1,
             "email": "test@naver.com",
-            "password": "pbkdf2_sha256$320000$9fPcOoSTXi4XGZHCvAX5L4$LY44j0p+vEp8FvJdFBPqWMhIwj52bur+MKefaDYRJgk=",
             "nickname": "nickname",
             "category": {
                 "9": "과학"
@@ -91,7 +90,6 @@ note_detail_response_example = {
         'note_author': {
             "id": 1,
             "email": "test@naver.com",
-            "password": "pbkdf2_sha256$320000$9fPcOoSTXi4XGZHCvAX5L4$LY44j0p+vEp8FvJdFBPqWMhIwj52bur+MKefaDYRJgk=",
             "nickname": "nickname",
             "category": {
                 "9": "과학"
@@ -125,7 +123,6 @@ page_response_example = {
         'note_author': {
             "id": 1,
             "email": "test@naver.com",
-            "password": "pbkdf2_sha256$320000$9fPcOoSTXi4XGZHCvAX5L4$LY44j0p+vEp8FvJdFBPqWMhIwj52bur+MKefaDYRJgk=",
             "nickname": "nickname",
             "category": {
                 "9": "과학"
@@ -192,7 +189,6 @@ user_main_response_example = {
             "note_author": {
                 "id": 1,
                 "email": "test@naver.com",
-                "password": "pbkdf2_sha256$320000$o6D1XcTjz4xtNAakuBVgup$QqF/Y0Bow3UKhboF7odffiSkWZYOcwLr8qQ1PKxR97Y=",
                 "nickname": "nickname",
                 "category": {
                     "9": "과학"
@@ -222,7 +218,6 @@ user_main_response_example = {
             "note_author": {
                 "id": 1,
                 "email": "test@naver.com",
-                "password": "pbkdf2_sha256$320000$o6D1XcTjz4xtNAakuBVgup$QqF/Y0Bow3UKhboF7odffiSkWZYOcwLr8qQ1PKxR97Y=",
                 "nickname": "nickname",
                 "category": {
                     "9": "과학"
@@ -254,7 +249,6 @@ user_main_response_example = {
             "note_author": {
                 "id": 1,
                 "email": "test@naver.com",
-                "password": "pbkdf2_sha256$320000$o6D1XcTjz4xtNAakuBVgup$QqF/Y0Bow3UKhboF7odffiSkWZYOcwLr8qQ1PKxR97Y=",
                 "nickname": "nickname",
                 "category": {
                     "9": "과학"
@@ -287,7 +281,6 @@ user_main_response_example = {
             "note_author": {
                 "id": 1,
                 "email": "test@naver.com",
-                "password": "pbkdf2_sha256$320000$o6D1XcTjz4xtNAakuBVgup$QqF/Y0Bow3UKhboF7odffiSkWZYOcwLr8qQ1PKxR97Y=",
                 "nickname": "nickname",
                 "category": {
                     "9": "과학"

@@ -114,7 +114,7 @@ class VerifySerializer(serializers.ModelSerializer):
 class UserSerializer(UserValidationBaseSerializer):
     class Meta:
         model = User
-        fields = ("id", "email", "password", "nickname", "category", "profile_image", "created_at", "updated_at")
+        fields = ("id", "email", "nickname", "category", "profile_image", "created_at", "updated_at")
 
     def update(self, instance, validated_data):
         instance.nickname = validated_data.pop('nickname', instance.nickname)
