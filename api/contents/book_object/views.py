@@ -5,8 +5,8 @@ from drf_yasg.utils import swagger_auto_schema
 from rest_framework import generics, status
 from rest_framework.response import Response
 
-from api.contents.book_object.serializers import BookCreateSerializer, BookObjectSerializer
-from apps.contents.models import BookObject
+from api.contents.book_object.serializers import BookCreateSerializer, BookObjectSerializer, DetailBookListSerializer
+from apps.contents.models import BookObject, Note
 from utils.naver_api import NaverSearchAPI
 from utils.swagger import swagger_response, swagger_schema_with_properties, swagger_schema_with_description, \
     BookObjectFailCaseCollection as book_fail_case, swagger_parameter
@@ -63,14 +63,16 @@ class BookView(generics.CreateAPIView):
         return Response(response, status=status.HTTP_201_CREATED)
 
 
-class NaverSearchAPIView(generics.RetrieveAPIView):
+class TaggingBookSearchAPIView(generics.RetrieveAPIView):
     search_class = NaverSearchAPI()
-    serializer_class = None
+    serializer_class = DetailBookListSerializer
     queryset = BookObject.objects.all()
 
     @swagger_auto_schema(
-        operation_id='naver_search',
-        operation_description='도서 검색을 수행합니다. parameter로는 검색어 또는 isbn 문자열 중 하나의 값만 전달할 수 있습니다.',
+        operation_id='tagging_book_search',
+        operation_description='페이지 생성시 등록할 도서에 대한 검색을 수행합니다.\n\n'
+                              'parameter로는 검색어 또는 isbn 문자열 중 하나의 값만 전달할 수 있습니다.\n\n'
+                              '두 개의 값을 모두 전달할 경우, 검색어가 우선 적용됩니다.',
         manual_parameters=[
             swagger_parameter('query', openapi.IN_QUERY, '검색어', openapi.TYPE_STRING),
             swagger_parameter('isbn', openapi.IN_QUERY, 'isbn 문자열', openapi.TYPE_STRING),
@@ -78,7 +80,8 @@ class NaverSearchAPIView(generics.RetrieveAPIView):
         ],
         responses={
             200: swagger_response(
-                description='BOOK_200_SEARCH',
+                description='BOOK_200_TAGGING_SEARCH',
+                schema=serializer_class,
                 examples={
                     "0": {
                         'isbn': '9788949114118',
@@ -89,17 +92,22 @@ class NaverSearchAPIView(generics.RetrieveAPIView):
                     }
                 }
             ),
-            204: swagger_response(description='BOOK_204_SEARCH_NO_RESULT')
+            204: swagger_response(description='BOOK_204_TAGGING_SEARCH_NO_RESULT')
         },
         security=[]
     )
-    def get(self, request, *args, **kwargs):
+    def get_search_class_result(self, request):
         param = self.request.GET
         if param is {}:
-            return Response(None, status=status.HTTP_204_NO_CONTENT)
+            return None
 
-        query = param.get('query', '') or param.get('isbn', '')
+        q = param.get('query', '') or param.get('isbn', '')
         display = param.get('display', '')
-        result = self.search_class(query, display)
+        return self.search_class(q, display)
+
+    def get(self, request, *args, **kwargs):
+        result = self.get_search_class_result(request)
+        if result is None:
+            return Response(None, status=status.HTTP_204_NO_CONTENT)
 
         return Response(result, status=status.HTTP_200_OK)

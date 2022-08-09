@@ -60,3 +60,9 @@ class SimpleBookListSerializer(serializers.ModelSerializer):
     class Meta:
         model = BookObject
         fields = ['isbn']
+
+
+class DetailBookListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BookObject
+        fields = ['isbn', 'title', 'author', 'publisher', 'thumbnail']
