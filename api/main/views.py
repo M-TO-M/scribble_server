@@ -9,7 +9,7 @@ from rest_framework import generics, mixins, status
 from rest_framework.response import Response
 
 from api.contents.book_object.serializers import SimpleBookListSerializer
-from api.main.serializers import MainSchemaSerializer, UserMainSchemaSerializer, MainBookListSchemaSerializer
+from api.main.serializers import MainSchemaSerializer, UserMainSchemaSerializer, MainNoteListSchemaSerializer
 from api.contents.note.serializers import NoteSerializer
 from api.contents.page.serializers import PageSerializer, PageDetailSerializer
 from api.users.serializers import UserSerializer
@@ -20,7 +20,7 @@ from core.exceptions import UserNotFound
 from core.views import TemplateMainView
 
 from utils.swagger import swagger_response, swagger_parameter, main_response_example, user_main_response_example, \
-    UserFailCaseCollection as user_fail_case, main_book_list_response_example
+    UserFailCaseCollection as user_fail_case, main_note_list_response_example
 
 
 class MainView(TemplateMainView):
@@ -111,20 +111,20 @@ class SearchView(generics.GenericAPIView, mixins.RetrieveModelMixin):
         return None
 
 
-class BookListView(generics.RetrieveAPIView):
+class NoteListView(generics.RetrieveAPIView):
     queryset = Note.objects.all().select_related('book__isbn')
     serializer_class = SimpleBookListSerializer
 
     @swagger_auto_schema(
-        operation_id='main_book_list',
-        operation_description='사용자가 등록한 책 정보(isbn, 등록일)를 조회합니다.',
+        operation_id='main_note_list',
+        operation_description='사용자가 필사한 책 정보(isbn, 등록일)를 조회합니다.',
         request_body=no_body,
         manual_parameters=[swagger_parameter('id', openapi.IN_PATH, '사용자 id', openapi.TYPE_INTEGER)],
         responses={
             200: swagger_response(
-                description='MAIN_BOOK_LIST_200',
-                schema=MainBookListSchemaSerializer,
-                examples=main_book_list_response_example
+                description='MAIN_NOTE_LIST_200',
+                schema=MainNoteListSchemaSerializer,
+                examples=main_note_list_response_example
             )
         }
     )
