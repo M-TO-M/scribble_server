@@ -118,24 +118,6 @@ note_detail_response_example = {
 }
 
 page_response_example = {
-    'note': {
-        'id': 1,
-        'note_author': {
-            "id": 1,
-            "email": "test@naver.com",
-            "nickname": "nickname",
-            "category": {
-                "9": "과학"
-            },
-            "profile_image": "https://placekitten.com/101/37",
-            "created_at": "2022-06-01T01:48:27.252426Z",
-            "updated_at": "2022-06-01T01:48:27.252439Z"
-        },
-        'like_count': 0,
-        'like_user': [],
-        'hit': 0,
-        'pages_count': 0
-    },
     'book': {
         'id': 1,
         'isbn': '9791166832598',
@@ -147,6 +129,17 @@ page_response_example = {
         'category': {},
         'thumbnail': 'https://placekitten.com/38/611'
     },
+    'page_author': {
+        "id": 1,
+        "email": "test@naver.com",
+        "nickname": "nickname",
+        "category": {
+            "9": "과학"
+        },
+        "profile_image": "https://placekitten.com/101/37",
+        "created_at": "2022-06-01T01:48:27.252426Z",
+        "updated_at": "2022-06-01T01:48:27.252439Z"
+    },
     'page_detail': {
         'id': 1,
         'note_index': 0,
@@ -155,8 +148,26 @@ page_response_example = {
         'hit': 1,
         'like_count': 0,
         'like_user': [],
-        'reviews_count': 0
-    }
+    },
+    'page_comments': [
+        {
+            "id": 1,
+            "comment_user": 1,
+            "depth": 0,
+            "parent": 0,
+            "content": "test1",
+            "page_id": 131
+        },
+        {
+            "id": 2,
+            "comment_user": 1,
+            "depth": 0,
+            "parent": 0,
+            "content": "test2",
+            "page_id": 131
+        }
+    ]
+
 }
 
 page_comment_response_example = {

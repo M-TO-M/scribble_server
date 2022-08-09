@@ -4,8 +4,9 @@ from django.db import transaction
 from django.db.models import Count
 from rest_framework import serializers
 
-from api.contents.book_object.serializers import BookObjectSerializer
-from api.contents.note.serializers import NoteWithoutBookSchemaSerializer, NoteSerializer
+from api.contents.book_object.serializers import BookObjectSerializer, DetailBookListSerializer
+from api.contents.note.serializers import NoteWithoutBookSchemaSerializer
+from api.contents.page_comment.serializers import PageCommentSerializer
 from api.users.serializers import UserSerializer
 from apps.contents.models import Page, PageLikesRelation
 from core.serializers import StringListField
@@ -79,25 +80,34 @@ class PageSerializer(serializers.ModelSerializer):
             'book_page': instance.book_page,
             'hit': instance.hit,
             'like_count': instance.page_likes_relation.count(),
-            'like_user': self.get_like_user(instance),
-            'reviews_count': instance.page_comment.count()
+            'like_user': self.get_like_user(instance)
         }
 
 
 class PageDetailSerializer(PageSerializer):
     @staticmethod
-    def get_note_data(instance: Page):
-        return NoteSerializer(instance=instance.note).data
+    def get_note_author_from_book(instance: Page):
+        return UserSerializer(instance=instance.note.user).data
 
-    def to_representation(self, instance):
-        note_data = self.get_note_data(instance)
-        book_data = note_data.pop('book')
-        page_data = super(PageDetailSerializer, self).to_representation(instance)
+    @staticmethod
+    def get_book_from_page(instance: Page):
+        return DetailBookListSerializer(instance=instance.note.book).data
+
+    @staticmethod
+    def get_comments_from_page(instance: Page):
+        return PageCommentSerializer(instance=instance.page_comment.all(), many=True).data
+
+    def to_representation(self, instance: Page):
+        page_author = self.get_note_author_from_book(instance)
+        book = self.get_book_from_page(instance)
+        page_comments = self.get_comments_from_page(instance)
+        page_detail = super(PageDetailSerializer, self).to_representation(instance)
 
         return OrderedDict([
-            ('note', note_data),
-            ('book', book_data),
-            ('page_detail', page_data)
+            ('book', book),
+            ('page_author', page_author),
+            ('page_detail', page_detail),
+            ('page_comments', page_comments)
         ])
 
 

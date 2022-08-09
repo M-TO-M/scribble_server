@@ -29,7 +29,7 @@ class PageView(generics.GenericAPIView,
                mixins.CreateModelMixin,
                mixins.UpdateModelMixin,
                mixins.DestroyModelMixin):
-    queryset = Page.objects.all().select_related('note', 'note__user', 'note__book')
+    queryset = Page.objects.all().select_related('note__user', 'note__book').prefetch_related('page_comment')
     serializer_class = PageDetailSerializer
 
     @swagger_auto_schema(
