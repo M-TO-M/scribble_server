@@ -5,10 +5,7 @@ on: [pull_request]
 jobs:
   build:
     runs-on: ubuntu-latest
-    strategy:
-      max-parallel: 4
-      matrix:
-        python-version: [3.8, 3.9]
+
     steps:
       - name: Checkout source code
         uses: actions/checkout@v3
@@ -19,10 +16,10 @@ jobs:
           touch scribble/.env
           echo "${{ secrets.ENV_VARS }}" >> .env
 
-      - name: Setup python ${{matrix.python-version}}
-        uses: action/setup-python@v3
+      - name: Setup python
+        uses: actions/setup-python@v3
         with:
-          python-version: ${{matrix.python-version}}
+          python-version: "3.8"
 
       - name: Setup docker buildx
         id: buildx
