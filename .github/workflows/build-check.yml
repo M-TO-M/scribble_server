@@ -42,8 +42,15 @@ jobs:
     needs: build
     runs-on: [ self-hosted, label-go ]
     steps:
+      - name: Checkout source code
+        uses: actions/checkout@v3
+
+      - name: Create env file
+        run: |
+          touch scribble/.env
+          echo "${{ secrets.ENV_VARS }}" >> .env
+
       - name: Access server and Run docker-compose
-        working-directory: app
         run: |
           sudo kill `sudo lsof -t -i:8084`
           docker rmi -f $(docker images -f "dangling=true" -q)
