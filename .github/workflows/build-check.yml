@@ -7,59 +7,30 @@ jobs:
     runs-on: [ self-hosted, label-go ]
 
     steps:
+      # bugfix: permission error
       - name: Checkout source code
         uses: actions/checkout@v3
 
+      # bugfix: .env echo does not work
       - name: Create env file
         run: |
           touch scribble/.env
-          echo "${{ secrets.NAVER_API_CLIENT_ID }}" >> .env
-          echo "${{ secrets.NAVER_API_CLIENT_SECRET }}" >> .env
-          echo "${{ secrets.SECRET_KEY }}" >> .env
-          echo "${{ secrets.RUN_ENV }}" >> .env
-          echo "${{ secrets.DOMAIN }}" >> .env
-          echo "${{ secrets.PROD_ALLOWED_HOSTS }}" >> .env
-          echo "${{ secrets.CORS_ORIGIN_WHITELIST }}" >> .env
-          echo "${{ secrets.DB_NAME }}" >> .env
-          echo "${{ secrets.DB_USER }}" >> .env
-          echo "${{ secrets.DB_HOST }}" >> .env
-          echo "${{ secrets.DB_PASSWORD }}" >> .env
+          echo NAVER_API_CLIENT_ID="\"${{ secrets.NAVER_API_CLIENT_ID }}"\" >> scribble/.env
+          echo NAVER_API_CLIENT_SECRET="\"${{ secrets.NAVER_API_CLIENT_SECRET }}"\" >> scribble/.env
+          echo SECRET_KEY="\"${{ secrets.SECRET_KEY }}"\" >> scribble/.env
+          echo RUN_ENV="\"${{ secrets.RUN_ENV }}"\" >> scribble/.env
+          echo DOMAIN="\"${{ secrets.DOMAIN }}"\" >> scribble/.env
+          echo PROD_ALLOWED_HOSTS="\"${{ secrets.PROD_ALLOWED_HOSTS }}"\" >> scribble/.env
+          echo CORS_ORIGIN_WHITELIST="\"${{ secrets.CORS_ORIGIN_WHITELIST }}"\" >> scribble/.env
+          echo DB_NAME="\"${{ secrets.DB_NAME }}"\" >> scribble/.env
+          echo DB_USER="\"${{ secrets.DB_USER }}"\" >> scribble/.env
+          echo DB_HOST="\"${{ secrets.DB_HOST }}"\" >> scribble/.env
+          echo DB_PASSWORD="\"${{ secrets.DB_PASSWORD }}"\" >> scribble/.env
 
       - name: Setup python
         uses: actions/setup-python@v3
         with:
           python-version: "3.8"
 
-      - name: Install docker setup script
+      - name: Docker setup script & Check docker container running
         run: sh setup.sh
-
-      - name: Access server and Build container
-        run: |
-          $(
-            $(docker images --quiet --filter=dangling=true)
-            if [ $? -gt 0 ]
-            then
-              docker rmi -f $(docker images -f dangling=true -q)
-            fi
-
-            $(docker ps -q -a | wc -l)
-            if [ $? -gt 0 ]
-            then
-              echo "More than one container is running..."
-              docker-compose down
-            fi
-          )
-          docker-compose up -d --build
-          echo "Build Complete"
-
-      - name: Check docker container running
-        run: |
-          echo $(
-            $(docker ps --format "{{.Names}} {{.Status}}" | grep "Up" -c)
-            if [ $? -ne 3 ]; then
-              show_error "Build Error while running docker-compose"
-              exit 1
-            else
-              echo "Deploy Complete"
-            fi
-          )

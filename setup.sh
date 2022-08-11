@@ -18,3 +18,33 @@ then
   sudo curl -L "https://github.com/docker/compose/releases/download/1.27.3/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
   sudo chmod +x /usr/local/bin/docker-compose
 fi
+
+# Remove existing dangling docker-images
+docker images --quiet --filter=dangling=true | wc -l
+if [ $? -gt 0 ]
+then
+  echo "Danglind docker image exists..."
+  docker rmi -f $(docker images -f dangling=true -q)
+fi
+
+# Remove all running containers and networks
+docker ps -q -a | wc -l
+if [ $? -gt 0 ]
+then
+  echo "More than one container is running..."
+  docker-compose down
+fi
+
+# Build docker containers
+docker-compose up -d --build
+echo "Build Complete"
+
+# Check running state of all 3 containers
+docker ps --format "{{.Names}} {{.Status}}" | grep "Up" | wc -l
+if [ $? -ne 3 ]
+then
+  echo "Build error while running docker-compose"
+  exit 1
+else
+  echo "Deploy Complete"
+fi
