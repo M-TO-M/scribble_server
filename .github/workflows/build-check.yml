@@ -35,7 +35,13 @@ jobs:
 
       - name: Access server and Build container
         run: |
-          docker rmi -f $(docker images -f "dangling=true" -q)
+          $(
+            docker images --quiet --filter=dangling=true
+            if [ $? -gt 0 ]
+            then
+              docker rmi -f $(docker images -f dangling=true -q)
+            fi
+          )
           $(
             docker ps -q -a | wc -l
             if [ $? -gt 0 ]
