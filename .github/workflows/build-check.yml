@@ -4,7 +4,7 @@ on: [pull_request]
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: [ self-hosted, label-go ]
 
     steps:
       - name: Checkout source code
@@ -13,7 +13,17 @@ jobs:
       - name: Create env file
         run: |
           touch scribble/.env
-          echo "${{ secrets.ENV_VARS }}" >> .env
+          echo "${{ secrets.NAVER_API_CLIENT_ID }}" >> .env
+          echo "${{ secrets.NAVER_API_CLIENT_SECRET }}" >> .env
+          echo "${{ secrets.SECRET_KEY }}" >> .env
+          echo "${{ secrets.RUN_ENV }}" >> .env
+          echo "${{ secrets.DOMAIN }}" >> .env
+          echo "${{ secrets.PROD_ALLOWED_HOSTS }}" >> .env
+          echo "${{ secrets.CORS_ORIGIN_WHITELIST }}" >> .env
+          echo "${{ secrets.DB_NAME }}" >> .env
+          echo "${{ secrets.DB_USER }}" >> .env
+          echo "${{ secrets.DB_HOST }}" >> .env
+          echo "${{ secrets.DB_PASSWORD }}" >> .env
 
       - name: Setup python
         uses: actions/setup-python@v3
@@ -23,46 +33,28 @@ jobs:
       - name: Install docker setup script
         run: sh setup.sh
 
-      - name: Build docker-compose
+      - name: Access server and Build container
         run: |
-          sudo kill `sudo lsof -t -i:8084` && docker-compose down && docker-compose up -d --build
-
-      - name: Check docker container running
-        run: |
-          echo $(
-            count = $(docker ps --format "{{.Names}} {{.Status}}" | grep "Up" -c)
-            if [ $count -ne 3 ]; then
-              exit 1
-            else
-              echo "backend, nginx, redis container running"
+          docker rmi -f $(docker images -f "dangling=true" -q)
+          $(
+            docker ps -q -a | wc -l
+            if [ $? -gt 0 ]
+            then
+              echo "More than one container is running..."
+              docker-compose down
             fi
           )
-
-  deploy:
-    needs: build
-    runs-on: [ self-hosted, label-go ]
-    steps:
-      - name: Checkout source code
-        uses: actions/checkout@v3
-
-      - name: Create env file
-        run: |
-          touch scribble/.env
-          echo "${{ secrets.ENV_VARS }}" >> .env
-
-      - name: Access server and Run docker-compose
-        run: |
-          sudo kill `sudo lsof -t -i:8084`
-          docker rmi -f $(docker images -f "dangling=true" -q)
-          docker-compose down && docker-compose up -d --build
+          docker-compose up -d --build
+          echo "Build Complete"
 
       - name: Check docker container running
         run: |
           echo $(
-            count = $(docker ps --format "{{.Names}} {{.Status}}" | grep "Up" -c)
-            if [ $count -ne 3 ]; then
+            docker ps --format "{{.Names}} {{.Status}}" | grep "Up" -c
+            if [ ? -ne 3 ]; then
+              show_error "Build Error while running docker-compose"
               exit 1
             else
-              echo "backend, nginx, redis container running"
+              echo "Deploy Complete"
             fi
           )
