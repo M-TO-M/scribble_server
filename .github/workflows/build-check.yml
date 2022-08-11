@@ -37,3 +37,25 @@ jobs:
               echo "backend, nginx, redis container running"
             fi
           )
+
+  deploy:
+    needs: build
+    runs-on: [ self-hosted, label-go ]
+    steps:
+      - name: Access server and Run docker-compose
+        working-directory: app
+        run: |
+          sudo kill `sudo lsof -t -i:8084`
+          docker rmi -f $(docker images -f "dangling=true" -q)
+          docker-compose down && docker-compose up -d --build
+
+      - name: Check docker container running
+        run: |
+          echo $(
+            count = $(docker ps --format "{{.Names}} {{.Status}}" | grep "Up" -c)
+            if [ $count -ne 3 ]; then
+              exit 1
+            else
+              echo "backend, nginx, redis container running"
+            fi
+          )
