@@ -26,3 +26,14 @@ jobs:
       - name: Build docker-compose
         run: |
           sudo kill `sudo lsof -t -i:8084` && docker-compose down && docker-compose up -d --build
+
+      - name: Check docker container running
+        run: |
+          echo $(
+            count = $(docker ps --format "{{.Names}} {{.Status}}" | grep "Up" -c)
+            if [ $count -ne 3 ]; then
+              exit 1
+            else
+              echo "backend, nginx, redis container running"
+            fi
+          )
