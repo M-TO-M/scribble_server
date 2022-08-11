@@ -36,14 +36,13 @@ jobs:
       - name: Access server and Build container
         run: |
           $(
-            docker images --quiet --filter=dangling=true
+            $(docker images --quiet --filter=dangling=true)
             if [ $? -gt 0 ]
             then
               docker rmi -f $(docker images -f dangling=true -q)
             fi
-          )
-          $(
-            docker ps -q -a | wc -l
+
+            $(docker ps -q -a | wc -l)
             if [ $? -gt 0 ]
             then
               echo "More than one container is running..."
@@ -56,8 +55,8 @@ jobs:
       - name: Check docker container running
         run: |
           echo $(
-            docker ps --format "{{.Names}} {{.Status}}" | grep "Up" -c
-            if [ ? -ne 3 ]; then
+            $(docker ps --format "{{.Names}} {{.Status}}" | grep "Up" -c)
+            if [ $? -ne 3 ]; then
               show_error "Build Error while running docker-compose"
               exit 1
             else
