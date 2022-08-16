@@ -12,8 +12,8 @@ ALLOWED_PATH = [
     "/users/verify",
     "/users/signin",
     "/token/refresh",
-    "/contents/main",
-    "/contents/naver/search"
+    "/main",
+    "/contents/books/search/navbar"
 ]
 
 
