@@ -20,8 +20,8 @@ jobs:
           echo SECRET_KEY="\"${{ secrets.SECRET_KEY }}"\" >> scribble/.env
           echo RUN_ENV="\"${{ secrets.RUN_ENV }}"\" >> scribble/.env
           echo DOMAIN="\"${{ secrets.DOMAIN }}"\" >> scribble/.env
-          echo PROD_ALLOWED_HOSTS="\"${{ secrets.PROD_ALLOWED_HOSTS }}"\" >> scribble/.env
-          echo CORS_ORIGIN_WHITELIST="\"${{ secrets.CORS_ORIGIN_WHITELIST }}"\" >> scribble/.env
+          echo PROD_ALLOWED_HOSTS='"${{ secrets.PROD_ALLOWED_HOSTS }}"' >> scribble/.env
+          echo CORS_ORIGIN_WHITELIST='"${{ secrets.CORS_ORIGIN_WHITELIST }}"' >> scribble/.env
           echo DB_NAME="\"${{ secrets.DB_NAME }}"\" >> scribble/.env
           echo DB_USER="\"${{ secrets.DB_USER }}"\" >> scribble/.env
           echo DB_HOST="\"${{ secrets.DB_HOST }}"\" >> scribble/.env
