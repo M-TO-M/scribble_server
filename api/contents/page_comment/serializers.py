@@ -31,7 +31,10 @@ class PageCommentSerializer(serializers.ModelSerializer):
             rep_parent = PageCommentSerializer(instance=parent_comment_instance).data
         return {
             'id': instance.id,
-            'comment_user': instance.comment_user.id,
+            'comment_user': {
+                'id': instance.comment_user.id,
+                'nickname': instance.comment_user.nickname
+            },
             'depth': instance.depth,
             'parent': rep_parent,
             'content': instance.content,

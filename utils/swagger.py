@@ -152,7 +152,10 @@ page_response_example = {
     'page_comments': [
         {
             "id": 1,
-            "comment_user": 1,
+            "comment_user": {
+                'id': 1,
+                'nickname': 'nickname'
+            },
             "depth": 0,
             "parent": 0,
             "content": "test1",
@@ -160,8 +163,10 @@ page_response_example = {
         },
         {
             "id": 2,
-            "comment_user": 1,
-            "depth": 0,
+            "comment_user": {
+                'id': 1,
+                'nickname': 'nickname'
+            },            "depth": 0,
             "parent": 0,
             "content": "test2",
             "page_id": 131
@@ -173,7 +178,10 @@ page_response_example = {
 page_comment_response_example = {
     'page_comment': {
         'id': 1,
-        'comment_user': 3,
+        "comment_user": {
+            'id': 1,
+            'nickname': 'nickname'
+        },
         'depth': 0,
         'parent': 0,
         'content': 'CzGDQozWpJXg',
