@@ -2,6 +2,8 @@ from datetime import timedelta
 
 from scribble.settings import BASE_DIR, RUN_ENV, SECRET_KEY
 
+VERSION = 'v1'
+
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
