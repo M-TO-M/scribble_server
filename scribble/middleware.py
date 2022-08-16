@@ -3,11 +3,13 @@ from django.utils.deprecation import MiddlewareMixin
 from django.utils.functional import SimpleLazyObject
 from rest_framework.exceptions import APIException
 
+from scribble.settings import base as settings
 from scribble.authentication import CustomJWTAuthentication
 
 
 ALLOWED_PATH = [
     "/",
+    "/docs"
     "/users/new",
     "/users/verify",
     "/users/signin",
@@ -15,6 +17,8 @@ ALLOWED_PATH = [
     "/main",
     "/contents/books/search/navbar"
 ]
+VERSION = getattr(settings, 'VERSION', '')
+VERSION_ALLOWED_PATH = ['/' + VERSION + path for path in ALLOWED_PATH]
 
 
 class TokenAuthMiddleWare(MiddlewareMixin):
