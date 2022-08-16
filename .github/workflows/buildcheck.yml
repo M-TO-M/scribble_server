@@ -33,4 +33,4 @@ jobs:
           echo DB_PASSWORD="\"${{ secrets.DB_PASSWORD }}"\" >> scribble/.env
 
       - name: Build docker-compose
-        run: docker-compose up -d --build
+        run: sudo kill `sudo lsof -t -i:8084` && docker-compose up -d --build
