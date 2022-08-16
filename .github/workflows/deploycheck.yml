@@ -47,10 +47,10 @@ jobs:
           python-version: "3.8"
 
       - name: Setup Docker
-        run: sh setup.sh
+        run: sh scripts/setup.sh
 
       - name: Build docker container and Check running state
-        run: sh deploy.sh
+        run: sh scripts/deploy.sh
 
   test:
     runs-on: [ self-hosted, label-go ]

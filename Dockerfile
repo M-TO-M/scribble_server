@@ -16,5 +16,5 @@ RUN set -ex \
 ENV VIRTUAL_ENV /env
 ENV PATH /env/bin:$PATH
 
-RUN ["chmod", "+x", "start.sh"]
-ENTRYPOINT ["sh", "./start.sh"]
+RUN ["chmod", "+x", "scripts/start.sh"]
+ENTRYPOINT ["sh", "./scripts/start.sh"]
