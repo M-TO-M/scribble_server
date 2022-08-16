@@ -8,7 +8,7 @@ jobs:
 
     steps:
       - name: Set Permissions
-      - run: sudo chown -R $USER:$USER /home/github/actions-runner/_work/${{ github.workspace }}
+        run: sudo chown -R $USER:$USER /home/github/actions-runner/_work/${{ github.workspace }}
 
       - name: Checkout source code
         uses: actions/checkout@v3
