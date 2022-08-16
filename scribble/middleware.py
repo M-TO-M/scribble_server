@@ -1,4 +1,4 @@
-import sys
+import importlib
 
 from django.contrib.auth.models import AnonymousUser
 from django.utils.deprecation import MiddlewareMixin
@@ -48,7 +48,7 @@ class TokenAuthMiddleWare(MiddlewareMixin):
         attr = getattr(settings, 'REST_FRAMEWORK', None)
         assert attr
         m_name, c_name = attr['DEFAULT_RENDERER_CLASSES'][0].rsplit('.', 1)
-        cls_renderer = getattr(sys.modules[m_name], c_name) or JSONRenderer
+        cls_renderer = getattr(importlib.import_module(m_name), c_name) or JSONRenderer
 
         if request.user.is_anonymous:
             response = Response({"user": "is_anonymous"}, status=status.HTTP_403_FORBIDDEN)
