@@ -1,7 +1,12 @@
+import sys
+
 from django.contrib.auth.models import AnonymousUser
 from django.utils.deprecation import MiddlewareMixin
 from django.utils.functional import SimpleLazyObject
-from rest_framework.exceptions import APIException
+
+from rest_framework import status
+from rest_framework.renderers import JSONRenderer
+from rest_framework.response import Response
 
 from scribble.settings import base as settings
 from scribble.authentication import CustomJWTAuthentication
@@ -27,12 +32,31 @@ class TokenAuthMiddleWare(MiddlewareMixin):
         self.get_response = get_response
 
     def __call__(self, request):
-        if request.path not in ALLOWED_PATH:
-            self.process_request(request)
-        return self.get_response(request)
+        self.process_request(request)
+
+        response = None
+        if request.path not in VERSION_ALLOWED_PATH:
+            response = self.process_response(request, response)
+
+        return response or self.get_response(request)
 
     def process_request(self, request):
         request.user = SimpleLazyObject(lambda: self.get_token_user(request))
+
+    def process_response(self, request, response):
+        attr = getattr(settings, 'REST_FRAMEWORK', None)
+        assert attr
+        m_name, c_name = attr['DEFAULT_RENDERER_CLASSES'][0].rsplit('.', 1)
+        cls_renderer = getattr(sys.modules[m_name], c_name) or JSONRenderer
+
+        if request.user.is_anonymous:
+            response = Response({"user": "is_anonymous"}, status=status.HTTP_403_FORBIDDEN)
+            response.accepted_renderer = cls_renderer()
+            response.accepted_media_type = "application/json"
+            response.renderer_context = {}
+            response.render()
+
+        return response
 
     @staticmethod
     def get_token_user(request):
