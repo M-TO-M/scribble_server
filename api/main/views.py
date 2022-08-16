@@ -26,6 +26,7 @@ from utils.swagger import swagger_response, swagger_parameter, main_response_exa
 class MainView(TemplateMainView):
     queryset = Page.objects.all().select_related('note', 'note__book')
     serializer_class = PageDetailSerializer
+    authentication_classes = []
 
     def __init__(self):
         super(MainView, self).__init__()
