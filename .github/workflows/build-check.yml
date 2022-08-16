@@ -3,7 +3,7 @@ name: build-ci-check
 on: [pull_request]
 
 jobs:
-  build:
+  checkout:
     runs-on: [ self-hosted, label-go ]
 
     steps:
@@ -13,7 +13,9 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@v3
 
-      # bugfix: .env echo does not work
+  build:
+    runs-on: [ self-hosted, label-go ]
+    needs: checkout
       - name: Create env file
         run: |
           touch scribble/.env
