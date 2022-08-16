@@ -40,6 +40,7 @@ class SignInLoggingMixin(LoggingMixin):
 
 class SignUpView(generics.CreateAPIView):
     serializer_class = SignUpSerializer
+    authentication_classes = []
 
     @swagger_auto_schema(
         operation_id='sign_up',
@@ -83,6 +84,7 @@ class SignUpView(generics.CreateAPIView):
 class VerifyView(generics.RetrieveAPIView):
     queryset = User.objects.all()
     serializer_class = VerifySerializer
+    authentication_classes = []
 
     @swagger_auto_schema(
         operation_id='verify',
@@ -123,6 +125,7 @@ class SignInView(SignInLoggingMixin, ScribbleTokenObtainView):
     logging_methods = ['POST']
     queryset = User.objects.all()
     serializer_class = ScribbleTokenObtainPairSerializer
+    authentication_classes = []
 
     @swagger_auto_schema(
         operation_id='sign_in',

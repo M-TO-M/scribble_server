@@ -69,6 +69,7 @@ class TaggingBookSearchAPIView(generics.RetrieveAPIView):
     search_class = NaverSearchAPI()
     serializer_class = DetailBookListSerializer
     queryset = BookObject.objects.all()
+    authentication_classes = []
 
     def get_params(self, request):
         param = self.request.GET
@@ -118,6 +119,8 @@ class TaggingBookSearchAPIView(generics.RetrieveAPIView):
 
 
 class NavbarBookSearchAPIView(TaggingBookSearchAPIView):
+    authentication_classes = []
+
     @swagger_auto_schema(
         operation_id='navbar_book_search',
         operation_description='네브바에서 모든 도서에 대한 검색을 수행합니다.'
