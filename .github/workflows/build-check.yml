@@ -38,3 +38,13 @@ jobs:
 
       - name: Docker setup script & Check docker container running
         run: sh setup.sh
+
+  test:
+    runs-on: [ self-hosted, label-go ]
+    needs: [ checkout, build ]
+      - name: Send cURL request to backend container
+        run:
+          RESP_CODE=$(curl -LI https://${{ secrets.DOMAIN }}/v1/docs -o /dev/null -w '%{http_code}\n' -s)
+          if [ $RESP_CODE -eq 200 ]; then
+            echo "Response 200 Success"; else
+            exit 1; fi
