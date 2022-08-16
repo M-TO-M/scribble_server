@@ -7,7 +7,9 @@ jobs:
     runs-on: [ self-hosted, label-go ]
 
     steps:
-      # bugfix: permission error
+      - name: Set Permissions
+      - run: sudo chown -R $USER:$USER /home/github/actions-runner/_work/${{ github.workspace }}
+
       - name: Checkout source code
         uses: actions/checkout@v3
 
