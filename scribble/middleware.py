@@ -12,9 +12,9 @@ from scribble.settings import base as settings
 from scribble.authentication import CustomJWTAuthentication
 
 
-ALLOWED_PATH = [
+REQ_ALLOWED_PATH = [
     "/",
-    "/docs"
+    "/docs",
     "/users/new",
     "/users/verify",
     "/users/signin",
@@ -22,8 +22,9 @@ ALLOWED_PATH = [
     "/main",
     "/contents/books/search/navbar"
 ]
+
 VERSION = getattr(settings, 'VERSION', '')
-VERSION_ALLOWED_PATH = ['/' + VERSION + path for path in ALLOWED_PATH]
+VERSION_ALLOWED_PATH = ['/' + VERSION + path for path in REQ_ALLOWED_PATH]
 
 
 class TokenAuthMiddleWare(MiddlewareMixin):
@@ -35,7 +36,7 @@ class TokenAuthMiddleWare(MiddlewareMixin):
         self.process_request(request)
 
         response = None
-        if request.path not in VERSION_ALLOWED_PATH:
+        if request.path_info not in VERSION_ALLOWED_PATH:
             response = self.process_response(request, response)
 
         return response or self.get_response(request)
