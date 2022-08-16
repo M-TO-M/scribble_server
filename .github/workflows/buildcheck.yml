@@ -1,0 +1,36 @@
+name: build-check
+
+on: [pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v3
+
+      - name: Setup python
+        uses: actions/setup-python@v3
+        with:
+          python-version: "3.8"
+
+      - name: Setup Docker
+        run: sh setup.sh
+
+      - name: Create env file
+        run: |
+          touch scribble/.env
+          echo NAVER_API_CLIENT_ID="\"${{ secrets.NAVER_API_CLIENT_ID }}"\" >> scribble/.env
+          echo NAVER_API_CLIENT_SECRET="\"${{ secrets.NAVER_API_CLIENT_SECRET }}"\" >> scribble/.env
+          echo SECRET_KEY="\"${{ secrets.SECRET_KEY }}"\" >> scribble/.env
+          echo RUN_ENV="\"${{ secrets.RUN_ENV }}"\" >> scribble/.env
+          echo DOMAIN="\"${{ secrets.DOMAIN }}"\" >> scribble/.env
+          echo PROD_ALLOWED_HOSTS='${{ secrets.PROD_ALLOWED_HOSTS }}' >> scribble/.env
+          echo CORS_ORIGIN_WHITELIST='${{ secrets.CORS_ORIGIN_WHITELIST }}' >> scribble/.env
+          echo DB_NAME="\"${{ secrets.DB_NAME }}"\" >> scribble/.env
+          echo DB_USER="\"${{ secrets.DB_USER }}"\" >> scribble/.env
+          echo DB_HOST="\"${{ secrets.DB_HOST }}"\" >> scribble/.env
+          echo DB_PASSWORD="\"${{ secrets.DB_PASSWORD }}"\" >> scribble/.env
+
+      - name: Build docker-compose
+        run: sudo kill `sudo lsof -t -i:8084` && docker-compose up -d --build
