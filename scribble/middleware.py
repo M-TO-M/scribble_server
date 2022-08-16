@@ -15,12 +15,12 @@ from scribble.authentication import CustomJWTAuthentication
 REQ_ALLOWED_PATH = [
     "/",
     "/docs",
+    "/main/",
     "/users/new",
     "/users/verify",
     "/users/signin",
-    "/token/refresh",
-    "/main",
-    "/contents/books/search/navbar"
+    "/contents/books/search/navbar",
+    "/contents/books/search/tagging"
 ]
 
 VERSION = getattr(settings, 'VERSION', '')
