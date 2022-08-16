@@ -5,7 +5,6 @@ on: [pull_request]
 jobs:
   checkout:
     runs-on: [ self-hosted, label-go ]
-
     steps:
       - name: Set Permissions
         run: sudo chown -R $USER:$USER ${{ github.workspace }}
@@ -16,6 +15,7 @@ jobs:
   build:
     runs-on: [ self-hosted, label-go ]
     needs: checkout
+    steps:
       - name: Create env file
         run: |
           touch scribble/.env
@@ -42,6 +42,7 @@ jobs:
   test:
     runs-on: [ self-hosted, label-go ]
     needs: [ checkout, build ]
+    steps:
       - name: Send cURL request to backend container
         run:
           RESP_CODE=$(curl -LI https://${{ secrets.DOMAIN }}/v1/docs -o /dev/null -w '%{http_code}\n' -s)
