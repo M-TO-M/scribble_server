@@ -64,19 +64,26 @@ class UserMainView(TemplateMainView):
 
     def __init__(self):
         super(UserMainView, self).__init__()
-        self.pagination_class.data_key = 'notes'
+
+    def filter_data(self, request, data):
+        key = self.request.query_params.get('key')
+        if key not in ['hit', 'like', 'pages']:
+            return data
+        if key in ['like', 'pages']:
+            key += '_count'
+
+        sorting = self.request.query_params.get('sorting')
+        data.sort(key=lambda x: x[key], reverse=True) if sorting == 'descending' else data.sort(key=lambda x: x[key])
+        return data
 
     @swagger_auto_schema(
         operation_id='user_main',
         operation_description='사용자가 작성한 노트와 페이지 데이터를 return 합니다.',
         manual_parameters=[
-            swagger_parameter('mode', openapi.IN_QUERY, '정렬기준 (조회수, 좋아요수, 댓글수)', openapi.TYPE_STRING,
-                              pattern=['hit / likes / reviews']),
+            swagger_parameter('key', openapi.IN_QUERY, '정렬기준 (조회수, 좋아요수, 댓글수)', openapi.TYPE_STRING,
+                              pattern=['hit, like, pages']),
             swagger_parameter('sorting', openapi.IN_QUERY, '오름차순/내림차순', openapi.TYPE_STRING,
-                              pattern=['ascending / descending']),
-            swagger_parameter('limit', openapi.IN_QUERY, '한 번에 조회할 데이터의 수 (default=4, max=count)',
-                              openapi.TYPE_INTEGER),
-            swagger_parameter('offset', openapi.IN_QUERY, '조회할 데이터의 offset (default=0)', openapi.TYPE_INTEGER)
+                              pattern=['ascending, descending']),
         ],
         responses={
             200: swagger_response(
@@ -94,10 +101,16 @@ class UserMainView(TemplateMainView):
         except Exception:
             raise UserNotFound()
 
-        notes = self.get_queryset().filter(user_id=user.id)
-        data = self.get_paginated_data(notes)
+        # TASK 1: 사용자가 작성한 전체 노트의 목록을 return
+        queryset = self.get_queryset().filter(user_id=user.id)
+        serializer = self.serializer_class(instance=queryset, many=True)
+        notes = self.filter_data(self.request, serializer.data)
 
-        return self.paginator.get_paginated_response(data=data, user=UserSerializer(instance=user).data)
+        response = {
+            "notes": notes,
+            "user": UserSerializer(instance=user).data
+        }
+        return Response(response, status=status.HTTP_200_OK)
 
 
 class SearchView(generics.GenericAPIView, mixins.RetrieveModelMixin):
