@@ -106,9 +106,11 @@ class Page(TimeStampModel):
         default=0,
         verbose_name='노트 인덱스'
     )
+    # TASK 2: 책 등록 이미지 url max_length 수정
     transcript = models.URLField(
         blank=False,
         null=False,
+        max_length=500,
         verbose_name='필사 이미지'
     )
     phrase = models.TextField(
