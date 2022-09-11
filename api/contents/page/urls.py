@@ -11,5 +11,5 @@ urlpatterns = [
     path('<int:pk>/delete', PageView.as_view(http_method_names=['delete']), name='page_delete'),
     path('<int:pk>/like', PageLikeView.as_view(http_method_names=['post']), name='page_like'),
     path('<int:pk>/like/cancel', PageLikeView.as_view(http_method_names=['delete']), name='page_like_cancel'),
-
+    path('all/<int:isbn>', PageAllView.as_view(http_method_names=['get']), name='page_all'),
 ]

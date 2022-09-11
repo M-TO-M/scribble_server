@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import UniqueConstraint
 
 from core.fields import ISBNField
 from core.models import TimeStampModel, Default
@@ -68,6 +69,14 @@ class Note(TimeStampModel):
         db_table = 'note'
         verbose_name = '필사 노트'
         verbose_name_plural = verbose_name
+        ordering = ['created_at']
+        # TASK 4: 동일한 user, book에 대하여 여러 개의 note object가 생성되는 버그 수정 (UniqueConstraint 지정)
+        constraints = [
+            UniqueConstraint(
+                fields=['user', 'book'],
+                name='user_book_unique_together'
+            )
+        ]
 
     def update_note_hit(self):
         self.hit += 1
@@ -106,9 +115,11 @@ class Page(TimeStampModel):
         default=0,
         verbose_name='노트 인덱스'
     )
+    # TASK 2: 책 등록 이미지 url max_length 수정
     transcript = models.URLField(
         blank=False,
         null=False,
+        max_length=500,
         verbose_name='필사 이미지'
     )
     phrase = models.TextField(

@@ -29,29 +29,24 @@ class BookObjectSerializer(serializers.ModelSerializer):
 
 
 class BookCreateSerializer(serializers.ModelSerializer):
-    isbn = serializers.SerializerMethodField()
-
     class Meta:
         model = BookObject
         fields = ['isbn', 'title', 'author', 'publisher', 'category', 'thumbnail']
 
     @swagger_serializer_method(serializer_or_field=serializers.CharField(help_text='isbn'))
-    def get_isbn(self, value):
+    def validate_isbn(self, value):
         try:
             ISBNValidator(value)
         except ValidationError:
             raise ValidationError(detail=_("invalid_isbn"))
-
-        self.isbn = value
-        return self.isbn
+        return value
 
     def create(self, validated_data):
-        self.get_isbn(validated_data.pop('isbn'))
-
+        isbn = self.validate_isbn(validated_data.pop('isbn'))
         try:
-            book = BookObject.objects.get(isbn__exact=self.isbn)
+            book = BookObject.objects.get(isbn__exact=isbn)
         except BookObject.DoesNotExist:
-            book_object_data = NaverSearchAPI()(self.isbn)[0]
+            book_object_data = NaverSearchAPI()(isbn)[0]
             book = BookObject.objects.create(**book_object_data)
         return book
 

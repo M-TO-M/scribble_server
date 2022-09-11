@@ -9,35 +9,17 @@ from core.pagination import MainViewPagination
 from core.serializers import ScribbleTokenObtainPairSerializer
 from utils.cache import get_or_set_token_cache
 from utils.swagger import swagger_response, swagger_schema_with_properties, swagger_schema_with_description
+from scribble.settings import RUN_ENV
 import scribble.settings.base as settings
 
 
 class TemplateMainView(generics.ListAPIView):
     pagination_class = MainViewPagination
 
-    def filter_data(self, params: dict, data: list):
-        mode = params.get('mode', '')
-        if mode == "hit":
-            sort_key = mode
-        elif mode == "likes" or mode == "reviews":
-            sort_key = mode + "_count"
-        else:
-            return data
-
-        sorting = params.get('sorting', '')
-        if sorting == 'descending':
-            data.sort(key=lambda x: x[sort_key], reverse=True)
-        else:
-            data.sort(key=lambda x: x[sort_key])
-
-        return data
-
     def get_paginated_data(self, queryset):
         pagination = self.paginate_queryset(queryset)
         serializer = self.serializer_class(instance=pagination or queryset, many=True)
-        filtered_data = self.filter_data(self.request.query_params, serializer.data)
-
-        return filtered_data
+        return serializer.data
 
 
 class ScribbleTokenObtainView(generics.CreateAPIView):
@@ -52,7 +34,8 @@ class ScribbleTokenObtainView(generics.CreateAPIView):
         if response.status_code >= 400:
             return response
 
-        cached, msg = get_or_set_token_cache(request=request, user=self.user)
+        if RUN_ENV == "prod":
+            cached, msg = get_or_set_token_cache(request=request, user=self.user)
 
         token = self.serializer_class.get_token(self.user)
         response.data['access'] = str(token.access_token)

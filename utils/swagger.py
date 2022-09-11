@@ -199,9 +199,6 @@ main_response_example = {
 }
 
 user_main_response_example = {
-    "count": 4,
-    "previous_offset": 0,
-    "next_offset": 0,
     "notes": [
         {
             "id": 1,
@@ -349,6 +346,14 @@ main_note_list_response_example = [
         "datetime": "2022-07-14T13:07:05.296Z"
     }
 ]
+
+page_all_response_example = {
+    "count": 2,
+    "pages": [
+        page_response_example,
+        {},
+    ]
+}
 
 
 def swagger_response(description=None, schema=None, examples=None):

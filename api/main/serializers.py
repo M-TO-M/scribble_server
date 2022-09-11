@@ -13,9 +13,6 @@ class MainSchemaSerializer(serializers.Serializer):
 
 
 class UserMainSchemaSerializer(serializers.Serializer):
-    count = serializers.IntegerField(help_text='전체 게시물(페이지) 수', read_only=True)
-    previous_offset = serializers.IntegerField(help_text='조회 가능한 이전 start offset', read_only=True)
-    next_offset = serializers.IntegerField(help_text='조회 가능한 다음 offset', read_only=True)
     notes = NoteSchemaSerializer(many=True, help_text='노트', read_only=True)
     user = UserSerializer(help_text='사용자', read_only=True)
 
