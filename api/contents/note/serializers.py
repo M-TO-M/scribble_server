@@ -72,29 +72,19 @@ class NoteCreateSerializer(serializers.ModelSerializer):
         model = Note
         fields = ['user']
 
-    def get_isbn(self, value):
-        try:
-            ISBNValidator(value)
-        except ValidationError:
-            raise ValidationError(detail=_("invalid_isbn"))
-
-        self.isbn = value
-        return self.isbn
-
-    def get_book(self) -> BookObject:
-        data = {"isbn": self.isbn}
-
+    @staticmethod
+    def get_or_create_book(isbn) -> BookObject:
         book_create_serializer = BookCreateSerializer()
-        self.book = book_create_serializer.create(validated_data=data)
+        book = book_create_serializer.create(validated_data={"isbn": isbn})
+        return book
 
-        return self.book
-
+    # TASK 4: 동일한 user, book에 대하여 여러 개의 note object가 생성되는 버그 수정
+    #           (create 대신 get_or_create 사용)
     def create(self, validated_data):
-        user = validated_data.pop('user')
-        self.get_isbn(validated_data.pop('isbn'))
-        self.get_book()
-
-        return Note.objects.create(user=user, book=self.book)
+        return Note.objects.get_or_create(
+            user=validated_data.pop('user'),
+            book=self.get_or_create_book(isbn=validated_data.pop('isbn'))
+        )
 
 
 class NoteLikesRelationSerializer(serializers.ModelSerializer):
