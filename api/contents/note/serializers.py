@@ -29,12 +29,14 @@ class NoteSchemaSerializer(serializers.Serializer):
     pages_count = serializers.IntegerField(help_text='노트에 저장된 페이지 수', read_only=True)
 
 
+# TASK 3: 기본 정렬 순서 지정 (최근 등록순)
 class NoteSerializer(serializers.ModelSerializer):
     like_user = serializers.SerializerMethodField()
 
     class Meta:
         model = Note
         fields = '__all__'
+        ordering = ['created_at']
 
     @staticmethod
     def get_like_user(instance):

@@ -68,6 +68,7 @@ class Note(TimeStampModel):
         db_table = 'note'
         verbose_name = '필사 노트'
         verbose_name_plural = verbose_name
+        ordering = ['created_at']
 
     def update_note_hit(self):
         self.hit += 1
