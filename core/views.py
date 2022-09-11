@@ -9,6 +9,7 @@ from core.pagination import MainViewPagination
 from core.serializers import ScribbleTokenObtainPairSerializer
 from utils.cache import get_or_set_token_cache
 from utils.swagger import swagger_response, swagger_schema_with_properties, swagger_schema_with_description
+from scribble.settings import RUN_ENV
 import scribble.settings.base as settings
 
 
@@ -33,7 +34,8 @@ class ScribbleTokenObtainView(generics.CreateAPIView):
         if response.status_code >= 400:
             return response
 
-        cached, msg = get_or_set_token_cache(request=request, user=self.user)
+        if RUN_ENV == "prod":
+            cached, msg = get_or_set_token_cache(request=request, user=self.user)
 
         token = self.serializer_class.get_token(self.user)
         response.data['access'] = str(token.access_token)
