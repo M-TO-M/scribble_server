@@ -246,3 +246,30 @@ class PageLikeView(generics.GenericAPIView, mixins.CreateModelMixin, mixins.Dest
 
         self.perform_destroy(relation)
         return Response(None, status=status.HTTP_204_NO_CONTENT)
+
+
+# TASK 5: 하나의 도서에 대한 모든 페이지 list를 반환하는 api
+class PageAllView(generics.GenericAPIView):
+    queryset = Page.objects.all().select_related('note__book')
+    serializer_class = PageDetailSerializer
+    lookup_field = 'isbn'
+
+    @swagger_auto_schema(
+        operation_id='page_all',
+        operation_description='도서에 대하여 등록되어 있는 모든 페이지를 조회합니다.',
+        responses={
+            200: swagger_response(
+                description='PAGE_ALL_200',
+                schema=PageAllSchemaSerializer,
+                examples=page_all_response_example
+            ),
+            204: swagger_response(description='PAGE_ALL_204')
+        }
+    )
+    def get(self, request, *args, **kwargs):
+        pages = self.queryset.filter(note__book__isbn=self.kwargs[self.lookup_field])
+        if pages.count() == 0:
+            return Response(None, status=status.HTTP_204_NO_CONTENT)
+        serializer = self.serializer_class(instance=pages, many=True)
+        response = {"count": pages.count(), "pages": serializer.data}
+        return Response(response, status=status.HTTP_200_OK)

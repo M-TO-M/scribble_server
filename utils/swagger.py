@@ -347,6 +347,14 @@ main_note_list_response_example = [
     }
 ]
 
+page_all_response_example = {
+    "count": 2,
+    "pages": [
+        page_response_example,
+        {},
+    ]
+}
+
 
 def swagger_response(description=None, schema=None, examples=None):
     return openapi.Response(

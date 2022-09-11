@@ -30,6 +30,11 @@ class PageSchemaSerializer(serializers.Serializer):
     page_detail = PageDetailSchemaSerialzer(help_text='페이지 세부정보', read_only=True)
 
 
+class PageAllSchemaSerializer(serializers.Serializer):
+    count = serializers.IntegerField(help_text='페이지 수', read_only=True)
+    pages = PageDetailSchemaSerialzer(help_text='페이지 정보', read_only=True)
+
+
 class PageBulkCreateUpdateSerializer(serializers.ListSerializer):
     def create(self, validated_data, *args):
         with transaction.atomic():
