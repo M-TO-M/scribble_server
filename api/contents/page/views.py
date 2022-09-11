@@ -12,16 +12,26 @@ from rest_framework.exceptions import ValidationError, AuthenticationFailed
 from rest_framework.response import Response
 
 from api.contents.note.serializers import NoteCreateSerializer, NoteSerializer
-from api.contents.page.serializers import PageSerializer, PageLikesRelationSerializer, PageSchemaSerializer, \
-    PageDetailSerializer
+from api.contents.page.serializers import (
+    PageSerializer,
+    PageLikesRelationSerializer,
+    PageSchemaSerializer,
+    PageDetailSerializer,
+    PageAllSchemaSerializer
+)
 from apps.contents.models import Note, Page, PageLikesRelation
 from core.exceptions import PageNotFound, NoteNotFound
-from utils.swagger import swagger_response, swagger_schema_with_description, swagger_schema_with_properties, \
-    page_response_example, \
-    PageFailCaseCollection as page_fail_case, \
-    UserFailCaseCollection as user_fail_case, \
-    NoteFailCaseCollection as note_fail_case, \
-    swagger_schema_with_items
+from utils.swagger import (
+    swagger_response,
+    swagger_schema_with_description,
+    swagger_schema_with_properties,
+    swagger_schema_with_items,
+    page_response_example,
+    page_all_response_example,
+    PageFailCaseCollection as page_fail_case,
+    UserFailCaseCollection as user_fail_case,
+    NoteFailCaseCollection as note_fail_case,
+)
 
 
 class PageView(generics.GenericAPIView,
