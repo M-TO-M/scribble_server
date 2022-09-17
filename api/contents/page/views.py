@@ -1,6 +1,7 @@
 import json
 from collections import OrderedDict
 
+from django.db import transaction
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema, no_body
 
@@ -108,36 +109,28 @@ class PageView(generics.GenericAPIView,
         except Exception:
             raise ValidationError(detail=_("no_data_in_req_body"))
 
-        note_exists = data['note']
-        if note_exists:
-            if "note_pk" not in data:
-                raise ValidationError(detail=_("no_note_pk_in_req_body"))
-            try:
-                note = Note.objects.get(id=data['note_pk'])
-            except Exception:
-                raise NoteNotFound()
-        else:
-            if "book_isbn" not in data:
-                raise ValidationError(detail=_("no_book_in_req_body"))
+        with transaction.atomic():
+            note_exists = data["note"]
+            if note_exists:
+                try:
+                    note_id = data["note_pk"]
+                    note = Note.objects.get(id=note_id)
+                except KeyError:
+                    raise ValidationError(detail=_("no_note_pk"))
+                except Note.DoesNotExist:
+                    raise NoteNotFound()
+            else:
+                note_data = {"user": request.user, "isbn": data.get("book_isbn")}
+                note_create_serializer = NoteCreateSerializer()
+                note = note_create_serializer.create(validated_data=note_data)
 
-            note_data = {"user": request.user, "isbn": data["book_isbn"]}
-            note_create_serializer = NoteCreateSerializer()
-            note = note_create_serializer.create(validated_data=note_data)
-
-        page_data = data["pages"]
-        for page in page_data:
-            page.update({'note': note.id})
-
-        page_serializer = self.serializer_class(data=page_data, many=True)
-        page_serializer.is_valid(raise_exception=True)
-        pages = page_serializer.create(
-            page_serializer.validated_data,
-            note.id
-        )
-        response = {
-            "pages": self.serializer_class(instance=pages, many=True).data
-        }
-        return Response(response, status.HTTP_201_CREATED)
+            serializer = PageSerializer(data=data["pages"], many=True, context={'note': note})
+            serializer.is_valid(raise_exception=True)
+            pages = serializer.create(serializer.validated_data)
+            response = {
+                "pages": self.serializer_class(instance=pages, many=True).data
+            }
+            return Response(response, status.HTTP_201_CREATED)
 
     @swagger_auto_schema(
         operation_id='page_edit',

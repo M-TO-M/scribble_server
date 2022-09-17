@@ -8,7 +8,7 @@ from api.contents.book_object.serializers import BookObjectSerializer, DetailBoo
 from api.contents.note.serializers import NoteWithoutBookSchemaSerializer
 from api.contents.page_comment.serializers import PageCommentSerializer
 from api.users.serializers import UserSerializer
-from apps.contents.models import Page, PageLikesRelation
+from apps.contents.models import Page, PageLikesRelation, Note
 from core.serializers import StringListField
 
 
@@ -35,18 +35,26 @@ class PageAllSchemaSerializer(serializers.Serializer):
     pages = PageDetailSchemaSerialzer(help_text='페이지 정보', read_only=True)
 
 
-class PageBulkCreateUpdateSerializer(serializers.ListSerializer):
-    def create(self, validated_data, *args):
+class PageBulkSerializer(serializers.ListSerializer):
+    note = serializers.SerializerMethodField('set_note')
+
+    def set_note(self):
+        self.note = self.context.get('note')
+
+    def create(self, validated_data):
+        self.set_note()
         with transaction.atomic():
+            for data in validated_data:
+                data.update({'note': self.note})
             obj_data = [Page(**item) for item in validated_data]
             pages = Page.objects.bulk_create(obj_data)
-
-            note_index = Page.objects.values('note_id').annotate(count=Count('note_id')).filter(note_id=args[0])[0]
+            note_index = Page.objects.values('note_id')\
+                .annotate(count=Count('note_id'))\
+                .filter(note=self.note)[0]
             note_index['count'] -= len(obj_data)
             for p in pages:
                 p.note_index = note_index['count'] + 1
                 note_index['count'] += 1
-
             Page.objects.bulk_update(pages, ['note_index'])
             return pages
 
@@ -66,7 +74,7 @@ class PageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Page
         fields = '__all__'
-        list_serializer_class = PageBulkCreateUpdateSerializer
+        list_serializer_class = PageBulkSerializer
 
     @staticmethod
     def get_like_user(instance):
