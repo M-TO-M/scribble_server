@@ -81,10 +81,15 @@ class NoteCreateSerializer(serializers.ModelSerializer):
     # TASK 4: 동일한 user, book에 대하여 여러 개의 note object가 생성되는 버그 수정
     #           (create 대신 get_or_create 사용)
     def create(self, validated_data):
-        return Note.objects.get_or_create(
+        isbn = validated_data.pop('isbn')
+        if not isbn:
+            raise ValidationError(detail=_("no_book_isbn"))
+
+        note, created = Note.objects.get_or_create(
             user=validated_data.pop('user'),
-            book=self.get_or_create_book(isbn=validated_data.pop('isbn'))
+            book=self.get_or_create_book(isbn=isbn)
         )
+        return note
 
 
 class NoteLikesRelationSerializer(serializers.ModelSerializer):
