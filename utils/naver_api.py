@@ -50,7 +50,7 @@ class NaverSearchAPI:
         data = json.loads(res_body)
         return data['items'] if 'items' in data else None
 
-    def search(self, param: str) -> Tuple[dict, str]:
+    def search(self, param: str) -> Union[Tuple[dict, str], None]:
         if bool(not param or param.isspace()):
             return None
         try:
