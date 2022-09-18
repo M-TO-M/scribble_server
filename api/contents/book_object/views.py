@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from django.db.models import Q
 
 from api.contents.book_object.serializers import BookCreateSerializer, BookObjectSerializer, DetailBookListSerializer
-from apps.contents.models import BookObject, Note
+from apps.contents.models import BookObject, Note, Page
 from utils.naver_api import NaverSearchAPI
 from utils.swagger import swagger_response, swagger_schema_with_properties, swagger_schema_with_description, \
     BookObjectFailCaseCollection as book_fail_case, swagger_parameter
@@ -151,8 +151,8 @@ class NavbarBookSearchAPIView(TaggingBookSearchAPIView):
             return Response(None, status=status.HTTP_204_NO_CONTENT)
 
         for result in results:
-            note_cnt = Note.objects.filter(book__isbn__exact=result['isbn']).count()
-            result.update({'note_cnt': note_cnt})
-        results.sort(key=lambda x: x['note_cnt'], reverse=True)
+            p_count = Note.objects.filter(book__isbn__exact=result['isbn']).values('page').count()
+            result.update({'count': p_count})
+        results.sort(key=lambda x: x['count'], reverse=True)
         response = {"type": api_search_type, "results": results}
         return Response(response, status=status.HTTP_200_OK)
