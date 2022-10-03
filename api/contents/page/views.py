@@ -12,6 +12,7 @@ from rest_framework import generics, mixins, status
 from rest_framework.exceptions import ValidationError, AuthenticationFailed
 from rest_framework.response import Response
 
+from api.contents.book_object.serializers import DetailBookListSerializer
 from api.contents.note.serializers import NoteCreateSerializer, NoteSerializer
 from api.contents.page.serializers import (
     PageSerializer,
@@ -20,7 +21,7 @@ from api.contents.page.serializers import (
     PageDetailSerializer,
     PageAllSchemaSerializer
 )
-from apps.contents.models import Note, Page, PageLikesRelation
+from apps.contents.models import Note, Page, PageLikesRelation, BookObject
 from core.exceptions import PageNotFound, NoteNotFound
 from utils.swagger import (
     swagger_response,
@@ -254,7 +255,7 @@ class PageLikeView(generics.GenericAPIView, mixins.CreateModelMixin, mixins.Dest
 # TASK 5: 하나의 도서에 대한 모든 페이지 list를 반환하는 api
 class PageAllView(generics.GenericAPIView):
     queryset = Page.objects.all().select_related('note__book')
-    serializer_class = PageDetailSerializer
+    serializer_class = PageSerializer
     lookup_field = 'isbn'
 
     @swagger_auto_schema(
@@ -270,9 +271,18 @@ class PageAllView(generics.GenericAPIView):
         }
     )
     def get(self, request, *args, **kwargs):
-        pages = self.queryset.filter(note__book__isbn=self.kwargs[self.lookup_field])
+        try:
+            book = BookObject.objects.get(isbn=self.kwargs[self.lookup_field])
+        except BookObject.DoesNotExist:
+            raise ValidationError(detail=_('no_exist_book'))
+
+        pages = self.queryset.filter(note__book=book)
         if pages.count() == 0:
             return Response(None, status=status.HTTP_204_NO_CONTENT)
-        serializer = self.serializer_class(instance=pages, many=True)
-        response = {"count": pages.count(), "pages": serializer.data}
+
+        response = {
+            "book": DetailBookListSerializer(instance=book).data,
+            "page_count": pages.count(),
+            "pages": self.serializer_class(instance=pages, many=True).data
+        }
         return Response(response, status=status.HTTP_200_OK)

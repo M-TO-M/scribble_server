@@ -31,7 +31,8 @@ class PageSchemaSerializer(serializers.Serializer):
 
 
 class PageAllSchemaSerializer(serializers.Serializer):
-    count = serializers.IntegerField(help_text='페이지 수', read_only=True)
+    book = BookObjectSerializer(help_text='도서 정보', read_only=True)
+    page_count = serializers.IntegerField(help_text='페이지 수', read_only=True)
     pages = PageDetailSchemaSerialzer(help_text='페이지 정보', read_only=True)
 
 
