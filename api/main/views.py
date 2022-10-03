@@ -59,7 +59,7 @@ class MainView(TemplateMainView):
 
 
 class UserMainView(TemplateMainView):
-    queryset = Note.objects.all().select_related('user')
+    queryset = Note.objects.all().exclude(page__isnull=True).select_related('user')
     serializer_class = NoteSerializer
 
     def __init__(self):
