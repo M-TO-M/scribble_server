@@ -348,10 +348,35 @@ main_note_list_response_example = [
 ]
 
 page_all_response_example = {
-    "count": 2,
+    "book": {
+        "isbn": "9791191436051",
+        "title": "실리콘밸리의 시간 (글로벌 협상가 김재우 박사가 들려주는)",
+        "author": "김재우",
+        "publisher": "브레인플랫폼",
+        "thumbnail": "https://shopping-phinf.pstatic.net/main_3243634/32436342819.20220527041747.jpg"
+    },
+    "page_count": 2,
     "pages": [
-        page_response_example,
-        {},
+        {
+            "id": 134,
+            "note_index": 1,
+            "transcript": "https://scribble-image.s3-ap-northeast-2.amazonaws.com/Sat_Sep_17_2022_1663390798335.png",
+            "phrase": "테스트",
+            "book_page": 0,
+            "hit": 0,
+            "like_count": 0,
+            "like_user": []
+        },
+        {
+            "id": 135,
+            "note_index": 0,
+            "transcript": "",
+            "phrase": 'null',
+            "book_page": 0,
+            "hit": 0,
+            "like_count": 0,
+            "like_user": []
+        }
     ]
 }
 
