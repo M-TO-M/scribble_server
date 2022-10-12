@@ -46,8 +46,8 @@ class BookCreateSerializer(serializers.ModelSerializer):
         try:
             book = BookObject.objects.get(isbn__exact=isbn)
         except BookObject.DoesNotExist:
-            book_object_data = NaverSearchAPI()(isbn)[0]
-            book = BookObject.objects.create(**book_object_data)
+            _, value = NaverSearchAPI()(isbn)
+            book = BookObject.objects.create(**value[0])
         return book
 
 
