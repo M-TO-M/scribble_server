@@ -151,8 +151,8 @@ class NavbarBookSearchAPIView(TaggingBookSearchAPIView):
             return Response(None, status=status.HTTP_204_NO_CONTENT)
 
         for result in results:
-            p_count = Note.objects.filter(book__isbn__exact=result['isbn']).values('page').count()
-            result.update({'count': p_count})
+            p_count = Note.objects.filter(book__isbn=result['isbn']).values('page').get().get('page')
+            result.update({'count': p_count if p_count else 0})
         results.sort(key=lambda x: x['count'], reverse=True)
         response = {"type": api_search_type, "results": results}
         return Response(response, status=status.HTTP_200_OK)
