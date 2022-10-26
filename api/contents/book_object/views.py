@@ -151,11 +151,7 @@ class NavbarBookSearchAPIView(TaggingBookSearchAPIView):
             return Response(None, status=status.HTTP_204_NO_CONTENT)
 
         for result in results:
-            try:
-                page = Note.objects.filter(book__isbn=result['isbn']).values_list('page', flat=True)
-                p_count = len(page) if None not in page else 0
-            except Note.DoesNotExist:
-                p_count = 0
+            p_count = Note.objects.filter(book__isbn=result['isbn']).exclude(page=None).values_list('page', flat=True).count()
             result.update({'count': p_count})
         results.sort(key=lambda x: x['count'], reverse=True)
         response = {"type": api_search_type, "results": results}
