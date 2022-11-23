@@ -1,23 +1,19 @@
 import json
-from typing import Tuple
 
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema, no_body
 
-from django.contrib.auth.hashers import check_password
-from django.utils.translation import gettext_lazy as _
-
-from rest_framework import mixins, generics, status
-from rest_framework.exceptions import AuthenticationFailed
+from rest_framework import viewsets, status
+from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework_tracking.mixins import LoggingMixin
 from rest_framework_simplejwt.views import TokenViewBase
 from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 
 import scribble.settings.base as settings
 from utils.cache import get_or_set_token_cache
-from apps.users.models import UserLoginLog
+
 from api.users.exceptions import UserNotFound
+from api.users.mixins import AuthorizingMixin, SignInLoggingMixin
 from api.users.serializers import *
 from utils.swagger import (
     swagger_response,
@@ -28,47 +24,6 @@ from utils.swagger import (
     user_response_example,
     user_response_example_with_access
 )
-
-
-class SignInLoggingMixin(LoggingMixin):
-    def initial(self, request, *args, **kwargs):
-        super(LoggingMixin, self).initial(request, *args, **kwargs)
-
-        user_agent = request.META.get('HTTP_USER_AGENT')
-        if user_agent is None:
-            user_agent = 'test'
-        self.log['user_agent'] = user_agent
-
-    def handle_log(self):
-        UserLoginLog(**self.log).save()
-
-
-class ScribbleTokenObtainView(generics.CreateAPIView):
-    serializer_class = ScribbleTokenObtainPairSerializer
-
-    def __init__(self, *args, **kwargs):
-        super().__init__()
-        self.user = None
-
-    def finalize_response(self, request, response, *args, **kwargs):
-        super(ScribbleTokenObtainView, self).finalize_response(request, response, *args, **kwargs)
-        if response.status_code >= 400:
-            return response
-
-        if settings.RUN_ENV == "prod":
-            cached, msg = get_or_set_token_cache(request=request, user=self.user)
-
-        token = self.serializer_class.get_token(self.user)
-        response.data['access'] = str(token.access_token)
-        response.set_cookie(
-            key=settings.SIMPLE_JWT["AUTH_COOKIE"],
-            value=str(token),
-            expires=settings.SIMPLE_JWT["REFRESH_TOKEN_LIFETIME"],
-            secure=settings.SIMPLE_JWT["AUTH_COOKIE_SECURE"],
-            httponly=settings.SIMPLE_JWT["AUTH_COOKIE_HTTP_ONLY"]
-        )
-
-        return response
 
 
 class ScribbleTokenRefreshView(TokenViewBase):
@@ -93,10 +48,11 @@ class ScribbleTokenRefreshView(TokenViewBase):
     def finalize_response(self, request, response, *args, **kwargs):
         super(ScribbleTokenRefreshView, self).finalize_response(request, response, *args, **kwargs)
 
-        cached, msg = get_or_set_token_cache(request=request, user=request.user)
-        if cached is False:
-            response.status_code = 401
-            return response
+        # addr = request.META.get('REMOTE_ADDR')
+        # cached, msg = get_or_set_token_cache(remote_addr=addr, user=user)
+        # if cached is False:
+        #     response.status_code = 401
+        #     return response
 
         refresh = response.data.pop('refresh')
         response.set_cookie(
@@ -106,13 +62,41 @@ class ScribbleTokenRefreshView(TokenViewBase):
             secure=settings.SIMPLE_JWT["AUTH_COOKIE_SECURE"],
             httponly=settings.SIMPLE_JWT["AUTH_COOKIE_HTTP_ONLY"]
         )
-
         return response
 
 
-class SignUpView(generics.CreateAPIView):
-    serializer_class = SignUpSerializer
-    authentication_classes = []
+class TokenObtainViewSet(viewsets.ViewSet):
+    def set_logging_cache(self, request):
+        if settings.RUN_ENV == "prod":
+            addr = request.META.get('REMOTE_ADDR')
+            cached, msg = get_or_set_token_cache(remote_addr=addr, user=request.user)
+
+    def finalize_response(self, request, response, *args, **kwargs):
+        response = super(TokenObtainViewSet, self).finalize_response(request, response, *args, **kwargs)
+        if response.status_code >= 400:
+            return response
+
+        if self.action == "signin":
+            self.set_logging_cache(request=request)
+            token = ScribbleTokenObtainPairSerializer().get_token(request.user)
+            response.data["access"] = str(token.access_token)
+            response.data["refresh"] = str(token)
+            response.set_cookie(
+                key=settings.SIMPLE_JWT["AUTH_COOKIE"],
+                value=str(token),
+                expires=settings.SIMPLE_JWT["REFRESH_TOKEN_LIFETIME"],
+                secure=settings.SIMPLE_JWT["AUTH_COOKIE_SECURE"],
+                httponly=settings.SIMPLE_JWT["AUTH_COOKIE_HTTP_ONLY"]
+            )
+        elif self.action == "signout":
+            response.delete_cookie(settings.SIMPLE_JWT["AUTH_COOKIE"])
+        return response
+
+
+# todo: custom exception 이전에 설정된 default exception을 호출하는 문제 해결하기
+class UserViewSet(TokenObtainViewSet, SignInLoggingMixin, AuthorizingMixin):
+    serializer_class = UserSerializer
+    queryset = User.objects.all()
 
     @swagger_auto_schema(
         operation_id='sign_up',
@@ -141,63 +125,9 @@ class SignUpView(generics.CreateAPIView):
         },
         security=[]
     )
-    def post(self, request, *args, **kwargs):
-        data = json.loads(request.body)
-        sign_up_serializer = self.serializer_class(data=data, partial=True)
-        sign_up_serializer.is_valid(raise_exception=True)
-        self.perform_create(sign_up_serializer)
-
-        response = {
-            "user": sign_up_serializer.data
-        }
-        return Response(response, status=status.HTTP_201_CREATED)
-
-
-class VerifyView(generics.RetrieveAPIView):
-    queryset = User.objects.all()
-    serializer_class = VerifySerializer
-    authentication_classes = []
-
-    @swagger_auto_schema(
-        operation_id='verify',
-        operation_description='중복 검사(이메일, 닉네임)를 수행합니다.',
-        manual_parameters=[
-            swagger_parameter('nickname', openapi.IN_QUERY, '닉네임', openapi.TYPE_STRING),
-            swagger_parameter('email', openapi.IN_QUERY, '이메일', openapi.FORMAT_EMAIL),
-        ],
-        responses={
-            200: swagger_response(description='USER_200_VERIFY', examples={"status": "success", "provider": "naver.com"}),
-            204: swagger_response(description='USER_204_VERIFY_NO_PARAMS'),
-            400:
-                user_fail_case.USER_400_VERIFY_EXIST_EMAIL.as_md() +
-                user_fail_case.USER_400_VERIFY_EXIST_NICKNAME.as_md() +
-                user_fail_case.USER_400_VERIFY_INVALID_DOMAIN.as_md()
-        },
-        security=[]
-    )
-    def get(self, request, *args, **kwargs):
-        params = request.GET
-        if not params:
-            return Response(None, status=status.HTTP_204_NO_CONTENT)
-
-        response = {}
-        email = params.get('email', '')
-        if email:
-            provider = self.serializer_class.get_email(email)
-            response["provider"] = provider
-
-        nickname = params.get('nickname', '')
-        if nickname:
-            self.serializer_class.get_nickname(nickname)
-
-        return Response(response, status=status.HTTP_200_OK)
-
-
-class SignInView(SignInLoggingMixin, ScribbleTokenObtainView):
-    logging_methods = ['POST']
-    queryset = User.objects.all()
-    serializer_class = ScribbleTokenObtainPairSerializer
-    authentication_classes = []
+    @action(detail=False, methods=["post"], serializer_class=SignUpSerializer)
+    def new(self, request, *args, **kwargs):
+        return self.create(request)
 
     @swagger_auto_schema(
         operation_id='sign_in',
@@ -221,24 +151,13 @@ class SignInView(SignInLoggingMixin, ScribbleTokenObtainView):
         },
         security=[]
     )
-    def post(self, request, *args, **kwargs):
-        data = json.loads(request.body)
-        try:
-            self.user = self.queryset.get(email__exact=data['email'])
-        except User.DoesNotExist:
-            raise ValidationError(detail=_("no_exist_email"))
-
-        if check_password(data['password'], self.user.password) is False:
-            raise ValidationError(detail=_("invalid_password"))
-
-        user_data = SignUpSerializer(instance=self.user).data
-        response = {"user": user_data}
-
-        return Response(response, status=status.HTTP_201_CREATED)
-
-
-class SignOutView(generics.CreateAPIView):
-    serializer_class = SignOutSerializer
+    @action(detail=False, methods=["post"], serializer_class=SignInSerializer)
+    def signin(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        headers = self.get_success_headers(serializer.data)
+        request.user = serializer.instance
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     @swagger_auto_schema(
         operation_id='sign_out',
@@ -251,28 +170,36 @@ class SignOutView(generics.CreateAPIView):
             404: user_fail_case.USER_404_DOES_NOT_EXIST.as_md()
         }
     )
-    def post(self, request, *args, **kwargs):
+    @action(detail=False,methods=["post"], serializer_class=SignOutSerializer)
+    def signout(self, request, *args, **kwargs):
         data = {
             'refresh': request.COOKIES[settings.SIMPLE_JWT["AUTH_COOKIE"]],
             'user_id': request.user.id
         }
 
-        logout_serializer = self.serializer_class(data=data)
-        logout_serializer.is_valid(raise_exception=True)
-        logout_serializer.save()
-
+        serializer = self.serializer_class(data=data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
         return Response(None, status=status.HTTP_204_NO_CONTENT)
 
-    def finalize_response(self, request, response, *args, **kwargs):
-        super(SignOutView, self).finalize_response(request, response, *args, **kwargs)
-        response.delete_cookie(settings.SIMPLE_JWT["AUTH_COOKIE"])
-
-        return response
-
-
-class UserView(generics.GenericAPIView, mixins.UpdateModelMixin, mixins.DestroyModelMixin):
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
+    @swagger_auto_schema(
+        operation_id='user_delete',
+        operation_description='사용자 탈퇴 기능을 수행합니다.',
+        responses={
+            204: swagger_response(description='USER_204_DELETE'),
+            401: user_fail_case.USER_401_UNAUTHORIZED.as_md(),
+            404: user_fail_case.USER_404_DOES_NOT_EXIST.as_md()
+        }
+    )
+    @action(detail=True, methods=["delete"])
+    def delete(self, request, *args, **kwargs):
+        try:
+            user = self.get_object()
+        except User.DoesNotExist:
+            raise UserNotFound()
+        self.authorize_request_user(request, user)
+        self.perform_destroy(request.user)
+        return Response(None, status=status.HTTP_204_NO_CONTENT)
 
     @swagger_auto_schema(
         operation_id='user_edit',
@@ -288,63 +215,67 @@ class UserView(generics.GenericAPIView, mixins.UpdateModelMixin, mixins.DestroyM
             404: user_fail_case.USER_404_DOES_NOT_EXIST.as_md()
         }
     )
-    def patch(self, request, *args, **kwargs):
+    @action(detail=True, methods=["patch"])
+    def edit(self, request, *args, **kwargs):
         try:
             user = self.get_object()
-        except Exception:
+        except User.DoesNotExist:
             raise UserNotFound()
-
-        if request.user and request.user.id != user.id:
-            raise AuthenticationFailed(detail=_("unauthorized_user"))
-
-        data = json.loads(request.body)
-        user_serializer = self.serializer_class(data=data, partial=True)
-        user_serializer.is_valid(raise_exception=True)
-        update_user = user_serializer.update(instance=user, validated_data=data)
-
-        response = {
-            "user": UserSerializer(instance=update_user).data
-        }
-
-        return Response(response, status=status.HTTP_201_CREATED)
+        self.authorize_request_user(request, user)
+        return self.update(request)
 
     @swagger_auto_schema(
-        operation_id='user_delete',
-        operation_description='사용자 탈퇴 기능을 수행합니다.',
+        operation_id='user_info',
+        operation_description='token값으로 사용자 정보를 조회합니다.',
         responses={
-            204: swagger_response(description='USER_204_DELETE'),
-            401: user_fail_case.USER_401_UNAUTHORIZED.as_md(),
+            200: swagger_response(
+                description='USER_200_INFO_BY_TOKEN',
+                schema=UserSerializer,
+                examples=user_response_example
+            ),
             404: user_fail_case.USER_404_DOES_NOT_EXIST.as_md()
         }
     )
-    def delete(self, request, *args, **kwargs):
-        try:
-            user = self.get_object()
-        except Exception:
+    @action(detail=False, methods=["get"])
+    def myinfo(self, request, *args, **kwargs):
+        user = request.user
+        if not user:
             raise UserNotFound()
+        return Response({"user": UserSerializer(user).data}, status=status.HTTP_200_OK)
 
-        if request.user and request.user.id != user.id:
-            raise AuthenticationFailed(detail=_("unauthorized_user"))
+    @swagger_auto_schema(
+        operation_id='verify',
+        operation_description='중복 검사(이메일, 닉네임)를 수행합니다.',
+        manual_parameters=[
+            swagger_parameter('nickname', openapi.IN_QUERY, '닉네임', openapi.TYPE_STRING),
+            swagger_parameter('email', openapi.IN_QUERY, '이메일', openapi.FORMAT_EMAIL),
+        ],
+        responses={
+            200: swagger_response(description='USER_200_VERIFY',
+                                  examples={"status": "success", "provider": "naver.com"}),
+            204: swagger_response(description='USER_204_VERIFY_NO_PARAMS'),
+            400:
+                user_fail_case.USER_400_VERIFY_EXIST_EMAIL.as_md() +
+                user_fail_case.USER_400_VERIFY_EXIST_NICKNAME.as_md() +
+                user_fail_case.USER_400_VERIFY_INVALID_DOMAIN.as_md()
+        },
+        security=[]
+    )
+    @action(detail=False, methods=["get"], serializer_class=VerifySerializer)
+    def verify(self, request, *args, **kwargs):
+        params = request.GET
+        if not params:
+            return Response(None, status=status.HTTP_204_NO_CONTENT)
 
-        self.perform_destroy(user)
-        return Response(None, status=status.HTTP_204_NO_CONTENT)
+        email = params.get('email', '')
+        if email:
+            response = {"provider": self.serializer_class.get_email(email)}
+            return Response(response, status=status.HTTP_200_OK)
 
-
-class CategoryView(generics.GenericAPIView, mixins.RetrieveModelMixin, mixins.UpdateModelMixin):
-    queryset = User.objects.all()
-    serializer_class = CategoryFieldSerializer
-
-    def get_params_for_category(self, request) -> Union[Tuple[str, str], Tuple[None, None]]:
-        params = self.request.GET
-        if params is {}:
-            return None, None
-
-        user_id = params.get('user', '')
-        event = params.get('event', '')
-        if not user_id or not event:
-            return None, None
-
-        return user_id, event
+        nickname = params.get('nickname', '')
+        if nickname:
+            response = {"nickname": self.serializer_class.get_nickname(nickname)}
+            return Response(response, status=status.HTTP_200_OK)
 
     @swagger_auto_schema(
         operation_id='user_category',
@@ -354,14 +285,13 @@ class CategoryView(generics.GenericAPIView, mixins.RetrieveModelMixin, mixins.Up
             404: user_fail_case.USER_404_DOES_NOT_EXIST.as_md()
         }
     )
-    def get(self, request, *args, **kwargs):
+    @action(detail=True, methods=["get"], serializer_class=CategoryFieldSerializer)
+    def category(self, request, *args, **kwargs):
         try:
             user = self.get_object()
-        except Exception:
+        except User.DoesNotExist:
             raise UserNotFound()
-
         response = {"category": user.category}
-
         return Response(response, status=status.HTTP_200_OK)
 
     @swagger_auto_schema(
@@ -390,9 +320,11 @@ class CategoryView(generics.GenericAPIView, mixins.RetrieveModelMixin, mixins.Up
             404: user_fail_case.USER_404_DOES_NOT_EXIST.as_md()
         }
     )
-    def patch(self, request, *args, **kwargs):
-        user_id, event = self.get_params_for_category(request)
-
+    @action(detail=False, methods=["patch"], serializer_class=CategoryFieldSerializer)
+    def category_update(self, request, *args, **kwargs):
+        user_id = request.GET.get("user_id")
+        event = request.GET.get("event")
+        print(user_id, event)
         if user_id is None or event is None:
             return Response(None, status=status.HTTP_204_NO_CONTENT)
 
@@ -400,16 +332,12 @@ class CategoryView(generics.GenericAPIView, mixins.RetrieveModelMixin, mixins.Up
             user = self.queryset.get(id=user_id)
         except User.DoesNotExist:
             raise UserNotFound()
-
-        if request.user and request.user.id != user.id:
-            raise AuthenticationFailed(detail=_("unauthorized_user"))
+        self.authorize_request_user(request, user)
 
         data = json.loads(request.body)
-
         raw_data = data.get('category', '')
         if raw_data is None:
             return Response(None, status=status.HTTP_204_NO_CONTENT)
-
         req_data = raw_data if isinstance(raw_data, list) else list(raw_data.values())
 
         if event == 'follow':
@@ -419,20 +347,16 @@ class CategoryView(generics.GenericAPIView, mixins.RetrieveModelMixin, mixins.Up
             valid_data = self.serializer_class.get_unfollow(user=user, req_data=req_data)
         else:
             return Response(None, status=status.HTTP_204_NO_CONTENT)
-
         valid_data = self.serializer_class.get_category(valid_data)
         user_serializer = UserSerializer(data=valid_data, partial=True)
         user_serializer.is_valid(raise_exception=True)
         update_user = user_serializer.update(instance=user, validated_data={'category': valid_data})
 
-        response = {
-            "user": UserSerializer(instance=update_user).data
-        }
-
+        response = {"user": UserSerializer(instance=update_user).data}
         return Response(response, status=status.HTTP_201_CREATED)
 
 
-class PasswordView(generics.GenericAPIView, mixins.UpdateModelMixin):
+class PasswordViewSet(viewsets.ViewSet, AuthorizingMixin):
     queryset = User.objects.all()
     serializer_class = PasswordChangeSerializer
 
@@ -456,47 +380,17 @@ class PasswordView(generics.GenericAPIView, mixins.UpdateModelMixin):
             404: user_fail_case.USER_404_DOES_NOT_EXIST.as_md()
         }
     )
-    def put(self, request, *args, **kwargs):
+    @action(detail=True, methods=["put"])  # todo: throttling
+    def change(self, request, *args, **kwargs):
         try:
             user = self.get_object()
-        except Exception:
+        except User.DoesNotExist:
             raise UserNotFound()
-
-        if request.user and request.user.id != user.id:
-            raise AuthenticationFailed(detail=_("unauthorized_user"))
+        self.authorize_request_user(request, user)
 
         data = json.loads(request.body)
-
         serializer = self.serializer_class(data=data)
         serializer.is_valid(raise_exception=True)
         user = serializer.check_passwd(obj=user)
-
-        response = {
-            "user": UserSerializer(instance=user).data
-        }
+        response = {"user": UserSerializer(instance=user).data}
         return Response(response, status=status.HTTP_201_CREATED)
-
-
-class UserInfoByTokenView(generics.GenericAPIView, mixins.RetrieveModelMixin):
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
-
-    @swagger_auto_schema(
-        operation_id='user_info',
-        operation_description='token값으로 사용자 정보를 조회합니다.',
-        responses={
-            200: swagger_response(
-                description='USER_200_INFO_BY_TOKEN',
-                schema=UserSerializer,
-                examples=user_response_example
-            ),
-            404: user_fail_case.USER_404_DOES_NOT_EXIST.as_md()
-        }
-    )
-    def get(self, request, *args, **kwargs):
-        user = request.user
-        if not user:
-            raise UserNotFound()
-
-        response = {"user": UserSerializer(user).data}
-        return Response(response, status=status.HTTP_200_OK)

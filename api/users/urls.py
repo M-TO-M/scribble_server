@@ -1,19 +1,12 @@
-from django.urls import path
-
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
 from api.users.views import *
 
 
 app_name = 'users'
-
+router = DefaultRouter(trailing_slash=False)
+router.register("", UserViewSet, basename=""),
+router.register("passwd", PasswordViewSet, basename="passwd"),
 urlpatterns = [
-    path('new', SignUpView.as_view(), name='signup'),
-    path('verify', VerifyView.as_view(), name='verify'),
-    path('signin', SignInView.as_view(), name='signin'),
-    path('signout', SignOutView.as_view(), name='signout'),
-    path('<int:pk>/delete', UserView.as_view(http_method_names=['delete']), name='user_delete'),
-    path('<int:pk>/edit', UserView.as_view(http_method_names=['patch']), name='user_edit'),
-    path('<int:pk>/category', CategoryView.as_view(http_method_names=['get']), name='user_category'),
-    path('category', CategoryView.as_view(http_method_names=['patch']), name='category_follow_unfollow'),
-    path('<int:pk>/passwd/change', PasswordView.as_view(), name='passwd_change'),
-    path('myinfo', UserInfoByTokenView.as_view(), name='user_info'),
+    path('', include(router.urls)),
 ]
