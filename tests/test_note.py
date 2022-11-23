@@ -1,13 +1,9 @@
-from faker import Faker
-from faker.providers.isbn import Provider
-
 from rest_framework import status
 from rest_framework.test import APIClient, APITestCase
 
 from core.serializers import ScribbleTokenObtainPairSerializer
-from .factories import NoteFactory, NoteLikesRelationFactory
-from apps.contents.tests.book_object.factories import BookObjectFactory
-from apps.users.tests.user.factories import UserFactory
+from .factories import NoteFactory, NoteLikesRelationFactory, BookObjectFactory
+from .factories import UserFactory
 
 
 class NoteTestCase(APITestCase):

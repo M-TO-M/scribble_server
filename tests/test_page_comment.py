@@ -1,12 +1,8 @@
 from factory import fuzzy
-
 from rest_framework import status
 
-from apps.contents.tests.page.factories import NoteFactory, PageFactory
-from apps.contents.tests.page_comment.factories import PageCommentFactory
-
-from apps.users.tests.user.factories import UserFactory
-from apps.users.tests.user.test_case import UserTestCase
+from .factories import PageFactory, PageCommentFactory, UserFactory
+from .test_user import UserTestCase
 
 
 class PageCommentTestCase(UserTestCase):

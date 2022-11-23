@@ -3,11 +3,8 @@ from faker import Faker
 
 from rest_framework import status
 
-from apps.contents.tests.note.factories import NoteFactory
-from apps.contents.tests.page.factories import PageFactory
-
-from apps.users.tests.user.factories import UserFactory
-from apps.users.tests.user.test_case import UserTestCase
+from .factories import NoteFactory, PageFactory, UserFactory
+from .test_user import UserTestCase
 
 
 class PageTestCase(UserTestCase):
