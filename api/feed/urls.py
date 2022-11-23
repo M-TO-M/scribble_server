@@ -1,8 +1,8 @@
 from django.urls import path
 
-from api.main.views import *
+from api.feed.views import *
 
-app_name = 'main'
+app_name = 'feed'
 
 urlpatterns = [
     path('', MainView.as_view(), name='main'),

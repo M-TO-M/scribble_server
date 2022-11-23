@@ -2,6 +2,7 @@ from django.urls import include, path
 
 app_name = 'contents'
 
+# todo: contents package 통합
 urlpatterns = [
     path('books/', include('api.contents.book_object.urls')),
     path('notes/', include('api.contents.note.urls')),

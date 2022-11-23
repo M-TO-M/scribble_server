@@ -7,13 +7,13 @@ from django.utils.translation import gettext_lazy as _
 from django.utils.translation.trans_null import gettext_lazy
 
 from rest_framework import generics, mixins, status
-from rest_framework.exceptions import ValidationError, AuthenticationFailed
+from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.response import Response
 
 from api.contents.note.serializers import *
 from api.contents.page.serializers import PageSerializer
 from apps.contents.models import Note, NoteLikesRelation
-from core.exceptions import NoteNotFound
+from api.contents.exceptions import NoteNotFound
 from utils.swagger import swagger_response, note_response_example, \
     swagger_schema_with_properties, swagger_schema_with_description, \
     NoteFailCaseCollection as note_fail_case, UserFailCaseCollection as user_fail_case, note_detail_response_example

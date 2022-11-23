@@ -6,8 +6,7 @@ from django.utils.translation import gettext_lazy as _
 from api.contents.book_object.serializers import BookObjectSerializer, BookCreateSerializer
 from api.users.serializers import UserSerializer
 from apps.contents.models import Note, BookObject, NoteLikesRelation, Page
-from core.serializers import StringListField
-from core.validators import ISBNValidator
+from api.contents.serializers import StringListField
 
 
 class NoteWithoutBookSchemaSerializer(serializers.Serializer):

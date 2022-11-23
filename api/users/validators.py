@@ -1,38 +1,10 @@
-import re
-from stdnum import isbn
-
 from django.core.validators import EmailValidator, BaseValidator
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework.exceptions import ValidationError
 
 
-domain_allowlist = [
-    "naver.com",
-    "gmail.com",
-    "outlook.com",
-    "daum.net",
-    "hanmail.net",
-    "nate.com",
-    "hotmail.com",
-    "icloud.com"
-]
-
-
-def ISBNValidator(input_isbn):
-    normalized = re.sub(" |-", "", input_isbn).upper()
-
-    if not isinstance(normalized, str):
-        raise ValidationError(_("invalid_isbn_not_string"))
-    if len(normalized) != 10 and len(normalized) != 13:
-        raise ValidationError(_("invalid_isbn_wrong_length"))
-    if not isbn.is_valid(normalized):
-        raise ValidationError(_("invalid_isbn_failed_checksum"))
-
-    return True
-
-
-class SpecificEmailDomainValidator(EmailValidator):
+class EmailDomainValidator(EmailValidator):
     def validate_domain_part(self, domain_part):
         if self.domain_regex.match(domain_part) is None:
             return False
@@ -43,7 +15,7 @@ class SpecificEmailDomainValidator(EmailValidator):
         return True
 
 
-class CategoryDictValidator(BaseValidator):
+class CategoryValidator(BaseValidator):
     message = _("Ensure this value is contained in given data dict.")
     code = "limit_dict"
 

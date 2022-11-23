@@ -9,7 +9,7 @@ from api.contents.note.serializers import NoteWithoutBookSchemaSerializer
 from api.contents.page_comment.serializers import PageCommentSerializer
 from api.users.serializers import UserSerializer
 from apps.contents.models import Page, PageLikesRelation, Note
-from core.serializers import StringListField
+from api.contents.serializers import StringListField
 
 
 class PageDetailSchemaSerialzer(serializers.Serializer):

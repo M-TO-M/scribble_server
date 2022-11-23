@@ -13,7 +13,7 @@ from rest_framework.exceptions import ValidationError, AuthenticationFailed
 from rest_framework.response import Response
 
 from api.contents.book_object.serializers import DetailBookListSerializer
-from api.contents.note.serializers import NoteCreateSerializer, NoteSerializer
+from api.contents.note.serializers import NoteCreateSerializer
 from api.contents.page.serializers import (
     PageSerializer,
     PageLikesRelationSerializer,
@@ -22,7 +22,7 @@ from api.contents.page.serializers import (
     PageAllSchemaSerializer
 )
 from apps.contents.models import Note, Page, PageLikesRelation, BookObject
-from core.exceptions import PageNotFound, NoteNotFound
+from api.contents.exceptions import PageNotFound, NoteNotFound
 from utils.swagger import (
     swagger_response,
     swagger_schema_with_description,

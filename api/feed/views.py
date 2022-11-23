@@ -8,19 +8,35 @@ from django.core.serializers.json import DjangoJSONEncoder
 from rest_framework import generics, mixins, status
 from rest_framework.response import Response
 
+from api.feed.serializers import MainSchemaSerializer, UserMainSchemaSerializer, MainNoteListSchemaSerializer
 from api.contents.book_object.serializers import SimpleBookListSerializer
-from api.main.serializers import MainSchemaSerializer, UserMainSchemaSerializer, MainNoteListSchemaSerializer
 from api.contents.note.serializers import NoteSerializer
-from api.contents.page.serializers import PageSerializer, PageDetailSerializer
-from api.users.serializers import UserSerializer
-
+from api.contents.page.serializers import PageDetailSerializer
 from apps.contents.models import Note, Page, BookObject
-from apps.users.models import User
-from core.exceptions import UserNotFound
-from core.views import TemplateMainView
 
-from utils.swagger import swagger_response, swagger_parameter, main_response_example, user_main_response_example, \
-    UserFailCaseCollection as user_fail_case, main_note_list_response_example
+from api.users.serializers import UserSerializer
+from api.users.pagination import MainViewPagination
+from api.users.exceptions import UserNotFound
+from apps.users.models import User
+
+from utils.swagger import (
+    swagger_response,
+    swagger_parameter,
+    main_response_example,
+    user_main_response_example,
+    UserFailCaseCollection as user_fail_case,
+    main_note_list_response_example
+)
+
+
+# todo: main → feed로 keyword 변경하기
+class TemplateMainView(generics.ListAPIView):
+    pagination_class = MainViewPagination
+
+    def get_paginated_data(self, queryset):
+        pagination = self.paginate_queryset(queryset)
+        serializer = self.serializer_class(instance=pagination or queryset, many=True)
+        return serializer.data
 
 
 class MainView(TemplateMainView):

@@ -5,7 +5,7 @@ from rest_framework.exceptions import ValidationError
 
 from apps.contents.models import Page, PageComment
 from api.users.serializers import UserSerializer
-from core.exceptions import PageNotFound, PageCommentNotFound
+from api.contents.exceptions import PageNotFound, PageCommentNotFound
 
 
 class PageCommentSchemaSerializer(serializers.Serializer):

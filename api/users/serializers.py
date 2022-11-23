@@ -1,3 +1,4 @@
+from datetime import datetime
 from random import randint
 from typing import Union
 
@@ -6,21 +7,31 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework_simplejwt.exceptions import TokenError
-from rest_framework_simplejwt.serializers import TokenBlacklistSerializer
+from rest_framework_simplejwt.serializers import TokenBlacklistSerializer, TokenObtainPairSerializer
 
-from apps.users.models import User, category_choices
-from core.validators import SpecificEmailDomainValidator, domain_allowlist, CategoryDictValidator
+from apps.users.models import User, category_list, domain_allowlist
+from api.users.validators import EmailDomainValidator, CategoryValidator
 from scribble.authentication import CustomJWTAuthentication
+
+
+class ScribbleTokenObtainPairSerializer(TokenObtainPairSerializer):
+    @classmethod
+    def get_token(cls, user):
+        token = super().get_token(user)
+        token["iat"] = datetime.now()
+        token["username"] = user.nickname
+
+        return token
 
 
 class UserValidationBaseSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(
         error_messages={'unique': _('exist_email')},
-        validators=[SpecificEmailDomainValidator(allowlist=domain_allowlist)]
+        validators=[EmailDomainValidator(allowlist=domain_allowlist)]
     )
     nickname = serializers.CharField(error_messages={'unique': _('exist_nickname')})
     category = serializers.JSONField(
-        validators=[CategoryDictValidator(limit_value=category_choices)]
+        validators=[CategoryValidator(limit_value=category_list)]
     )
 
     class Meta:
@@ -44,9 +55,9 @@ class UserValidationBaseSerializer(serializers.ModelSerializer):
     def validate_category(self, value):
         ret = {}
         for val in value:
-            if val not in category_choices:
-                raise ValidationError(detail={"detail": "invalid_category", "category_list": category_choices})
-            ret[category_choices.index(val)] = val
+            if val not in category_list:
+                raise ValidationError(detail={"detail": "invalid_category", "category_list": category_list})
+            ret[category_list.index(val)] = val
         return ret
 
 
@@ -157,9 +168,9 @@ class CategoryFieldSerializer(serializers.Serializer):
         if isinstance(value, list):
             ret = {}
             for val in value:
-                if val not in category_choices:
-                    raise ValidationError(detail={"detail": "invalid_category", "category_list": category_choices})
-                ret[category_choices.index(val)] = val
+                if val not in category_list:
+                    raise ValidationError(detail={"detail": "invalid_category", "category_list": category_list})
+                ret[category_list.index(val)] = val
             return ret
 
 

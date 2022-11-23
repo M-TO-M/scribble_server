@@ -11,7 +11,6 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'core',
     'apps.users',
     'apps.contents',
     'rest_framework',
@@ -106,7 +105,7 @@ SIMPLE_JWT = {
     "USER_ID_FIELD": "id",
     "USER_ID_CLAIM": "user_id",
 
-    "TOKEN_OBTAIN_SERIALIZER": "utils.serializers.ScribbleTokenObtainPairSerializer",
+    "TOKEN_OBTAIN_SERIALIZER": "api.users.serializers.ScribbleTokenObtainPairSerializer",
     "TOKEN_REFRESH_SERIALIZER": "rest_framework_simplejwt.serializers.TokenRefreshSerializer",
 
     "AUTH_COOKIE": "SCRIB_TOKEN",

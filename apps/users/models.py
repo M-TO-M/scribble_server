@@ -2,24 +2,13 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser, UserManager
 from rest_framework_tracking.models import APIRequestLog
 
-from core.models import TimeStampModel
-from core.validators import domain_allowlist, SpecificEmailDomainValidator, CategoryDictValidator
+from apps.users.choices import CategoryChoices, DomainChoices
+from api.users.validators import EmailDomainValidator, CategoryValidator
+from apps.models import TimeStampModel
 
 
-category_choices = [
-  '국내소설',
-  '외국소설(유럽,북미등)',
-  '외국소설(아시아)',
-  '경제/경영',
-  '자기계발',
-  '역사',
-  '종교',
-  '정치/사회',
-  '예술/대중문화',
-  '과학',
-  '기술/공학',
-  '컴퓨터/IT'
-]
+category_list = CategoryChoices.choices_list()
+domain_allowlist = DomainChoices.choices_list()
 
 
 class NewUserManager(UserManager):
@@ -52,7 +41,7 @@ class User(AbstractUser, TimeStampModel):
     email = models.EmailField(
         max_length=255,
         verbose_name='이메일',
-        validators=[SpecificEmailDomainValidator(allowlist=domain_allowlist)]
+        validators=[EmailDomainValidator(allowlist=domain_allowlist)]
     )
     nickname = models.CharField(
         max_length=15,
@@ -66,7 +55,7 @@ class User(AbstractUser, TimeStampModel):
     )
     category = models.JSONField(
         default=dict,
-        validators=[CategoryDictValidator(category_choices)]
+        validators=[CategoryValidator(category_list)]
     )
 
     objects = NewUserManager()

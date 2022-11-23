@@ -6,12 +6,12 @@ from drf_yasg.utils import swagger_auto_schema
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework import generics, mixins, status
-from rest_framework.exceptions import AuthenticationFailed, ValidationError
+from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.response import Response
 
 from api.contents.page_comment.serializers import *
 from apps.contents.models import PageComment
-from core.exceptions import PageCommentNotFound
+from api.contents.exceptions import PageCommentNotFound
 from utils.swagger import swagger_response, swagger_schema_with_description, swagger_schema_with_properties, \
     PageCommentFailCaseCollection as page_comment_fail_case, UserFailCaseCollection as user_fail_case, \
     page_comment_response_example

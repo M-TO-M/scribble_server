@@ -6,7 +6,7 @@ from rest_framework.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 
 from apps.contents.models import BookObject
-from core.validators import ISBNValidator
+from api.contents.validators import ISBNValidator
 from utils.naver_api import NaverSearchAPI
 
 
