@@ -5,8 +5,7 @@ from api.users.views import *
 
 app_name = 'users'
 router = DefaultRouter(trailing_slash=False)
-router.register("", UserViewSet, basename=""),
-router.register("passwd", PasswordViewSet, basename="passwd"),
-urlpatterns = [
-    path('', include(router.urls)),
-]
+router.register("", UserViewSet, basename="")
+router.register("passwd", PasswordViewSet, basename="passwd")
+
+urlpatterns = [path('', include(router.urls)), ]

@@ -1,6 +1,8 @@
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework_tracking.mixins import LoggingMixin
 
+from django.utils.translation import gettext_lazy as _
+
 from api.users.exceptions import UserNotFound
 from apps.users.models import UserLoginLog
 
