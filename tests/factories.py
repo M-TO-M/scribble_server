@@ -7,7 +7,7 @@ from django.utils import timezone
 from django.contrib.auth.hashers import make_password
 from faker.providers.isbn import Provider
 
-from apps.users.models import User, category_choices, domain_allowlist
+from apps.users.models import User, domain_allowlist, category_list
 from apps.contents.models import BookObject, Note, NoteLikesRelation, Page, PageComment
 
 
@@ -31,7 +31,7 @@ class UserFactory(factory.django.DjangoModelFactory):
     @factory.lazy_attribute_sequence
     def category(self, n):
         value = {}
-        category_dict = {i: value for i, value in enumerate(category_choices)}
+        category_dict = {i: value for i, value in enumerate(category_list)}
 
         for i in range(1, (n + 1) % len(category_dict)):
             idx = random.randrange(i)
@@ -53,7 +53,7 @@ class BookObjectFactory(factory.django.DjangoModelFactory):
     @factory.lazy_attribute_sequence
     def category(self, n):
         value = {}
-        category_dict = {i: value for i, value in enumerate(category_choices)}
+        category_dict = {i: value for i, value in enumerate(category_list)}
 
         for i in range(1, (n + 1) % len(category_dict)):
             idx = random.randrange(i)
