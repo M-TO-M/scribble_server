@@ -1,7 +1,7 @@
 from rest_framework.views import exception_handler
 
 
-fail_case_key = ['detail', 'email', 'nickname', 'category', 'isbn']
+fail_case_key = ['detail', 'email', 'nickname', 'category', 'isbn', 'non_field_errors']
 
 
 def _get_custom_response_data(data):

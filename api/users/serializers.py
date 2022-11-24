@@ -1,26 +1,38 @@
+from datetime import datetime
 from random import randint
 from typing import Union
 
+from django.contrib.auth.hashers import check_password
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework_simplejwt.exceptions import TokenError
-from rest_framework_simplejwt.serializers import TokenBlacklistSerializer
+from rest_framework_simplejwt.serializers import TokenBlacklistSerializer, TokenObtainPairSerializer
 
-from apps.users.models import User, category_choices
-from core.validators import SpecificEmailDomainValidator, domain_allowlist, CategoryDictValidator
+from apps.users.models import User, category_list, domain_allowlist
+from api.users.validators import EmailDomainValidator, CategoryValidator
 from scribble.authentication import CustomJWTAuthentication
+
+
+class ScribbleTokenObtainPairSerializer(TokenObtainPairSerializer):
+    @classmethod
+    def get_token(cls, user):
+        token = super().get_token(user)
+        token["iat"] = datetime.now()
+        token["username"] = user.nickname
+
+        return token
 
 
 class UserValidationBaseSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(
         error_messages={'unique': _('exist_email')},
-        validators=[SpecificEmailDomainValidator(allowlist=domain_allowlist)]
+        validators=[EmailDomainValidator(allowlist=domain_allowlist)]
     )
     nickname = serializers.CharField(error_messages={'unique': _('exist_nickname')})
     category = serializers.JSONField(
-        validators=[CategoryDictValidator(limit_value=category_choices)]
+        validators=[CategoryValidator(limit_value=category_list)]
     )
 
     class Meta:
@@ -44,9 +56,9 @@ class UserValidationBaseSerializer(serializers.ModelSerializer):
     def validate_category(self, value):
         ret = {}
         for val in value:
-            if val not in category_choices:
-                raise ValidationError(detail={"detail": "invalid_category", "category_list": category_choices})
-            ret[category_choices.index(val)] = val
+            if val not in category_list:
+                raise ValidationError(detail={"detail": "invalid_category", "category_list": category_list})
+            ret[category_list.index(val)] = val
         return ret
 
 
@@ -58,6 +70,30 @@ class SignUpSerializer(UserValidationBaseSerializer):
     def create(self, validated_data):
         user = User.objects.create_user(**validated_data)
         return user
+
+
+class SignInSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField(validators=[EmailDomainValidator(allowlist=domain_allowlist)], required=True)
+    password = serializers.CharField(required=True)
+
+    class Meta:
+        model = User
+        fields = ("email", "password")
+
+    def validate(self, attrs):
+        try:
+            user = self.Meta.model.objects.get(email=attrs["email"])
+            self.instance = user
+        except self.Meta.model.DoesNotExist:
+            raise ValidationError(detail=_("no_exist_email"))
+
+        if check_password(attrs["password"], self.instance.password) is False:
+            raise ValidationError(detail=_("invalid_password"))
+
+        return attrs
+
+    def to_representation(self, instance):
+        return SignUpSerializer(instance=self.instance).data
 
 
 class SignOutSerializer(TokenBlacklistSerializer):
@@ -97,24 +133,27 @@ class VerifySerializer(serializers.ModelSerializer):
             raise ValidationError(detail=_("exist_email"))
         except User.DoesNotExist:
             domain = email.rsplit("@", 1)[1]
-            if domain not in domain_allowlist:
-                raise ValidationError(detail={"detail": "invalid_domain", "domain_allowlist": domain_allowlist})
-            return domain
+            if domain in domain_allowlist:
+                return domain
+            raise ValidationError(detail={"detail": "invalid_domain", "domain_allowlist": domain_allowlist})
 
     @staticmethod
-    def get_nickname(nickname: str) -> None:
+    def get_nickname(nickname: str) -> str:
         try:
             User.objects.get(nickname__exact=nickname)
-            recommend = nickname + str(randint(1, 100))
-            raise ValidationError(detail={"detail": "exist_nickname", "recommend": recommend})
+            raise ValidationError(detail={"detail": "exist_nickname", "recommend": nickname + str(randint(1, 100))})
         except User.DoesNotExist:
-            return None
+            return nickname
 
 
 class UserSerializer(UserValidationBaseSerializer):
     class Meta:
         model = User
         fields = ("id", "email", "nickname", "category", "profile_image", "created_at", "updated_at")
+
+    def create(self, validated_data):
+        user = User.objects.create_user(**validated_data)
+        return user
 
     def update(self, instance, validated_data):
         instance.nickname = validated_data.pop('nickname', instance.nickname)
@@ -157,9 +196,9 @@ class CategoryFieldSerializer(serializers.Serializer):
         if isinstance(value, list):
             ret = {}
             for val in value:
-                if val not in category_choices:
-                    raise ValidationError(detail={"detail": "invalid_category", "category_list": category_choices})
-                ret[category_choices.index(val)] = val
+                if val not in category_list:
+                    raise ValidationError(detail={"detail": "invalid_category", "category_list": category_list})
+                ret[category_list.index(val)] = val
             return ret
 
 

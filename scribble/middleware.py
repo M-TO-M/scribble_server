@@ -15,7 +15,7 @@ from scribble.authentication import CustomJWTAuthentication
 REQ_ALLOWED_PATH = [
     "/",
     "/docs",
-    "/main/",
+    "/feed/main",
     "/users/new",
     "/users/verify",
     "/users/signin",
@@ -33,12 +33,10 @@ class TokenAuthMiddleWare(MiddlewareMixin):
         self.get_response = get_response
 
     def __call__(self, request):
-        self.process_request(request)
-
         response = None
         if request.path_info not in VERSION_ALLOWED_PATH:
+            self.process_request(request)
             response = self.process_response(request, response)
-
         return response or self.get_response(request)
 
     def process_request(self, request):

@@ -1,18 +1,16 @@
 from django.db import models
 from django.db.models import UniqueConstraint
 
-from core.fields import ISBNField
-from core.models import TimeStampModel, Default
+from api.contents.fields import ISBNField
+from apps.models import TimeStampModel
 from apps.users.models import User
 
 
-DEFAULT_MODEL_PK = Default(
-    user=0,
-    book_object=1,
-    note=2,
-    page=3,
-    page_comment=4
-)
+USER__DEFAULT_PK = 0
+BOOK_OBJECT__DEFAULT_PK = 1
+NOTE__DEFAULT_PK = 2
+PAGE__DEFAULT_PK = 3
+PAGE_COMMENT__DEFAULT_PK = 4
 
 
 class BookObject(TimeStampModel):
@@ -49,14 +47,14 @@ class Note(TimeStampModel):
     user = models.ForeignKey(
         User,
         on_delete=models.SET_DEFAULT,
-        default=DEFAULT_MODEL_PK.user,
+        default=USER__DEFAULT_PK,
         related_name='note',
         verbose_name='작성자'
     )
     book = models.ForeignKey(
         BookObject,
         on_delete=models.SET_DEFAULT,
-        default=DEFAULT_MODEL_PK.book_object,
+        default=BOOK_OBJECT__DEFAULT_PK,
         related_name='note',
         verbose_name='도서'
     )
@@ -70,7 +68,6 @@ class Note(TimeStampModel):
         verbose_name = '필사 노트'
         verbose_name_plural = verbose_name
         ordering = ['created_at']
-        # TASK 4: 동일한 user, book에 대하여 여러 개의 note object가 생성되는 버그 수정 (UniqueConstraint 지정)
         constraints = [
             UniqueConstraint(
                 fields=['user', 'book'],
@@ -107,7 +104,7 @@ class Page(TimeStampModel):
     note = models.ForeignKey(
         Note,
         on_delete=models.SET_DEFAULT,
-        default=DEFAULT_MODEL_PK.note,
+        default=NOTE__DEFAULT_PK,
         related_name='page',
         verbose_name='노트'
     )
@@ -115,7 +112,6 @@ class Page(TimeStampModel):
         default=0,
         verbose_name='노트 인덱스'
     )
-    # TASK 2: 책 등록 이미지 url max_length 수정
     transcript = models.URLField(
         blank=False,
         null=False,
@@ -179,7 +175,7 @@ class PageComment(TimeStampModel):
     comment_user = models.ForeignKey(
         User,
         on_delete=models.SET_DEFAULT,
-        default=DEFAULT_MODEL_PK.page_comment,
+        default=PAGE_COMMENT__DEFAULT_PK,
         related_name='page_comment',
         verbose_name='작성자'
     )
@@ -187,7 +183,7 @@ class PageComment(TimeStampModel):
     page = models.ForeignKey(
         Page,
         on_delete=models.SET_DEFAULT,
-        default=DEFAULT_MODEL_PK.page,
+        default=PAGE__DEFAULT_PK,
         related_name='page_comment',
         verbose_name='페이지'
     )

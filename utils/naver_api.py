@@ -4,7 +4,7 @@ from typing import Union, Tuple
 from urllib import request, parse
 
 from rest_framework.exceptions import ValidationError
-from core.validators import ISBNValidator
+from api.contents.validators import ISBNValidator
 from scribble.settings import NAVER_API_CLIENT_ID, NAVER_API_CLIENT_SECRET
 
 
