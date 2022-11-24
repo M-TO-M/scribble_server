@@ -68,7 +68,6 @@ class Note(TimeStampModel):
         verbose_name = '필사 노트'
         verbose_name_plural = verbose_name
         ordering = ['created_at']
-        # TASK 4: 동일한 user, book에 대하여 여러 개의 note object가 생성되는 버그 수정 (UniqueConstraint 지정)
         constraints = [
             UniqueConstraint(
                 fields=['user', 'book'],
@@ -113,7 +112,6 @@ class Page(TimeStampModel):
         default=0,
         verbose_name='노트 인덱스'
     )
-    # TASK 2: 책 등록 이미지 url max_length 수정
     transcript = models.URLField(
         blank=False,
         null=False,

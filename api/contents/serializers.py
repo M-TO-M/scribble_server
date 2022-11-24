@@ -95,7 +95,6 @@ class NoteSchemaSerializer(serializers.Serializer):
     pages_count = serializers.IntegerField(help_text='노트에 저장된 페이지 수', read_only=True)
 
 
-# TASK 3: 기본 정렬 순서 지정 (최근 등록순)
 class NoteSerializer(serializers.ModelSerializer):
     like_user = serializers.SerializerMethodField()
 
@@ -144,8 +143,6 @@ class NoteCreateSerializer(serializers.ModelSerializer):
         book = book_create_serializer.create(validated_data={"isbn": isbn})
         return book
 
-    # TASK 4: 동일한 user, book에 대하여 여러 개의 note object가 생성되는 버그 수정
-    #           (create 대신 get_or_create 사용)
     def create(self, validated_data):
         isbn = validated_data.pop('isbn')
         if not isbn:
