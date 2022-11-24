@@ -1,7 +1,6 @@
 from rest_framework import serializers
 
-from api.contents.note.serializers import NoteSchemaSerializer
-from api.contents.page.serializers import PageSchemaSerializer
+from api.contents.serializers import NoteSchemaSerializer, PageSchemaSerializer
 from api.users.serializers import UserSerializer
 
 

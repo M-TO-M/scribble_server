@@ -9,9 +9,7 @@ from rest_framework import generics, mixins, status
 from rest_framework.response import Response
 
 from api.feed.serializers import MainSchemaSerializer, UserMainSchemaSerializer, MainNoteListSchemaSerializer
-from api.contents.book_object.serializers import SimpleBookListSerializer
-from api.contents.note.serializers import NoteSerializer
-from api.contents.page.serializers import PageDetailSerializer
+from api.contents.serializers import SimpleBookListSerializer, NoteSerializer, PageDetailSerializer
 from apps.contents.models import Note, Page, BookObject
 
 from api.users.serializers import UserSerializer
