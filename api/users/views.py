@@ -65,7 +65,7 @@ class ScribbleTokenRefreshView(TokenViewBase):
         return response
 
 
-class TokenObtainViewSet(viewsets.ViewSet):
+class TokenObtainViewSet(viewsets.ModelViewSet):
     def set_logging_cache(self, request):
         if settings.RUN_ENV == "prod":
             addr = request.META.get('REMOTE_ADDR')
@@ -125,7 +125,7 @@ class UserViewSet(TokenObtainViewSet, SignInLoggingMixin, AuthorizingMixin):
         },
         security=[]
     )
-    @action(detail=False, methods=["post"], serializer_class=SignUpSerializer)
+    @action(detail=False, methods=["post"], serializer_class=SignUpSerializer, name="new")
     def new(self, request, *args, **kwargs):
         return self.create(request)
 
@@ -151,7 +151,7 @@ class UserViewSet(TokenObtainViewSet, SignInLoggingMixin, AuthorizingMixin):
         },
         security=[]
     )
-    @action(detail=False, methods=["post"], serializer_class=SignInSerializer)
+    @action(detail=False, methods=["post"], serializer_class=SignInSerializer, name="signin")
     def signin(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -170,7 +170,7 @@ class UserViewSet(TokenObtainViewSet, SignInLoggingMixin, AuthorizingMixin):
             404: user_fail_case.USER_404_DOES_NOT_EXIST.as_md()
         }
     )
-    @action(detail=False,methods=["post"], serializer_class=SignOutSerializer)
+    @action(detail=False, methods=["post"], serializer_class=SignOutSerializer, name="signout")
     def signout(self, request, *args, **kwargs):
         data = {
             'refresh': request.COOKIES[settings.SIMPLE_JWT["AUTH_COOKIE"]],
@@ -191,7 +191,7 @@ class UserViewSet(TokenObtainViewSet, SignInLoggingMixin, AuthorizingMixin):
             404: user_fail_case.USER_404_DOES_NOT_EXIST.as_md()
         }
     )
-    @action(detail=True, methods=["delete"])
+    @action(detail=True, methods=["delete"], name="delete")
     def delete(self, request, *args, **kwargs):
         try:
             user = self.get_object()
@@ -215,7 +215,7 @@ class UserViewSet(TokenObtainViewSet, SignInLoggingMixin, AuthorizingMixin):
             404: user_fail_case.USER_404_DOES_NOT_EXIST.as_md()
         }
     )
-    @action(detail=True, methods=["patch"])
+    @action(detail=True, methods=["patch"], name="edit")
     def edit(self, request, *args, **kwargs):
         try:
             user = self.get_object()
@@ -236,7 +236,7 @@ class UserViewSet(TokenObtainViewSet, SignInLoggingMixin, AuthorizingMixin):
             404: user_fail_case.USER_404_DOES_NOT_EXIST.as_md()
         }
     )
-    @action(detail=False, methods=["get"])
+    @action(detail=False, methods=["get"], name="myinfo")
     def myinfo(self, request, *args, **kwargs):
         user = request.user
         if not user:
@@ -261,7 +261,7 @@ class UserViewSet(TokenObtainViewSet, SignInLoggingMixin, AuthorizingMixin):
         },
         security=[]
     )
-    @action(detail=False, methods=["get"], serializer_class=VerifySerializer)
+    @action(detail=False, methods=["get"], serializer_class=VerifySerializer, name="verify")
     def verify(self, request, *args, **kwargs):
         params = request.GET
         if not params:
@@ -285,7 +285,7 @@ class UserViewSet(TokenObtainViewSet, SignInLoggingMixin, AuthorizingMixin):
             404: user_fail_case.USER_404_DOES_NOT_EXIST.as_md()
         }
     )
-    @action(detail=True, methods=["get"], serializer_class=CategoryFieldSerializer)
+    @action(detail=True, methods=["get"], serializer_class=CategoryFieldSerializer, name="category")
     def category(self, request, *args, **kwargs):
         try:
             user = self.get_object()
@@ -320,7 +320,7 @@ class UserViewSet(TokenObtainViewSet, SignInLoggingMixin, AuthorizingMixin):
             404: user_fail_case.USER_404_DOES_NOT_EXIST.as_md()
         }
     )
-    @action(detail=False, methods=["patch"], serializer_class=CategoryFieldSerializer)
+    @action(detail=False, methods=["patch"], serializer_class=CategoryFieldSerializer, name="category_update")
     def category_update(self, request, *args, **kwargs):
         user_id = request.GET.get("user_id")
         event = request.GET.get("event")
@@ -356,7 +356,7 @@ class UserViewSet(TokenObtainViewSet, SignInLoggingMixin, AuthorizingMixin):
         return Response(response, status=status.HTTP_201_CREATED)
 
 
-class PasswordViewSet(viewsets.ViewSet, AuthorizingMixin):
+class PasswordViewSet(viewsets.GenericViewSet, AuthorizingMixin):
     queryset = User.objects.all()
     serializer_class = PasswordChangeSerializer
 
@@ -380,7 +380,7 @@ class PasswordViewSet(viewsets.ViewSet, AuthorizingMixin):
             404: user_fail_case.USER_404_DOES_NOT_EXIST.as_md()
         }
     )
-    @action(detail=True, methods=["put"])  # todo: throttling
+    @action(detail=True, methods=["put"], name="change")  # todo: throttling
     def change(self, request, *args, **kwargs):
         try:
             user = self.get_object()

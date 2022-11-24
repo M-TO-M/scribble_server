@@ -13,10 +13,13 @@ class ScribbleOpenAPISchemaGenerator(OpenAPISchemaGenerator):
 
         view_paths = defaultdict(list)
         view_cls = {}
-
         for path, method, callback in endpoints:
-            http_method_names = callback.view_initkwargs.get('http_method_names')
-            if http_method_names and method.lower() != http_method_names[0]:
+            try:
+                actions = callback.actions.get(method.lower())
+                view_initkwargs = callback.initkwargs.get('name')
+                if not actions or not view_initkwargs or actions.lower() != view_initkwargs.lower():
+                    continue
+            except AttributeError:
                 continue
 
             view = self.create_view(callback, method, request)
