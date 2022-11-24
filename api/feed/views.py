@@ -74,13 +74,13 @@ class MainFeedViewSet(viewsets.ModelViewSet):
         },
         security=[]
     )
-    @action(detail=False, methods=["get"], url_path=r"", name="feed_main")
+    @action(detail=False, methods=["get"], url_path=r"main", name="feed_main")
     def feed_main(self, request, *args, **kwargs):
         data = self.get_paginated_data(self.get_queryset().order_by('-created_at'))
         return self.get_paginated_response(data)
 
     @swagger_auto_schema(
-        operation_id='user_main',
+        operation_id='main_user',
         operation_description='사용자가 작성한 노트와 페이지 데이터를 return 합니다.',
         manual_parameters=[
             swagger_parameter('key', openapi.IN_QUERY, '정렬기준 (조회수, 좋아요수, 댓글수)', openapi.TYPE_STRING,
@@ -98,7 +98,7 @@ class MainFeedViewSet(viewsets.ModelViewSet):
         }
     )
     @action(
-        detail=True, methods=["get"], url_path=r"", name="user_main",
+        detail=True, methods=["get"], url_path=r"all", name="user_main",
         queryset=Note.objects.all().exclude(page__isnull=True).select_related('user')
     )
     def user_main(self):

@@ -15,7 +15,7 @@ from scribble.authentication import CustomJWTAuthentication
 REQ_ALLOWED_PATH = [
     "/",
     "/docs",
-    "/main/",
+    "/feed/main",
     "/users/new",
     "/users/verify",
     "/users/signin",

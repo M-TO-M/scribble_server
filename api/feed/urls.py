@@ -5,6 +5,6 @@ from api.feed.views import *
 app_name = 'feed'
 
 router = DefaultRouter(trailing_slash=False)
-router.register("feed", MainFeedViewSet, basename="feed")
+router.register("", MainFeedViewSet, basename="feed")
 
 urlpatterns = [path('', include(router.urls)), ]
