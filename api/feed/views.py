@@ -101,7 +101,7 @@ class MainFeedViewSet(viewsets.ModelViewSet):
         detail=True, methods=["get"], url_path=r"all", name="user_main",
         queryset=Note.objects.all().exclude(page__isnull=True).select_related('user')
     )
-    def user_main(self, request, *args, **kwargs):
+    def user_main(self):
         try:
             user = User.objects.get(id=self.kwargs[self.lookup_field])
         except Exception:

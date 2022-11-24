@@ -65,22 +65,7 @@ class ScribbleTokenRefreshView(TokenViewBase):
         return response
 
 
-class BaseModelViewSet(viewsets.ModelViewSet):
-    def get_object(self):
-        queryset = self.filter_queryset(self.get_queryset())
-        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
-        assert lookup_url_kwarg in self.kwargs
-        filter_kwargs = {self.lookup_field: self.kwargs[lookup_url_kwarg]}
-        try:
-            obj = queryset.get(**filter_kwargs)
-        except queryset.model.DoesNotExist:
-            raise UserNotFound()
-
-        self.check_object_permissions(self.request, obj)
-        return obj
-
-
-class TokenObtainViewSet(BaseModelViewSet):
+class TokenObtainViewSet(viewsets.ModelViewSet):
     def set_logging_cache(self, request):
         if settings.RUN_ENV == "prod":
             addr = request.META.get('REMOTE_ADDR')
@@ -208,7 +193,10 @@ class UserViewSet(TokenObtainViewSet, SignInLoggingMixin, AuthorizingMixin):
     )
     @action(detail=True, methods=["delete"], name="delete")
     def delete(self, request, *args, **kwargs):
-        user = self.get_object()
+        try:
+            user = self.get_object()
+        except User.DoesNotExist:
+            raise UserNotFound()
         self.authorize_request_user(request, user)
         self.perform_destroy(request.user)
         return Response(None, status=status.HTTP_204_NO_CONTENT)
@@ -229,9 +217,12 @@ class UserViewSet(TokenObtainViewSet, SignInLoggingMixin, AuthorizingMixin):
     )
     @action(detail=True, methods=["patch"], name="edit")
     def edit(self, request, *args, **kwargs):
-        user = self.get_object()
+        try:
+            user = self.get_object()
+        except User.DoesNotExist:
+            raise UserNotFound()
         self.authorize_request_user(request, user)
-        return self.partial_update(request)
+        return self.update(request)
 
     @swagger_auto_schema(
         operation_id='user_info',
@@ -296,7 +287,10 @@ class UserViewSet(TokenObtainViewSet, SignInLoggingMixin, AuthorizingMixin):
     )
     @action(detail=True, methods=["get"], serializer_class=CategoryFieldSerializer, name="category")
     def category(self, request, *args, **kwargs):
-        user = self.get_object()
+        try:
+            user = self.get_object()
+        except User.DoesNotExist:
+            raise UserNotFound()
         response = {"category": user.category}
         return Response(response, status=status.HTTP_200_OK)
 
@@ -330,6 +324,7 @@ class UserViewSet(TokenObtainViewSet, SignInLoggingMixin, AuthorizingMixin):
     def category_update(self, request, *args, **kwargs):
         user_id = request.GET.get("user_id")
         event = request.GET.get("event")
+        print(user_id, event)
         if user_id is None or event is None:
             return Response(None, status=status.HTTP_204_NO_CONTENT)
 
@@ -361,7 +356,7 @@ class UserViewSet(TokenObtainViewSet, SignInLoggingMixin, AuthorizingMixin):
         return Response(response, status=status.HTTP_201_CREATED)
 
 
-class PasswordViewSet(BaseModelViewSet, AuthorizingMixin):
+class PasswordViewSet(viewsets.GenericViewSet, AuthorizingMixin):
     queryset = User.objects.all()
     serializer_class = PasswordChangeSerializer
 
@@ -387,7 +382,10 @@ class PasswordViewSet(BaseModelViewSet, AuthorizingMixin):
     )
     @action(detail=True, methods=["put"], name="change")  # todo: throttling
     def change(self, request, *args, **kwargs):
-        user = self.get_object()
+        try:
+            user = self.get_object()
+        except User.DoesNotExist:
+            raise UserNotFound()
         self.authorize_request_user(request, user)
 
         data = json.loads(request.body)

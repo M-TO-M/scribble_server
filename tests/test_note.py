@@ -1,8 +1,9 @@
 from rest_framework import status
 from rest_framework.test import APIClient, APITestCase
 
-from .factories import NoteFactory, NoteLikesRelationFactory, BookObjectFactory, UserFactory
-from api.users.serializers import ScribbleTokenObtainPairSerializer
+from core.serializers import ScribbleTokenObtainPairSerializer
+from .factories import NoteFactory, NoteLikesRelationFactory, BookObjectFactory
+from .factories import UserFactory
 
 
 class NoteTestCase(APITestCase):

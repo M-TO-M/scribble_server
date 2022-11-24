@@ -22,6 +22,9 @@ class SignInLoggingMixin(LoggingMixin):
 
 class AuthorizingMixin:
     def authorize_request_user(self, request, user):
-        if not request.user or request.user.id != user.id:
-            raise AuthenticationFailed(detail=_("unauthorized_user"))
+        try:
+            if not request.user or request.user.id != user.id:
+                raise AuthenticationFailed(detail=_("unauthorized_user"))
+        except Exception:
+            raise UserNotFound()
         return user
