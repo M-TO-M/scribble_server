@@ -363,8 +363,8 @@ class PageViewSet(viewsets.ModelViewSet, AuthorizingMixin):
             404: page_fail_case.PAGE_404_DOES_NOT_EXIST.as_md()
         }
     )
-    @action(detail=True, methods=["get"], url_path=r"", name="detail")
-    def detail(self, request, *args, **kwargs):
+    @action(detail=True, methods=["get"], url_path=r"", name="page_detail")
+    def page_detail(self, request, *args, **kwargs):
         page = self.get_object()
         if request.user and request.user.id != page.note.user.id:
             page.update_page_hit()
@@ -597,8 +597,8 @@ class PageCommentViewSet(viewsets.ModelViewSet, AuthorizingMixin):
             404: page_comment_fail_case.PAGE_COMMENT_404_DOES_NOT_EXIST.as_md()
         }
     )
-    @action(detail=True, methods=["get"], url_path=r"", name="detail")
-    def detail(self, request, *args, **kwargs):
+    @action(detail=True, methods=["get"], url_path=r"detail", name="page_comment_detail")
+    def page_comment_detail(self, request, *args, **kwargs):
         page_comment = self.get_object()
         page_comment_data = self.serializer_class(instance=page_comment).data
         response = {"page_comment": page_comment_data}
