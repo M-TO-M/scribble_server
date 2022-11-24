@@ -2,15 +2,16 @@ import json
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema, no_body
 
-from django.db.models import Q, F
+from django.db.models import F
 from django.core.serializers.json import DjangoJSONEncoder
 
-from rest_framework import generics, mixins, status
+from rest_framework import viewsets, status
+from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from api.feed.serializers import MainSchemaSerializer, UserMainSchemaSerializer, MainNoteListSchemaSerializer
-from api.contents.serializers import SimpleBookListSerializer, NoteSerializer, PageDetailSerializer
-from apps.contents.models import Note, Page, BookObject
+from api.contents.serializers import SimpleBookListSerializer, PageDetailSerializer
+from apps.contents.models import Note, Page
 
 from api.users.serializers import UserSerializer
 from api.users.pagination import MainViewPagination
@@ -27,27 +28,33 @@ from utils.swagger import (
 )
 
 
-# todo: main → feed로 keyword 변경하기
-class TemplateMainView(generics.ListAPIView):
+class MainFeedViewSet(viewsets.ModelViewSet):
+    queryset = Page.objects.all().select_related('note', 'note__book')
+    serializer_class = PageDetailSerializer
+    authentication_classes = []
     pagination_class = MainViewPagination
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.pagination_class.data_key = 'pages'
 
     def get_paginated_data(self, queryset):
         pagination = self.paginate_queryset(queryset)
         serializer = self.serializer_class(instance=pagination or queryset, many=True)
         return serializer.data
 
-
-class MainView(TemplateMainView):
-    queryset = Page.objects.all().select_related('note', 'note__book')
-    serializer_class = PageDetailSerializer
-    authentication_classes = []
-
-    def __init__(self):
-        super(MainView, self).__init__()
-        self.pagination_class.data_key = 'pages'
+    def get_filtered_data(self, request, data):
+        key = self.request.query_params.get('key')
+        if key not in ['hit', 'like', 'pages']:
+            return data
+        if key in ['like', 'pages']:
+            key += '_count'
+        sorting = self.request.query_params.get('sorting')
+        data.sort(key=lambda x: x[key], reverse=True) if sorting == 'descending' else data.sort(key=lambda x: x[key])
+        return data
 
     @swagger_auto_schema(
-        operation_id='main',
+        operation_id='main_feed',
         operation_description='메인 화면에 나열할 데이터를 return합니다.',
         manual_parameters=[
             swagger_parameter('mode', openapi.IN_QUERY, '정렬기준 (조회수, 좋아요수, 댓글수)', openapi.TYPE_STRING,
@@ -67,28 +74,10 @@ class MainView(TemplateMainView):
         },
         security=[]
     )
-    def get(self, request, *args, **kwargs):
+    @action(detail=False, methods=["get"], url_path=r"", name="feed_main")
+    def feed_main(self, request, *args, **kwargs):
         data = self.get_paginated_data(self.get_queryset().order_by('-created_at'))
         return self.get_paginated_response(data)
-
-
-class UserMainView(TemplateMainView):
-    queryset = Note.objects.all().exclude(page__isnull=True).select_related('user')
-    serializer_class = NoteSerializer
-
-    def __init__(self):
-        super(UserMainView, self).__init__()
-
-    def filter_data(self, request, data):
-        key = self.request.query_params.get('key')
-        if key not in ['hit', 'like', 'pages']:
-            return data
-        if key in ['like', 'pages']:
-            key += '_count'
-
-        sorting = self.request.query_params.get('sorting')
-        data.sort(key=lambda x: x[key], reverse=True) if sorting == 'descending' else data.sort(key=lambda x: x[key])
-        return data
 
     @swagger_auto_schema(
         operation_id='user_main',
@@ -108,40 +97,22 @@ class UserMainView(TemplateMainView):
             404: user_fail_case.USER_404_DOES_NOT_EXIST.as_md()
         }
     )
-    def get(self, request, *args, **kwargs):
-        user_id = self.kwargs[self.lookup_field]
+    @action(
+        detail=True, methods=["get"], url_path=r"", name="user_main",
+        queryset=Note.objects.all().exclude(page__isnull=True).select_related('user')
+    )
+    def user_main(self):
         try:
-            user = User.objects.get(id=user_id)
+            user = User.objects.get(id=self.kwargs[self.lookup_field])
         except Exception:
             raise UserNotFound()
 
-        # TASK 1: 사용자가 작성한 전체 노트의 목록을 return
         queryset = self.get_queryset().filter(user_id=user.id)
         serializer = self.serializer_class(instance=queryset, many=True)
-        notes = self.filter_data(self.request, serializer.data)
+        notes = self.get_filtered_data(self.request, serializer.data)
 
-        response = {
-            "notes": notes,
-            "user": UserSerializer(instance=user).data
-        }
+        response = {"notes": notes, "user": UserSerializer(instance=user).data}
         return Response(response, status=status.HTTP_200_OK)
-
-
-class SearchView(generics.GenericAPIView, mixins.RetrieveModelMixin):
-    def get(self, request, *args, **kwargs):
-        params = self.request.query_params.get('q')
-        from_book = BookObject.objects.filter(
-            Q(title__icontains=params) &
-            Q(author__icontains=params) &
-            Q(publisher__icontains=params)
-        )
-
-        return None
-
-
-class NoteListView(generics.RetrieveAPIView):
-    queryset = Note.objects.all().select_related('book__isbn')
-    serializer_class = SimpleBookListSerializer
 
     @swagger_auto_schema(
         operation_id='main_note_list',
@@ -156,10 +127,14 @@ class NoteListView(generics.RetrieveAPIView):
             )
         }
     )
-    def get(self, request, *args, **kwargs):
-        user_id = self.kwargs[self.lookup_field]
+    @action(
+        detail=True, methods=["get"], url_path=r"notes", name="note_list_main",
+        queryset=Note.objects.all().select_related('book__isbn'),
+        serializer_class=SimpleBookListSerializer
+    )
+    def note_list_main(self, request, *args, **kwargs):
         try:
-            user = User.objects.get(id=user_id)
+            user = User.objects.get(id=self.kwargs[self.lookup_field])
         except Exception:
             raise UserNotFound()
 
@@ -167,5 +142,4 @@ class NoteListView(generics.RetrieveAPIView):
             .annotate(note_id=F('id'), isbn=F('book__isbn'), datetime=F('created_at'))\
             .values('note_id', 'isbn', 'datetime').order_by('-datetime')
         book_list = json.dumps(list(queryset), cls=DjangoJSONEncoder)
-
         return Response(json.loads(book_list), status=status.HTTP_200_OK)

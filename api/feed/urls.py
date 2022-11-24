@@ -1,11 +1,10 @@
-from django.urls import path
-
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
 from api.feed.views import *
 
 app_name = 'feed'
 
-urlpatterns = [
-    path('', MainView.as_view(), name='main'),
-    path('<int:pk>', UserMainView.as_view(), name='user_main'),
-    path('<int:pk>/notes', NoteListView.as_view(), name='main_note_list'),
-]
+router = DefaultRouter(trailing_slash=False)
+router.register("feed", MainFeedViewSet, basename="feed")
+
+urlpatterns = [path('', include(router.urls)), ]
