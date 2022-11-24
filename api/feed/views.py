@@ -10,7 +10,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from api.feed.serializers import MainSchemaSerializer, UserMainSchemaSerializer, MainNoteListSchemaSerializer
-from api.contents.serializers import SimpleBookListSerializer, PageDetailSerializer
+from api.contents.serializers import SimpleBookListSerializer, PageDetailSerializer, NoteSerializer
 from apps.contents.models import Note, Page
 
 from api.users.serializers import UserSerializer
@@ -99,7 +99,8 @@ class MainFeedViewSet(viewsets.ModelViewSet):
     )
     @action(
         detail=True, methods=["get"], url_path=r"all", name="user_main",
-        queryset=Note.objects.all().exclude(page__isnull=True).select_related('user')
+        queryset=Note.objects.all().exclude(page__isnull=True).select_related('user'),
+        serializer_class=NoteSerializer
     )
     def user_main(self, request, *args, **kwargs):
         try:
