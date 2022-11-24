@@ -6,7 +6,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.test import APIClient, APITestCase
 
 from .factories import BookObjectFactory
-from core.validators import ISBNValidator
+from api.contents.validators import ISBNValidator
 from utils.naver_api import NaverSearchAPI
 
 

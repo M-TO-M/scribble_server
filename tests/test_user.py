@@ -1,13 +1,12 @@
-
 import random
 from typing import Union
 
 from rest_framework import status
 from rest_framework.test import APIClient, APITestCase
 
-from apps.users.models import category_choices
+from apps.users.models import category_list
+from api.users.serializers import ScribbleTokenObtainPairSerializer
 from .factories import UserFactory
-from core.serializers import ScribbleTokenObtainPairSerializer
 
 
 class UserTestCase(APITestCase):
@@ -136,7 +135,7 @@ class UserSignUpTestCase(UserTestCase):
             "email": "test@naver.com",
             "password": "password",
             "nickname": "test_nickname",
-            "category": self.pick_rand_category_item(category_choices)
+            "category": self.pick_rand_category_item(category_list)
         }
 
         response = self.client.post(path=self.base_url, data=data, format='json')
@@ -272,7 +271,7 @@ class UserCategoryTestCase(UserTestCase):
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
     def test_given_valid_category_data_expect_user_category_update_success(self):
-        data = self.pick_rand_category_item(category_choices)
+        data = self.pick_rand_category_item(category_list)
 
         response = self.client.patch(path=self.base_url['category_update'], data={"category": data})
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
@@ -332,9 +331,9 @@ class UserCategoryTestCase(UserTestCase):
         self.assertTrue(data[0] in list(response.data['user']['category'].values()))
 
     def test_given_no_exist_follow_with_authorized_user_expect_user_category_update_unfollow_fail(self):
-        base_url = self.base_url['unfollow_category'] + "&user=" + str(self.user.id)
+        base_url = self.base_url['unfollow_category'] + "&user_id=" + str(self.user.id)
 
-        category_dict = {i: value for i, value in enumerate(category_choices)}
+        category_dict = {i: value for i, value in enumerate(category_list)}
         for key in self.user.category.keys():
             del category_dict[key]
         data = self.pick_rand_category_item(category_dict)
