@@ -2,6 +2,7 @@ from datetime import timedelta
 
 from scribble.settings import BASE_DIR, RUN_ENV, SECRET_KEY
 
+# todo: 프로젝트 구조 수정 및 viewset 적용을 통한 api 패키지 통합
 VERSION = 'v1'
 
 INSTALLED_APPS = [
