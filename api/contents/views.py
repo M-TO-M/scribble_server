@@ -114,6 +114,8 @@ class BookViewSet(viewsets.ModelViewSet):
     )
     def navbar_book_search(self, request, *args, **kwargs):
         q = request.GET.get("query") or request.GET.get("isbn")
+        if not q:
+            return Response(None, status=status.HTTP_204_NO_CONTENT)
         display = request.GET.get("display")
         db_search_result = self.queryset.filter(
             Q(title__contains=q) |
@@ -175,6 +177,8 @@ class BookViewSet(viewsets.ModelViewSet):
     )
     def tagging_book_search(self, request, *args, **kwargs):
         q = request.GET.get("query") or request.GET.get("isbn")
+        if not q:
+            return Response(None, status=status.HTTP_204_NO_CONTENT)
         display = request.GET.get("display")
 
         result = self.search_class(q, display)
