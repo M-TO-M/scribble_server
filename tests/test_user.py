@@ -67,7 +67,7 @@ class UserVerifyTestCase(UserTestCase):
 
         response = self.client.get(path=query_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data, {})
+        self.assertEqual(response.data["nickname"], "dummy_" + str(self.user.nickname))
 
     def test_given_exist_email_expect_user_verify_fail(self):
         query_url = self.verify_email_url + str(self.user.email)
@@ -140,7 +140,8 @@ class UserSignUpTestCase(UserTestCase):
 
         response = self.client.post(path=self.base_url, data=data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertTrue('user' in response.data)
+        self.assertEqual(response.data["email"], data["email"])
+        self.assertEqual(response.data["nickname"], data["nickname"])
 
 
 class UserSignInOutTestCase(UserTestCase):
@@ -209,8 +210,8 @@ class UserEditTestCase(UserTestCase):
         data = {"nickname": "new_nickname"}
 
         response = self.client.patch(path=base_url, data=data, format='json')
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data["user"]["nickname"], data["nickname"])
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["nickname"], data["nickname"])
 
 
 class UserDeleteTestCase(UserTestCase):
@@ -243,9 +244,9 @@ class UserCategoryTestCase(UserTestCase):
     def setUp(self):
         super(UserCategoryTestCase, self).setUp()
         self.base_url = {
-            "category_update": self.url_prefix + "category",
-            "follow_category": self.url_prefix + "category?event=follow",
-            "unfollow_category": self.url_prefix + "category?event=unfollow"
+            "category_update": self.url_prefix + "category_update",
+            "follow_category": self.url_prefix + "category_update?event=follow",
+            "unfollow_category": self.url_prefix + "category_update?event=unfollow"
         }
 
     def test_with_no_exist_user_expect_user_category_search_fail(self):
@@ -277,14 +278,14 @@ class UserCategoryTestCase(UserTestCase):
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
     def test_given_empty_data_with_no_exist_user_expect_user_category_update_follow_fail(self):
-        base_url = self.base_url["category_update"] + "?user=" + str(5)
+        base_url = self.base_url["category_update"] + "?user_id=" + str(5)
 
         response = self.client.patch(path=base_url+"&event=unfollow", data=None)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
         self.assertTrue('no_exist_user' in response.data)
 
     def test_given_empty_data_with_no_exist_user_expect_user_category_update_unfollow_fail(self):
-        base_url = self.base_url["category_update"] + "?user=" + str(5)
+        base_url = self.base_url["category_update"] + "?user_id=" + str(5)
 
         response = self.client.patch(path=base_url + "&event=unfollow", data=None)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
@@ -292,24 +293,21 @@ class UserCategoryTestCase(UserTestCase):
 
     def test_given_empty_data_with_unauthorized_user_expect_user_category_update_follow_fail(self):
         new_user = UserFactory.create()
-        base_url = self.base_url["category_update"] + "?user=" + str(new_user.id)
-
+        base_url = self.base_url["category_update"] + "?user_id=" + str(new_user.id)
         response = self.client.patch(path=base_url + "&event=follow", data=None)
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
         self.assertTrue('unauthorized_user' in response.data)
 
     def test_given_empty_data_with_unauthorized_user_expect_user_category_update_unfollow_fail(self):
         new_user = UserFactory.create()
-        base_url = self.base_url["category_update"] + "?user=" + str(new_user.id)
-
+        base_url = self.base_url["category_update"] + "?user_id=" + str(new_user.id)
         response = self.client.patch(path=base_url + "&event=unfollow", data=None)
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
         self.assertTrue('unauthorized_user' in response.data)
 
     def test_given_exist_follow_with_authorized_user_expect_user_category_update_follow_fail(self):
-        base_url = self.base_url['follow_category'] + "&user=" + str(self.user.id)
+        base_url = self.base_url['follow_category'] + "&user_id=" + str(self.user.id)
         data = self.pick_rand_category_item(self.user.category)
-
         response = self.client.patch(path=base_url, data={"category": data}, format='json')
 
         if data:
@@ -319,9 +317,8 @@ class UserCategoryTestCase(UserTestCase):
             self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
     def test_given_valid_follow_data_with_authorized_user_expect_user_category_update_follow_success(self):
-        base_url = self.base_url['follow_category'] + "&user=" + str(self.user.id)
-
-        category_dict = {i: value for i, value in enumerate(category_choices)}
+        base_url = self.base_url['follow_category'] + "&user_id=" + str(self.user.id)
+        category_dict = {i: value for i, value in enumerate(category_list)}
         for key in self.user.category.keys():
             del category_dict[key]
         data = self.pick_rand_category_item(category_dict)
@@ -343,7 +340,7 @@ class UserCategoryTestCase(UserTestCase):
         self.assertTrue(f'no_exist_unfollow_{data[0]}' in response.data)
 
     def test_given_valid_unfollow_data_with_authorized_user_expect_user_category_update_unfollow_success(self):
-        base_url = self.base_url['unfollow_category'] + "&user=" + str(self.user.id)
+        base_url = self.base_url['unfollow_category'] + "&user_id=" + str(self.user.id)
         data = self.pick_rand_category_item(self.user.category)
 
         response = self.client.patch(path=base_url, data={"category": data}, format='json')
