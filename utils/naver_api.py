@@ -26,9 +26,9 @@ class NaverSearchAPI:
             isbn = re.sub('<.+?>', '', item["isbn"]).rsplit(" ", 1)
             result.append({
                 "isbn": isbn[1] if len(isbn) > 1 else isbn[0],
-                "title": re.sub('<.+?>', '', item["title"]),
-                "author": re.sub('<.+?>', '', item["author"]),
-                "publisher": re.sub('<.+?>', '', item["publisher"]),
+                "title": re.sub('<.+?>', '', item["title"]).replace('^', ', '),
+                "author": re.sub('<.+?>', '', item["author"]).replace('^', ', '),
+                "publisher": re.sub('<.+?>', '', item["publisher"]).replace('^', ', '),
                 "thumbnail": item["image"].rsplit("?", 1)[0]
             })
 
