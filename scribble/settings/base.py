@@ -21,6 +21,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 NAVER_API_CLIENT_ID = os.environ.get('NAVER_API_CLIENT_ID')
 NAVER_API_CLIENT_SECRET = os.environ.get('NAVER_API_CLIENT_SECRET')
 
+SENTRY_DSN = os.environ.get('SENTRY_DSN')
+
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -167,6 +169,19 @@ scribble_logging_config = {
 }
 
 logger = Logger(scribble_logging_config)
+
+
+import sentry_sdk
+from sentry_sdk.integrations.django import DjangoIntegration
+
+sentry_sdk.init(
+    dsn=SENTRY_DSN,
+    integrations=[
+        DjangoIntegration(),
+    ],
+    traces_sample_rate=0.25,
+    send_default_pii=True
+)
 
 if RUN_ENV == "dev":
     INSTALLED_APPS += [
