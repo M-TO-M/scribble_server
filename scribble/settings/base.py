@@ -4,6 +4,7 @@ from datetime import timedelta
 from dotenv import load_dotenv
 from pathlib import Path
 
+from utils.logging_utils import Logger
 
 load_dotenv()
 
@@ -138,6 +139,35 @@ SWAGGER_SETTINGS = {
       }
    }
 }
+
+
+LOG_DIR = os.environ.get('LOG_DIR')
+LOG_FILENAME = os.environ.get('LOG_FILENAME')
+os.makedirs(os.path.join(BASE_DIR, LOG_DIR), exist_ok=True)
+
+scribble_logging_config = {
+    "drivers": ["console", "file", "mail_admin"],
+    "level": "DEBUG",
+    "handlers": {
+        "console": {
+            "level": "DEBUG",
+            "format": "verbose",
+            "filters": "django.utils.log.RequiredDebugTrue",
+        },
+        "file": {
+            "level": "INFO",
+            "path": os.path.join(BASE_DIR, LOG_DIR),
+            "filename": LOG_FILENAME,
+            "backup-count": 5,
+            "rotation-size": 1024 * 1024 * 5,
+        },
+        "mail_admin": {"level": "ERROR", "filters": "django.utils.log.RequireDebugFalse", },
+        "null": {"class": "logging.NullHandler", },
+    },
+    "packages": {"api": "INFO", "scribble": "INFO"}
+}
+
+logger = Logger(scribble_logging_config)
 
 if RUN_ENV == "dev":
     INSTALLED_APPS += [
