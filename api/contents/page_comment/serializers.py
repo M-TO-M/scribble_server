@@ -1,3 +1,4 @@
+import logging
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
@@ -6,6 +7,9 @@ from rest_framework.exceptions import ValidationError
 from apps.contents.models import Page, PageComment
 from api.users.serializers import UserSerializer
 from core.exceptions import PageNotFound, PageCommentNotFound
+from utils.logging_utils import BraceStyleAdapter
+
+log = BraceStyleAdapter(logging.getLogger("api.contents.page_comment.views"))
 
 
 class PageCommentSchemaSerializer(serializers.Serializer):

@@ -1,3 +1,4 @@
+import logging
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
@@ -8,6 +9,9 @@ from api.users.serializers import UserSerializer
 from apps.contents.models import Note, BookObject, NoteLikesRelation, Page
 from core.serializers import StringListField
 from core.validators import ISBNValidator
+from utils.logging_utils import  BraceStyleAdapter
+
+log = BraceStyleAdapter(logging.getLogger("api.contents.note.views"))
 
 
 class NoteWithoutBookSchemaSerializer(serializers.Serializer):

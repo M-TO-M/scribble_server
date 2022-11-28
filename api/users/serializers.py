@@ -1,3 +1,4 @@
+import logging
 from random import randint
 from typing import Union
 
@@ -11,6 +12,9 @@ from rest_framework_simplejwt.serializers import TokenBlacklistSerializer
 from apps.users.models import User, category_choices
 from core.validators import SpecificEmailDomainValidator, domain_allowlist, CategoryDictValidator
 from scribble.authentication import CustomJWTAuthentication
+from utils.logging_utils import BraceStyleAdapter
+
+log = BraceStyleAdapter(logging.getLogger("api.users.serializers"))
 
 
 class UserValidationBaseSerializer(serializers.ModelSerializer):

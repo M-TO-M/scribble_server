@@ -1,4 +1,5 @@
 import json
+import logging
 from collections import OrderedDict
 
 from django.db import transaction
@@ -34,6 +35,9 @@ from utils.swagger import (
     UserFailCaseCollection as user_fail_case,
     NoteFailCaseCollection as note_fail_case,
 )
+from utils.logging_utils import BraceStyleAdapter
+
+log = BraceStyleAdapter(logging.getLogger("api.contents.page.views"))
 
 
 class PageView(generics.GenericAPIView,
