@@ -301,3 +301,5 @@ cython_debug/
 .DS_Store
 .idea
 
+# logs
+logs/
