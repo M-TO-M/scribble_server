@@ -5,7 +5,7 @@ from urllib import request, parse
 
 from rest_framework.exceptions import ValidationError
 from core.validators import ISBNValidator
-from scribble.settings import NAVER_API_CLIENT_ID, NAVER_API_CLIENT_SECRET
+from scribble.settings.base import NAVER_API_CLIENT_ID, NAVER_API_CLIENT_SECRET
 
 
 class NaverSearchAPI:

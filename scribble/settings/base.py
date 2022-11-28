@@ -1,8 +1,24 @@
+import os
+import json
 from datetime import timedelta
+from dotenv import load_dotenv
+from pathlib import Path
 
-from scribble.settings import BASE_DIR, RUN_ENV, SECRET_KEY
+
+load_dotenv()
 
 VERSION = 'v1'
+
+SECRET_KEY = os.environ.get('SECRET_KEY')
+
+RUN_ENV = os.environ.get('RUN_ENV')
+HOST_KEY = 'DEV_ALLOWED_HOSTS' if RUN_ENV == 'dev' else 'PROD_ALLOWED_HOSTS'
+ALLOWED_HOSTS = json.loads(os.environ.get(HOST_KEY))
+
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
+
+NAVER_API_CLIENT_ID = os.environ.get('NAVER_API_CLIENT_ID')
+NAVER_API_CLIENT_SECRET = os.environ.get('NAVER_API_CLIENT_SECRET')
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -31,7 +47,6 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'scribble.middleware.TokenAuthMiddleWare',
 ]
-
 
 ROOT_URLCONF = 'scribble.urls'
 
@@ -125,6 +140,9 @@ SWAGGER_SETTINGS = {
 }
 
 if RUN_ENV == "dev":
+    INSTALLED_APPS += [
+        'corsheaders',
+    ]
     from .dev import *
 else:
     from .prod import *
