@@ -9,8 +9,6 @@ from typing import Any, Mapping, MutableMapping
 
 from pythonjsonlogger.jsonlogger import JsonFormatter
 
-from django.utils.log import AdminEmailHandler
-
 
 class BraceMessage:
     __slots__ = ("fmt", "args")
@@ -98,17 +96,6 @@ def setup_file_log_handler(config: Mapping[str, Any]) -> logging.Handler:
     return file_handler
 
 
-def setup_mail_log_handelr(config: Mapping[str, Any]) -> logging.Handler:
-    drv_config = config["mail_admin"]
-    log_format = "%(timestamp) %(level) %(name) %(processName) %(message)"
-    mail_handler = AdminEmailHandler(
-        include_html=None,
-        email_backend=None,
-        reporter_class=None
-    )
-    return mail_handler
-
-
 def check_logging_config_driver_exists(config, driver):
     if driver in config and config["handlers"][driver] is None:
         raise Exception(f"{driver} driver is activated but no config given.")
@@ -121,7 +108,6 @@ class Logger:
     ) -> None:
         check_logging_config_driver_exists(logging_config, "console")
         check_logging_config_driver_exists(logging_config, "file")
-        check_logging_config_driver_exists(logging_config, "mail_admin")
 
         log_handlers = []
         self.logging_config = logging_config
@@ -131,9 +117,6 @@ class Logger:
         if "file" in self.logging_config["drivers"]:
             file_handler = setup_file_log_handler(self.logging_config["handlers"])
             log_handlers.append(file_handler)
-        if "mail_admin" in self.logging_config["drivers"]:
-            mail_log_handler = setup_mail_log_handelr(self.logging_config["handlers"])
-            log_handlers.append(mail_log_handler)
 
         self.server_logging_cfg = {
             "version": 1,
