@@ -51,7 +51,7 @@ class CustomJsonFormatter(JsonFormatter):
 def setup_console_log_handler(config: Mapping[str, Any]) -> logging.Handler:
     log_formats = {
         "simple": "%(levelname)s %(message)s",
-        "verbose": "%(asctime)s %(levelname)s %(name)s [%(lineno)s] %(message)s",
+        "verbose": "[%(asctime)s] [%(levelname)s] [%(name)s] [%(lineno)s]: %(message)s",
     }
     drv_config = config["console"]
     formatter = coloredlogs.ColoredFormatter(
