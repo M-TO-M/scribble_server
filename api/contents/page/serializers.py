@@ -1,3 +1,4 @@
+import logging
 from collections import OrderedDict
 
 from django.db import transaction
@@ -10,6 +11,9 @@ from api.contents.page_comment.serializers import PageCommentSerializer
 from api.users.serializers import UserSerializer
 from apps.contents.models import Page, PageLikesRelation, Note
 from core.serializers import StringListField
+from utils.logging_utils import BraceStyleAdapter
+
+log = BraceStyleAdapter(logging.getLogger("api.contents.page.views"))
 
 
 class PageDetailSchemaSerialzer(serializers.Serializer):

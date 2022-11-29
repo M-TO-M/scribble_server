@@ -1,4 +1,5 @@
 import json
+import logging
 
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
@@ -12,6 +13,9 @@ from apps.contents.models import BookObject, Note, Page
 from utils.naver_api import NaverSearchAPI
 from utils.swagger import swagger_response, swagger_schema_with_properties, swagger_schema_with_description, \
     BookObjectFailCaseCollection as book_fail_case, swagger_parameter
+from utils.logging_utils import BraceStyleAdapter
+
+log = BraceStyleAdapter(logging.getLogger("api.contents.book_object.views"))
 
 
 class BookView(generics.CreateAPIView):

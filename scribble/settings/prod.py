@@ -1,18 +1,20 @@
 import os
+import json
+from dotenv import load_dotenv
+from pathlib import Path
 
-from scribble.settings import DB_NAME, DB_USER, DB_HOST, DB_PASSWORD, BASE_DIR, \
-    ALLOWED_HOSTS as prod_env_hosts, \
-    CORS_ORIGIN_WHITELIST as cors_origin_whitelist
+load_dotenv()
 
-from scribble.settings.base import INSTALLED_APPS
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
+
+
+DB_NAME = os.environ.get('DB_NAME')
+DB_USER = os.environ.get('DB_USER')
+DB_HOST = os.environ.get('DB_HOST')
+DB_PASSWORD = os.environ.get('DB_PASSWORD')
+
 
 DEBUG = False
-
-INSTALLED_APPS += [
-    'corsheaders',
-]
-
-ALLOWED_HOSTS = prod_env_hosts
 
 DATABASES = {
     'default': {
@@ -44,7 +46,7 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR.parent, 'media')
 
 
-CORS_ORIGIN_WHITELIST = cors_origin_whitelist
+CORS_ORIGIN_WHITELIST = json.loads(os.environ.get('CORS_ORIGIN_WHITELIST'))
 
 CORS_ALLOW_CREDENTIALS = True
 

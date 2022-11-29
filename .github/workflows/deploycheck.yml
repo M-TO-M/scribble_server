@@ -40,6 +40,10 @@ jobs:
           echo DB_USER="\"${{ secrets.DB_USER }}"\" >> scribble/.env
           echo DB_HOST="\"${{ secrets.DB_HOST }}"\" >> scribble/.env
           echo DB_PASSWORD="\"${{ secrets.DB_PASSWORD }}"\" >> scribble/.env
+          echo LOG_DIR="\"${{ secrets.LOG_DIR }}"\" >> scribble/.env
+          echo LOG_FILENAME="\"${{ secrets.LOG_FILENAME }}"\" >> scribble/.env
+          echo SENTRY_DSN="\"${{ secrets.SENTRY_DSN }}"\" >> scribble/.env
+
 
       - name: Setup python
         uses: actions/setup-python@v3

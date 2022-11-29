@@ -4,6 +4,7 @@ from typing import Union, Tuple
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema, no_body
 
+from django.conf import settings
 from django.contrib.auth.hashers import check_password
 from django.utils.translation import gettext_lazy as _
 
@@ -18,11 +19,12 @@ from api.users.serializers import *
 from core.views import ScribbleTokenObtainView
 from core.exceptions import UserNotFound
 from core.serializers import ScribbleTokenObtainPairSerializer
+from utils.logging_utils import BraceStyleAdapter
 from utils.swagger import swagger_response, swagger_parameter, \
     swagger_schema_with_properties, swagger_schema_with_description, swagger_schema_with_items, \
     UserFailCaseCollection as user_fail_case, user_response_example, user_response_example_with_access
 
-from scribble import settings
+log = BraceStyleAdapter(logging.getLogger("api.users.views"))
 
 
 class SignInLoggingMixin(LoggingMixin):

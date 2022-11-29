@@ -1,8 +1,27 @@
+import os
+import json
 from datetime import timedelta
+from dotenv import load_dotenv
+from pathlib import Path
 
-from scribble.settings import BASE_DIR, RUN_ENV, SECRET_KEY
+from utils.logging_utils import Logger
+
+load_dotenv()
 
 VERSION = 'v1'
+
+SECRET_KEY = os.environ.get('SECRET_KEY')
+
+RUN_ENV = os.environ.get('RUN_ENV')
+HOST_KEY = 'DEV_ALLOWED_HOSTS' if RUN_ENV == 'dev' else 'PROD_ALLOWED_HOSTS'
+ALLOWED_HOSTS = json.loads(os.environ.get(HOST_KEY))
+
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
+
+NAVER_API_CLIENT_ID = os.environ.get('NAVER_API_CLIENT_ID')
+NAVER_API_CLIENT_SECRET = os.environ.get('NAVER_API_CLIENT_SECRET')
+
+SENTRY_DSN = os.environ.get('SENTRY_DSN')
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -31,7 +50,6 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'scribble.middleware.TokenAuthMiddleWare',
 ]
-
 
 ROOT_URLCONF = 'scribble.urls'
 
@@ -124,7 +142,51 @@ SWAGGER_SETTINGS = {
    }
 }
 
+
+LOG_DIR = os.environ.get('LOG_DIR')
+LOG_FILENAME = os.environ.get('LOG_FILENAME')
+os.makedirs(os.path.join(BASE_DIR, LOG_DIR), exist_ok=True)
+
+scribble_logging_config = {
+    "drivers": ["console", "file"],
+    "level": "DEBUG",
+    "handlers": {
+        "console": {
+            "level": "DEBUG",
+            "format": "verbose",
+            "filters": "django.utils.log.RequiredDebugTrue",
+        },
+        "file": {
+            "level": "INFO",
+            "path": os.path.join(BASE_DIR, LOG_DIR),
+            "filename": LOG_FILENAME,
+            "backup-count": 5,
+            "rotation-size": 1024 * 1024 * 5,
+        },
+        "null": {"class": "logging.NullHandler", },
+    },
+    "packages": {"api": "INFO", "scribble": "INFO"}
+}
+
+logger = Logger(scribble_logging_config)
+
+
+import sentry_sdk
+from sentry_sdk.integrations.django import DjangoIntegration
+
+sentry_sdk.init(
+    dsn=SENTRY_DSN,
+    integrations=[
+        DjangoIntegration(),
+    ],
+    traces_sample_rate=0.25,
+    send_default_pii=True
+)
+
 if RUN_ENV == "dev":
+    INSTALLED_APPS += [
+        'corsheaders',
+    ]
     from .dev import *
 else:
     from .prod import *

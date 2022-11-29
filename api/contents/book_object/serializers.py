@@ -1,3 +1,4 @@
+import logging
 from drf_yasg.utils import swagger_serializer_method
 
 from rest_framework import serializers
@@ -8,6 +9,9 @@ from django.utils.translation import gettext_lazy as _
 from apps.contents.models import BookObject
 from core.validators import ISBNValidator
 from utils.naver_api import NaverSearchAPI
+from utils.logging_utils import BraceStyleAdapter
+
+log = BraceStyleAdapter(logging.getLogger("api.contents.book_object.serializers"))
 
 
 class BookObjectSerializer(serializers.ModelSerializer):

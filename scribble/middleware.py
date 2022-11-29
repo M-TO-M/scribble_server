@@ -8,9 +8,8 @@ from rest_framework import status
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 
-from scribble.settings import base as settings
 from scribble.authentication import CustomJWTAuthentication
-
+from django.conf import settings
 
 REQ_ALLOWED_PATH = [
     "/",

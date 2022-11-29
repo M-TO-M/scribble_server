@@ -1,4 +1,5 @@
 import json
+import logging
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema, no_body
 
@@ -21,6 +22,9 @@ from core.views import TemplateMainView
 
 from utils.swagger import swagger_response, swagger_parameter, main_response_example, user_main_response_example, \
     UserFailCaseCollection as user_fail_case, main_note_list_response_example
+from utils.logging_utils import BraceStyleAdapter
+
+log = BraceStyleAdapter(logging.getLogger("api.main.views"))
 
 
 class MainView(TemplateMainView):

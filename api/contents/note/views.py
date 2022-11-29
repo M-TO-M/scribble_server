@@ -1,4 +1,5 @@
 import json
+import logging
 
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema, no_body
@@ -17,6 +18,9 @@ from core.exceptions import NoteNotFound
 from utils.swagger import swagger_response, note_response_example, \
     swagger_schema_with_properties, swagger_schema_with_description, \
     NoteFailCaseCollection as note_fail_case, UserFailCaseCollection as user_fail_case, note_detail_response_example
+from utils.logging_utils import BraceStyleAdapter
+
+log = BraceStyleAdapter(logging.getLogger("api.contents.note.views"))
 
 
 class NoteView(generics.GenericAPIView, mixins.RetrieveModelMixin, mixins.CreateModelMixin, mixins.DestroyModelMixin):

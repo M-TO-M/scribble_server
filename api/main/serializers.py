@@ -1,9 +1,12 @@
+import logging
 from rest_framework import serializers
 
 from api.contents.note.serializers import NoteSchemaSerializer
 from api.contents.page.serializers import PageSchemaSerializer
 from api.users.serializers import UserSerializer
+from utils.logging_utils import BraceStyleAdapter
 
+log = BraceStyleAdapter(logging.getLogger("api.main.serializers"))
 
 class MainSchemaSerializer(serializers.Serializer):
     count = serializers.IntegerField(help_text='전체 게시물(페이지) 수', read_only=True)

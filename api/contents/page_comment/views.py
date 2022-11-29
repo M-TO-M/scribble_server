@@ -1,4 +1,5 @@
 import json
+import logging
 
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
@@ -15,6 +16,9 @@ from core.exceptions import PageCommentNotFound
 from utils.swagger import swagger_response, swagger_schema_with_description, swagger_schema_with_properties, \
     PageCommentFailCaseCollection as page_comment_fail_case, UserFailCaseCollection as user_fail_case, \
     page_comment_response_example
+from utils.logging_utils import BraceStyleAdapter
+
+log = BraceStyleAdapter(logging.getLogger("api.contents.page_comment.views"))
 
 
 class PageCommentView(generics.GenericAPIView,

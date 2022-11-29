@@ -1,10 +1,12 @@
 import os
+from dotenv import load_dotenv
+from pathlib import Path
 
-from scribble.settings import BASE_DIR, ALLOWED_HOSTS as dev_env_hosts
+load_dotenv()
+
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 DEBUG = True
-
-ALLOWED_HOSTS = dev_env_hosts
 
 DATABASES = {
     'default': {
