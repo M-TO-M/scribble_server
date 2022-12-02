@@ -1,19 +1,37 @@
 version: "2"
 services:
-  backend:
-    container_name: backend
-    image: scribble:v2
+  prod_backend:
+    container_name: prod_backend
+    image: scribble/prod:v0.1
     build:
       context: ./
       dockerfile: Dockerfile
+      args:
+        HOME: app_prod
+        SCRIPT_FILENAME: prod_backend.sh
     volumes:
-      - .:/app
+      - .:/app_prod
     expose:
       - "8000"
     networks:
       - redis_network
       - nginx_network
-
+  staging_backend:
+    container_name: staging_backend
+    image: scribble/staging:v0.1
+    build:
+      context: ./
+      dockerfile: Dockerfile
+      args:
+        HOME: app_staging
+        SCRIPT_FILENAME: staging_backend.sh
+    volumes:
+    - .:/app_staging
+    expose:
+      - "8001"
+    networks:
+      - redis_network
+      - nginx_network
   nginx:
     image: nginx:v2
     container_name: nginx
@@ -21,14 +39,15 @@ services:
       context: ./config/nginx
       dockerfile: Dockerfile
     volumes:
-      - .:/app
+      - .:/app_prod
+      - .:/app_staging
       - /etc/letsencrypt:/etc/letsencrypt
     restart: always
     ports:
       - "8084:80"
       - "443:443"
     depends_on:
-      - backend
+      - prod_backend
     networks:
       - nginx_network
   redis:
