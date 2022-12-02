@@ -7,8 +7,8 @@ services:
       context: ./
       dockerfile: Dockerfile
       args:
-        HOME: app_prod
-        SCRIPT_FILENAME: prod_backend.sh
+        WORKING_DIR: app_prod
+        PORT: 8000
     volumes:
       - .:/app_prod
     expose:
@@ -23,8 +23,8 @@ services:
       context: ./
       dockerfile: Dockerfile
       args:
-        HOME: app_staging
-        SCRIPT_FILENAME: staging_backend.sh
+        WORKING_DIR: app_staging
+        PORT: 8001
     volumes:
     - .:/app_staging
     expose:

@@ -1,3 +1,4 @@
+#!/bin/bash
 echo
 python3 manage.py makemigrations --settings=scribble.settings.base
 
@@ -8,7 +9,7 @@ echo
 python3 manage.py collectstatic --settings=scribble.settings.base --noinput -v 3
 
 echo
-pip3 install -r /app_staging/requirements.txt
+pip3 install -r /$WORKING_DIR/requirements.txt
 
 echo
-gunicorn --bind 0:8001 --workers 3 --env DJANGO_SETTINGS_MODULE=scribble.settings.base scribble.wsgi:application
+gunicorn --bind 0:$PORT --workers 3 --env DJANGO_SETTINGS_MODULE=scribble.settings.base scribble.wsgi:application
