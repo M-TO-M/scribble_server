@@ -8,7 +8,7 @@ echo
 python3 manage.py collectstatic --settings=scribble.settings.base --noinput -v 3
 
 echo
-pip3 install -r /app/requirements.txt
+pip3 install -r /app_staging/requirements.txt
 
 echo
-gunicorn --bind 0:8000 --workers 3 --env DJANGO_SETTINGS_MODULE=scribble.settings.base scribble.wsgi:application
+gunicorn --bind 0:8001 --workers 3 --env DJANGO_SETTINGS_MODULE=scribble.settings.base scribble.wsgi:application
