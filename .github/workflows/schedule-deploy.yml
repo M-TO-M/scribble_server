@@ -67,7 +67,7 @@ jobs:
     steps:
       - name: Send cURL to validate server and ssl cerficiate
         run: |
-          RESP_CODE=$(curl -LI https://${{ secrets.DOMAIN }}/v1/docs -vI --stderr - -o /dev/null -w '%{http_code}\n' -s)
+          RESP_CODE=$(curl -LI https://${{ secrets.DOMAIN }}/v1/docs -o /dev/null -w '%{http_code}\n' -s)
           if [ $RESP_CODE -eq 200 ]
           then
             echo "Success $RESP_CODE: SSL certificate verify ok."
