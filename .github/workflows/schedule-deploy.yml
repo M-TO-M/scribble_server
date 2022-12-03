@@ -80,6 +80,9 @@ jobs:
     needs: [ checkout, deploy, test ]
     if: ${{ always() && contains(needs.*.result, 'failure') }}
     steps:
+      - name: Set Action Runner Permissions
+        run: sudo chown -R $USER:$USER ${{ github.workspace }}
+
       - name: Fetch Latest Release
         id: fetch-latest
         uses: thebritican/fetch-latest-release@v1.0.3
