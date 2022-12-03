@@ -90,7 +90,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
-          ref: ${{ steps.latest.outputs.tag_name }}
+          ref: ${{ steps.fetch-latest.outputs.tag_name }}
 
       - name: Build Docker containers
         run: sh scripts/build-docker-compose.sh
