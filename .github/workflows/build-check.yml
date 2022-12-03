@@ -22,6 +22,7 @@ jobs:
         run: sh scripts/setup-docker.sh
 
   build:
+    runs-on: ubuntu-latest
     needs: checkout
     steps:
       - - name: Create env file
