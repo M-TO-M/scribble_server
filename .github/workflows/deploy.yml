@@ -1,0 +1,80 @@
+name: Deploy Project
+
+on:
+  pull_request:
+    branches:
+      - main
+    types: [ closed ]
+
+jobs:
+  checkout:
+    runs-on: [ self-hosted, label-go ]
+    if : ${{ github.event.pull_request.merged == true }}
+    steps:
+      - name: Set Permissions
+        run: sudo chown -R $USER:$USER ${{ github.workspace }}
+
+      - name: Checkout source code
+        uses: actions/checkout@v3
+
+      - name: Setup python
+        uses: actions/setup-python@v3
+        with:
+          python-version: "3.8"
+
+      - name: Setup Docker
+        run: sh scripts/setup-docker.sh
+
+  deploy:
+    runs-on: [ self-hosted, label-go ]
+    needs: checkout
+    if : ${{ github.event.pull_request.merged == true }}
+    steps:
+      - name: Create env file
+        run: |
+          : > ${{ secrets.ENV_PATH }}
+          touch ${{ secrets.ENV_PATH }}
+          {
+            echo NAVER_API_CLIENT_ID="\"${{ secrets.NAVER_API_CLIENT_ID }}"\"
+            echo NAVER_API_CLIENT_SECRET="\"${{ secrets.NAVER_API_CLIENT_SECRET }}"\"
+            echo SECRET_KEY="\"${{ secrets.SECRET_KEY }}"\"
+            echo RUN_ENV="\"${{ secrets.RUN_ENV }}"\"
+            echo DOMAIN="\"${{ secrets.DOMAIN }}"\"
+            echo PROD_ALLOWED_HOSTS='${{ secrets.PROD_ALLOWED_HOSTS }}'
+            echo CORS_ORIGIN_WHITELIST='${{ secrets.CORS_ORIGIN_WHITELIST }}'
+            echo DB_NAME="\"${{ secrets.DB_NAME }}"\"
+            echo DB_USER="\"${{ secrets.DB_USER }}"\"
+            echo DB_HOST="\"${{ secrets.DB_HOST }}"\"
+            echo DB_PASSWORD="\"${{ secrets.DB_PASSWORD }}"\"
+            echo LOG_DIR="\"${{ secrets.LOG_DIR }}"\"
+            echo LOG_FILENAME="\"${{ secrets.LOG_FILENAME }}"\"
+            echo SENTRY_DSN="\"${{ secrets.SENTRY_DSN }}"\"
+          } >> ${{ secrets.ENV_PATH }}
+
+      - name: Build Docker containers
+        run: sh scripts/build-docker-compose.sh
+
+      - name: Check container running state
+        run: |
+          if [ $(docker ps --format "{{.Names}} {{.Status}}" | grep "Up" | wc -l) -ne 3 ]
+          then
+            echo "Build error while running docker-compose"
+            exit 1
+          else
+            echo "Deploy Complete"
+          fi
+
+  test:
+    runs-on: [ self-hosted, label-go ]
+    needs: [ checkout, deploy ]
+    if : ${{ github.event.pull_request.merged == true }}
+    steps:
+      - name: Send cURL to validate server and ssl cerficiate
+        run: |
+          RESP_CODE=$(curl -LI https://${{ secrets.DOMAIN }}/v1/docs -vI --stderr - -o /dev/null -w '%{http_code}\n' -s)
+          if [ $RESP_CODE -eq 200 ]
+          then
+            echo "Success $RESP_CODE: SSL certificate verify ok."
+          else
+            exit 1
+          fi
