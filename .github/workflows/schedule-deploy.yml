@@ -8,7 +8,6 @@ on:
 jobs:
   checkout:
     runs-on: [ self-hosted, label-go ]
-    if: ${{ github.event.pull_request.merged == true }}
     steps:
       - name: Set Permissions
         run: sudo chown -R $USER:$USER ${{ github.workspace }}
@@ -27,7 +26,6 @@ jobs:
   deploy:
     runs-on: [ self-hosted, label-go ]
     needs: checkout
-    if: ${{ github.event.pull_request.merged == true }}
     steps:
       - name: Create env file
         run: |
@@ -66,7 +64,6 @@ jobs:
   test:
     runs-on: [ self-hosted, label-go ]
     needs: [ checkout, deploy ]
-    if: ${{ github.event.pull_request.merged == true }}
     steps:
       - name: Send cURL to validate server and ssl cerficiate
         run: |
