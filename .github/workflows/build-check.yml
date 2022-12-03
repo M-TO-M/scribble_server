@@ -1,10 +1,6 @@
 name: Auto Build Test
 
-on:
-  pull_request:
-    branches:
-      - develop
-    types: [ opened, edited, reopened, synchronize ]
+on: [pull_request]
 
 jobs:
   checkout:
