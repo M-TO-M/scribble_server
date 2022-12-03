@@ -21,26 +21,26 @@ jobs:
     runs-on: ubuntu-latest
     needs: checkout
     steps:
-      - - name: Create env file
-          run: |
-            : > ${{ secrets.ENV_PATH }}
-            touch ${{ secrets.ENV_PATH }}
-            {
-              echo NAVER_API_CLIENT_ID="\"${{ secrets.NAVER_API_CLIENT_ID }}"\"
-              echo NAVER_API_CLIENT_SECRET="\"${{ secrets.NAVER_API_CLIENT_SECRET }}"\"
-              echo SECRET_KEY="\"${{ secrets.SECRET_KEY }}"\"
-              echo RUN_ENV="\"${{ secrets.RUN_ENV }}"\"
-              echo DOMAIN="\"${{ secrets.DOMAIN }}"\"
-              echo PROD_ALLOWED_HOSTS='${{ secrets.PROD_ALLOWED_HOSTS }}'
-              echo CORS_ORIGIN_WHITELIST='${{ secrets.CORS_ORIGIN_WHITELIST }}'
-              echo DB_NAME="\"${{ secrets.DB_NAME }}"\"
-              echo DB_USER="\"${{ secrets.DB_USER }}"\"
-              echo DB_HOST="\"${{ secrets.DB_HOST }}"\"
-              echo DB_PASSWORD="\"${{ secrets.DB_PASSWORD }}"\"
-              echo LOG_DIR="\"${{ secrets.LOG_DIR }}"\"
-              echo LOG_FILENAME="\"${{ secrets.LOG_FILENAME }}"\"
-              echo SENTRY_DSN="\"${{ secrets.SENTRY_DSN }}"\"
-            } >> ${{ secrets.ENV_PATH }}
+      - name: Create env file
+        run: |
+          : > ${{ secrets.ENV_PATH }}
+          touch ${{ secrets.ENV_PATH }}
+          {
+            echo NAVER_API_CLIENT_ID="\"${{ secrets.NAVER_API_CLIENT_ID }}"\"
+            echo NAVER_API_CLIENT_SECRET="\"${{ secrets.NAVER_API_CLIENT_SECRET }}"\"
+            echo SECRET_KEY="\"${{ secrets.SECRET_KEY }}"\"
+            echo RUN_ENV="\"${{ secrets.RUN_ENV }}"\"
+            echo DOMAIN="\"${{ secrets.DOMAIN }}"\"
+            echo PROD_ALLOWED_HOSTS='${{ secrets.PROD_ALLOWED_HOSTS }}'
+            echo CORS_ORIGIN_WHITELIST='${{ secrets.CORS_ORIGIN_WHITELIST }}'
+            echo DB_NAME="\"${{ secrets.DB_NAME }}"\"
+            echo DB_USER="\"${{ secrets.DB_USER }}"\"
+            echo DB_HOST="\"${{ secrets.DB_HOST }}"\"
+            echo DB_PASSWORD="\"${{ secrets.DB_PASSWORD }}"\"
+            echo LOG_DIR="\"${{ secrets.LOG_DIR }}"\"
+            echo LOG_FILENAME="\"${{ secrets.LOG_FILENAME }}"\"
+            echo SENTRY_DSN="\"${{ secrets.SENTRY_DSN }}"\"
+          } >> ${{ secrets.ENV_PATH }}
 
       - name: Build Docker containers
         run: sudo kill `sudo lsof -t -i:8084` && sh scripts/build-docker-compose.sh

@@ -11,7 +11,7 @@ on:
 jobs:
   checkout:
     runs-on: [ self-hosted, label-go ]
-    if: ${{ contains(fromJson('["schedule"]'), github.event_name) || github.event.pull_request_merged == true }}
+    if: ${{ contains(fromJson('["schedule"]'), github.event_name) || github.event.pull_request.merged == true }}
     steps:
       - name: Set Permissions
         run: sudo chown -R $USER:$USER ${{ github.workspace }}
@@ -30,7 +30,7 @@ jobs:
   deploy:
     runs-on: [ self-hosted, label-go ]
     needs: checkout
-    if: ${{ contains(fromJson('["schedule"]'), github.event_name) || github.event.pull_request_merged == true }}
+    if: ${{ contains(fromJson('["schedule"]'), github.event_name) || github.event.pull_request.merged == true }}
     steps:
       - name: Create env file
         run: |
@@ -69,7 +69,7 @@ jobs:
   test:
     runs-on: [ self-hosted, label-go ]
     needs: [ checkout, deploy ]
-    if: ${{ contains(fromJson('["schedule"]'), github.event_name) || github.event.pull_request_merged == true }}
+    if: ${{ contains(fromJson('["schedule"]'), github.event_name) || github.event.pull_request.merged == true }}
     steps:
       - name: Send cURL to validate server and ssl cerficiate
         run: |
@@ -81,7 +81,7 @@ jobs:
             exit 1
           fi
 
-  rollback / release:
+  rollback:
     runs-on: [ self-hosted, label-go ]
     needs: [ checkout, deploy, test ]
     if: ${{ always() && contains(needs.*.result, 'failure') }}
@@ -111,10 +111,10 @@ jobs:
             echo "Deploy Complete"
           fi
 
-  tagging / release:
+  tagging:
     runs-on: [ self-hosted, label-go ]
     needs: [ checkout, deploy, test ]
-    if: ${{ always() && github.event.pull_request_merged == true && (needs.checkout.result == 'success' && needs.deploy.result == 'success' && needs.test.result == 'success) }}
+    if: ${{ always() && github.event.pull_request.merged == true && (needs.checkout.result == 'success' && needs.deploy.result == 'success' && needs.test.result == 'success) }}
     steps:
       - name: Extract version
         run: echo "##[set-output name=version;]$(echo '${{ github.event.head_commit.message }}' | egrep -o '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}')"
