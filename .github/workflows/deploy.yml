@@ -6,7 +6,7 @@ on:
       - main
     types: [ closed ]
   schedule:
-    - cron: '0 0 * * 1-5'
+    - cron: '0 0 * * 1'
 
 jobs:
   checkout:
