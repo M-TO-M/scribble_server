@@ -1,3 +1,5 @@
+#! /bin/bash
+
 # Remove existing dangling docker-images
 if [ $(docker images --quiet --filter=dangling=true | wc -l) -gt 0 ]
 then
@@ -15,12 +17,3 @@ fi
 # Build docker containers
 docker-compose up -d --build
 echo "Build Complete"
-
-# Check running state of all 3 containers
-if [ $(docker ps --format "{{.Names}} {{.Status}}" | grep "Up" | wc -l) -ne 3 ]
-then
-  echo "Build error while running docker-compose"
-  exit 1
-else
-  echo "Deploy Complete"
-fi
