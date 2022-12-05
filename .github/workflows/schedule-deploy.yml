@@ -127,6 +127,11 @@ jobs:
           fi
         id: extract-version
 
+      - name: Auto Generate Changelog
+        run: |
+          python3 change.py --version "${{ steps.extract-version.outputs.version }}"
+        id: changelog
+
       - name: Create Release with Tag
         uses: actions/create-release@v1
         env:
