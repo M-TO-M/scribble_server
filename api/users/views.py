@@ -11,6 +11,7 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import generics, mixins, status
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.response import Response
+from rest_framework.throttling import AnonRateThrottle
 from rest_framework_tracking.mixins import LoggingMixin
 
 from apps.users.models import UserLoginLog
@@ -43,6 +44,7 @@ class SignInLoggingMixin(LoggingMixin):
 class SignUpView(generics.CreateAPIView):
     serializer_class = SignUpSerializer
     authentication_classes = []
+    throttle_classes = [AnonRateThrottle]
 
     @swagger_auto_schema(
         operation_id='sign_up',
@@ -87,6 +89,7 @@ class VerifyView(generics.RetrieveAPIView):
     queryset = User.objects.all()
     serializer_class = VerifySerializer
     authentication_classes = []
+    throttle_classes = [AnonRateThrottle]
 
     @swagger_auto_schema(
         operation_id='verify',
@@ -128,6 +131,7 @@ class SignInView(SignInLoggingMixin, ScribbleTokenObtainView):
     queryset = User.objects.all()
     serializer_class = ScribbleTokenObtainPairSerializer
     authentication_classes = []
+    throttle_classes = [AnonRateThrottle]
 
     @swagger_auto_schema(
         operation_id='sign_in',

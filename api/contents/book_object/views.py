@@ -7,6 +7,7 @@ from rest_framework import generics, status
 from rest_framework.response import Response
 
 from django.db.models import Q
+from rest_framework.throttling import AnonRateThrottle
 
 from api.contents.book_object.serializers import BookCreateSerializer, BookObjectSerializer, DetailBookListSerializer
 from apps.contents.models import BookObject, Note, Page
@@ -74,6 +75,7 @@ class TaggingBookSearchAPIView(generics.RetrieveAPIView):
     serializer_class = DetailBookListSerializer
     queryset = BookObject.objects.all()
     authentication_classes = []
+    throttle_classes = [AnonRateThrottle]
 
     def get_params(self, request):
         param = self.request.GET
