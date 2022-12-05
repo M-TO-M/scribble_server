@@ -3,6 +3,9 @@ import json
 from dotenv import load_dotenv
 from pathlib import Path
 
+import sentry_sdk
+from sentry_sdk.integrations.django import DjangoIntegration
+
 load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -13,6 +16,7 @@ DB_USER = os.environ.get('DB_USER')
 DB_HOST = os.environ.get('DB_HOST')
 DB_PASSWORD = os.environ.get('DB_PASSWORD')
 
+SENTRY_DSN = os.environ.get('SENTRY_DSN')
 
 DEBUG = False
 
@@ -68,4 +72,13 @@ CORS_ALLOW_HEADERS = (
     'user-agent',
     'x-csrftoken',
     'x-requested-with',
+)
+
+sentry_sdk.init(
+    dsn=SENTRY_DSN,
+    integrations=[
+        DjangoIntegration(),
+    ],
+    traces_sample_rate=0.25,
+    send_default_pii=True
 )

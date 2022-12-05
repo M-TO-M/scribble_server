@@ -118,13 +118,23 @@ jobs:
     if: ${{ always() && github.event.pull_request.merged == true && needs.checkout.result == 'success' && needs.deploy.result == 'success' && needs.test.result == 'success' }}
     steps:
       - name: Extract version
-        run: echo "##[set-output name=version;]$(echo '${{ github.event.pull_request.title }}' | egrep -o '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}')"
+        run: |
+          version=$(echo '${{ github.event.pull_request.title }}' | egrep -o '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}')
+          if [ -z $version ]; then
+            exit 1
+          else
+            echo "::set-output name=version::$version"
+          fi
         id: extract-version
 
+      - name: Auto Generate Changelog
+        run: |
+          python3 ./scripts/generate_changelog.py --version "${{ steps.extract-version.outputs.version }}"
+        id: changelog
+
       - name: Create Release with Tag
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: ncipollo/release-action@v1
         with:
-          tag_name: ${{ steps.extract-version.outputs.version }}
-          release_name: ${{ steps.extract-version.outputs.version }}
+          tag: ${{ steps.extract-version.outputs.version }}
+          name: ${{ steps.extract-version.outputs.version }}
+          bodyFile: "./CHANGELOG_RELEASE.md"
