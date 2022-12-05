@@ -133,9 +133,8 @@ jobs:
         id: changelog
 
       - name: Create Release with Tag
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: ncipollo/release-action@v1
         with:
-          tag_name: ${{ steps.extract-version.outputs.version }}
-          release_name: ${{ steps.extract-version.outputs.version }}
+          tag: ${{ steps.extract-version.outputs.version }}
+          name: ${{ steps.extract-version.outputs.version }}
+          bodyFile: "./CHANGELOG_RELEASE.md"
