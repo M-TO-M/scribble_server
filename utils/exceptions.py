@@ -1,3 +1,6 @@
+import math
+
+from rest_framework.exceptions import Throttled
 from rest_framework.views import exception_handler
 
 
@@ -30,6 +33,11 @@ def _get_custom_response_data(data):
 def custom_exception_handler(exc, context):
     response = exception_handler(exc, context)
     if response is None:
+        return response
+
+    if isinstance(exc, Throttled):
+        wait = math.ceil(exc.wait) if exc.wait else exc.wait
+        response.data = {"detail": "throttled", "wait": wait}
         return response
 
     code, data = response.status_code, response.data

@@ -12,8 +12,6 @@ from scribble.authentication import CustomJWTAuthentication
 from django.conf import settings
 
 REQ_ALLOWED_PATH = [
-    "/",
-    "/docs",
     "/main/",
     "/users/new",
     "/users/verify",
