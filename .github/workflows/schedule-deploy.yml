@@ -129,7 +129,7 @@ jobs:
 
       - name: Auto Generate Changelog
         run: |
-          python3 change.py --version "${{ steps.extract-version.outputs.version }}"
+          python3 ./scripts/generate_changelog.py --version "${{ steps.extract-version.outputs.version }}"
         id: changelog
 
       - name: Create Release with Tag
