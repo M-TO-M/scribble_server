@@ -65,24 +65,9 @@ jobs:
             echo "Deploy Complete"
           fi
 
-  test:
-    runs-on: [ self-hosted, label-go ]
-    needs: [ checkout, deploy ]
-    if: ${{ github.event.pull_request.merged == true }}
-    steps:
-      - name: Send cURL to validate server and ssl cerficiate
-        run: |
-          RESP_CODE=$(curl -LI https://${{ secrets.DOMAIN }}/v1/docs -o /dev/null -w '%{http_code}\n' -s)
-          if [ $RESP_CODE -eq 200 ]
-          then
-            echo "Success $RESP_CODE: SSL certificate verify ok."
-          else
-            exit 1
-          fi
-
   rollback:
     runs-on: [ self-hosted, label-go ]
-    needs: [ checkout, deploy, test ]
+    needs: [ checkout, deploy ]
     if: ${{ always() && contains(needs.*.result, 'failure') }}
     steps:
       - name: Set Action Runner Permissions
@@ -114,8 +99,8 @@ jobs:
 
   tagging:
     runs-on: [ self-hosted, label-go ]
-    needs: [ checkout, deploy, test ]
-    if: ${{ always() && github.event.pull_request.merged == true && needs.checkout.result == 'success' && needs.deploy.result == 'success' && needs.test.result == 'success' }}
+    needs: [ checkout, deploy ]
+    if: ${{ always() && github.event.pull_request.merged == true && needs.checkout.result == 'success' && needs.deploy.result == 'success' }}
     steps:
       - name: Extract version
         run: |
