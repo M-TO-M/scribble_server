@@ -29,7 +29,7 @@ def get_repo_url():
 
 
 def get_change_log_content(prev_tag, tag):
-    p = subprocess.run(['git', 'log', '--oneline', '--format=" * %s"', f'{prev_tag}..{tag}'], capture_output=True)
+    p = subprocess.run(['git', 'log', '--oneline', '--format=" * %s"', f'{prev_tag}..{tag}~1'], capture_output=True)
     content = re.sub('"\n"', '\n', p.stdout.decode().strip()).strip('\"')
     return content
 
