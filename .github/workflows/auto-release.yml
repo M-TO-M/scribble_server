@@ -2,7 +2,7 @@ name: Auto Release
 
 on:
   pull_request:
-    - types: [opened, reopened, synchronize, edited]
+    types: [opened, reopened, synchronize, edited]
 
 jobs:
   release:
@@ -31,12 +31,10 @@ jobs:
         id: changed-files
         if: ${{ steps.extract-version.outputs.version }}
         uses: tj-actions/changed-files@v31
-        files: |
-          **
 
       - name: Auto Commit Updated Changelog
         id: auto-commit-push
-        if: ${{ (steps.changed-files.outputs.any_changed) && (steps.extract-version.outputs.version) }}
+        if: ${{ steps.changed-files.outputs.any_changed }} && ${{ steps.extract-version.outputs.version }}
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
           commit_message: "update: CHANGELOG.md"
