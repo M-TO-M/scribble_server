@@ -29,7 +29,7 @@ def get_repo_url():
 
 
 def get_change_log_content(prev_tag, tag):
-    p = subprocess.run(['git', 'log', '--oneline', '--format=" * %s"', f'{prev_tag}..{tag}'], capture_output=True)
+    p = subprocess.run(['git', 'log', '--oneline', '--format=" * %s"', f'{prev_tag}..{tag}~1'], capture_output=True)
     content = re.sub('"\n"', '\n', p.stdout.decode().strip()).strip('\"')
     return content
 
@@ -58,7 +58,7 @@ def main():
 
         output_path = Path('./CHANGELOG_RELEASE.md')
         output_text = (
-            "## %s\n-------------\n### Features\n%s\n"
+            "## %s\n### Features\n%s\n"
             "### Full Commit Logs\nCheck out [the full commit logs](%s) until this release (%s).\n\n"
             % (args.version, get_change_log_content(prev_tag, tag), commit_log_url, args.version)
         )
