@@ -1,6 +1,8 @@
 name: Auto Release
 
-on: [pull_request]
+on:
+  pull_request:
+    - types: [opened, reopened, synchronize, edited]
 
 jobs:
   release:
