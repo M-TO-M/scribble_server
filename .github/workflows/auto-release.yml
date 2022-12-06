@@ -29,6 +29,8 @@ jobs:
         id: changed-files
         if: ${{ steps.extract-version.outputs.version }}
         uses: tj-actions/changed-files@v31
+        files: |
+          **
 
       - name: Auto Commit Updated Changelog
         id: auto-commit-push
