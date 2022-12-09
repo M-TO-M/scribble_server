@@ -56,13 +56,12 @@ def main():
         print("::error ::No version given from args.")
         sys.exit(1)
 
-    repo_url = get_repo_url()
-    m = re.match(r'^(https://)[a-zA-Z0-9-]+\.(com)+/[a-zA-Z-_.]+/[a-zA-Z-_]+', repo_url, re.S)
-
     prev_tag = get_prev_tag()
     tag = args.tag if args.tag else get_branch()
 
-    commit_log_url = f"{m.group().strip()}/compare/{prev_tag}...{tag}"
+    repo_url = get_repo_url()
+    m_url = re.match(r'^(https://)[a-zA-Z0-9-]+\.(com)+/[a-zA-Z-_.]+/[a-zA-Z-_]+', repo_url, re.S)
+    commit_log_url = f"{m_url.group().strip()}/compare/{prev_tag}...{args.version}"
 
     try:
         input_path = Path('./CHANGELOG.md')
