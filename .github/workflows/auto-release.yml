@@ -46,7 +46,7 @@ jobs:
           file_pattern: "CHANGELOG.md"
 
       - name: Create Release with Tag
-        if: ${{ steps.extract-version.outputs.version }}
+        if: ${{ steps.extract-version.outputs.version }} && contains(github.event.pull_request.title, "release")
         uses: ncipollo/release-action@v1
         with:
           tag: ${{ steps.extract-version.outputs.version }}
