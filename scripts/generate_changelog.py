@@ -26,6 +26,9 @@ def get_prev_tag():
     tag_gh_cli = ['git', 'describe', '--abbrev=0', '--tags', f'{rev}']
     p = subprocess.run(tag_gh_cli, capture_output=True)
     tag = p.stdout.decode().strip()
+    if not tag:
+        p = subprocess.run(['git', 'describe', '--tags', '--first-parent', 'abbrev=0'], capture_output=True)
+        tag = p.stdout.decode().strip()
     return tag
 
 
