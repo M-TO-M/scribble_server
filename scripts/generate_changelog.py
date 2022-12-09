@@ -74,7 +74,10 @@ def main():
             "### Full Commit Logs\nCheck out [the full commit logs](%s) until this release (%s).\n\n"
             % (args.version, get_change_log_content(prev_tag, tag), commit_log_url, args.version)
         )
-        input_path.write_text(output_text + "\n\n" + input_text)
+
+        m_text = re.search(rf"(?:^|\n)## {re.escape(args.version)}(?:[^\n]*)?\n(.*?)(?:\n## |$)", input_text, re.S)
+        if not m_text:
+            input_path.write_text(output_text + "\n\n" + input_text)
         output_path.write_text(output_text)
     except IOError as e:
         sys.exit(1)
