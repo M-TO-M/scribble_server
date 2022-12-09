@@ -2,7 +2,7 @@ name: Auto Release
 
 on:
   pull_request:
-    types: [opened, reopened, synchronize, edited]
+    types: [opened, reopened, synchronize, edited, closed]
 
 jobs:
   release:
@@ -46,7 +46,7 @@ jobs:
           file_pattern: "CHANGELOG.md"
 
       - name: Create Release with Tag
-        if: ${{ steps.extract-version.outputs.version }} && contains(github.event.pull_request.title, "release")
+        if: ${{ steps.extract-version.outputs.version }} && ${{ github.event.pull_request.merged == true }} && contains(github.event.pull_request.title, "release")
         uses: ncipollo/release-action@v1
         with:
           tag: ${{ steps.extract-version.outputs.version }}
