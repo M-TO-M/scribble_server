@@ -72,7 +72,7 @@ def main():
         output_text = (
             "## %s\n### Features\n%s\n"
             "### Full Commit Logs\nCheck out [the full commit logs](%s) until this release (%s).\n\n"
-            % (args.version, get_change_log_content(prev_tag, tag), commit_log_url, args.version)
+            % (args.version, get_change_log_content(prev_tag, get_tag()), commit_log_url, args.version)
         )
 
         m_text = re.search(rf"(?:^|\n)## {re.escape(args.version)}(?:[^\n]*)?\n(.*?)(?:\n## |$)", input_text, re.S)
