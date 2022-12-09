@@ -5,6 +5,13 @@ import subprocess
 from pathlib import Path
 
 
+def get_branch():
+    gh_cli = ['git', 'branch', '--show-current']
+    p = subprocess.run(gh_cli, capture_output=True)
+    branch = p.stdout.decode().strip()
+    return branch
+
+
 def get_tag():
     gh_cli = ['git', 'rev-parse', '--abbrev-ref', 'HEAD']
     p = subprocess.run(gh_cli, capture_output=True)
@@ -40,6 +47,10 @@ def main():
         '--version', '-v', type=str, default=False,
         help="Declare the newest release version in 'YY.MM.*' format."
     )
+    parser.add_argument(
+        '--tag', '-t', type=str, default=False,
+        help="Declare current branch name."
+    )
     args = parser.parse_args()
     if not args.version:
         print("::error ::No version given from args.")
@@ -48,7 +59,9 @@ def main():
     repo_url = get_repo_url()
     m = re.match(r'^(https://)[a-zA-Z0-9-]+\.(com)+/[a-zA-Z-_.]+/[a-zA-Z-_]+', repo_url, re.S)
 
-    prev_tag, tag = get_prev_tag(), get_tag()
+    prev_tag = get_prev_tag()
+    tag = args.tag if args.tag else get_branch()
+
     commit_log_url = f"{m.group().strip()}/compare/{prev_tag}...{tag}"
 
     try:

@@ -21,11 +21,16 @@ jobs:
           version=$(echo '${{ github.event.pull_request.title }}' | egrep -o '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}')
           echo "::set-output name=version::$version"
 
+      - name: Debug Github Ref
+        run: |
+          echo "head_ref: ${{ github.head_ref }}"
+          echo "ref_name: ${{ github.ref_name }}"
+
       - name: Auto Generate Changelog
         id: changelog
         if: ${{ steps.extract-version.outputs.version }}
         run: |
-          python3 ./scripts/generate_changelog.py --version "${{ steps.extract-version.outputs.version }}"
+          python3 ./scripts/generate_changelog.py --version "${{ steps.extract-version.outputs.version }} --tag "${{ github.head_ref }}""
 
       - name: Get Changed Files
         id: changed-files
