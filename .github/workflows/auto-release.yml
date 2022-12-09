@@ -30,7 +30,7 @@ jobs:
         id: changelog
         if: ${{ steps.extract-version.outputs.version }}
         run: |
-          python3 ./scripts/generate_changelog.py --version "${{ steps.extract-version.outputs.version }} --tag "${{ github.head_ref }}""
+          python3 ./scripts/generate_changelog.py --version "${{ steps.extract-version.outputs.version }}" --tag "${{ github.head_ref }}"
 
       - name: Get Changed Files
         id: changed-files
