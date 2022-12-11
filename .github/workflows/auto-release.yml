@@ -34,19 +34,19 @@ jobs:
 
       - name: Get Changed Files
         id: changed-files
-        if: ${{ steps.extract-version.outputs.version }}
+        if: ${{ github.event.action != 'closed' && steps.extract-version.outputs.version }}
         uses: tj-actions/changed-files@v31
 
       - name: Auto Commit Updated Changelog
         id: auto-commit-push
-        if: ${{ steps.changed-files.outputs.any_changed }} && ${{ steps.extract-version.outputs.version }}
+        if: ${{ github.event.action != 'closed' && steps.changed-files.outputs.any_changed == true && steps.extract-version.outputs.version }}
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
           commit_message: "update: CHANGELOG.md"
           file_pattern: "CHANGELOG.md"
 
       - name: Create Release with Tag
-        if: ${{ steps.extract-version.outputs.version }} && ${{ github.event.pull_request.merged == true }} && contains(github.event.pull_request.title, "release")
+        if: ${{ github.event.action == 'closed' && github.event.pull_request.merged == true && steps.extract-version.outputs.version == true && contains(github.event.pull_request.title, "release") }}
         uses: ncipollo/release-action@v1
         with:
           tag: ${{ steps.extract-version.outputs.version }}
