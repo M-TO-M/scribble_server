@@ -5,6 +5,13 @@ import subprocess
 from pathlib import Path
 
 
+def get_branch():
+    gh_cli = ['git', 'branch', '--show-current']
+    p = subprocess.run(gh_cli, capture_output=True)
+    branch = p.stdout.decode().strip()
+    return branch
+
+
 def get_tag():
     gh_cli = ['git', 'rev-parse', '--abbrev-ref', 'HEAD']
     p = subprocess.run(gh_cli, capture_output=True)
@@ -19,6 +26,9 @@ def get_prev_tag():
     tag_gh_cli = ['git', 'describe', '--abbrev=0', '--tags', f'{rev}']
     p = subprocess.run(tag_gh_cli, capture_output=True)
     tag = p.stdout.decode().strip()
+    if not tag:
+        p = subprocess.run(['git', 'describe', '--abbrev=0', '--tags', '--first-parent'], capture_output=True)
+        tag = p.stdout.decode().strip()
     return tag
 
 
@@ -40,16 +50,19 @@ def main():
         '--version', '-v', type=str, default=False,
         help="Declare the newest release version in 'YY.MM.*' format."
     )
+    parser.add_argument(
+        '--tag', '-t', type=str, default=False,
+        help="Declare current branch name."
+    )
     args = parser.parse_args()
     if not args.version:
         print("::error ::No version given from args.")
         sys.exit(1)
 
-    repo_url = get_repo_url()
-    m = re.match(r'^(https://)[a-zA-Z0-9-]+\.(com)+/[a-zA-Z-_.]+/[a-zA-Z-_]+', repo_url, re.S)
-
     prev_tag, tag = get_prev_tag(), get_tag()
-    commit_log_url = f"{m.group().strip()}/compare/{prev_tag}...{tag}"
+    repo_url = get_repo_url()
+    m_url = re.match(r'^(https://)[a-zA-Z0-9-]+\.(com)+/[a-zA-Z-_.]+/[a-zA-Z-_]+', repo_url, re.S)
+    commit_log_url = f"{m_url.group().strip()}/compare/{prev_tag}...{args.version}"
 
     try:
         input_path = Path('./CHANGELOG.md')
@@ -62,7 +75,10 @@ def main():
             "### Full Commit Logs\nCheck out [the full commit logs](%s) until this release (%s).\n\n"
             % (args.version, get_change_log_content(prev_tag, tag), commit_log_url, args.version)
         )
-        input_path.write_text(output_text + "\n\n" + input_text)
+
+        m_text = re.search(rf"(?:^|\n)## {re.escape(args.version)}(?:[^\n]*)?\n(.*?)(?:\n## |$)", input_text, re.S)
+        if not m_text:
+            input_path.write_text(output_text + "\n\n" + input_text)
         output_path.write_text(output_text)
     except IOError as e:
         sys.exit(1)
