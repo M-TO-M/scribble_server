@@ -1,3 +1,5 @@
-from django.contrib import admin
+from django_api_admin.sites import site
+from apps.users.models import User
 
-# Register your models here.
+site.unregister(User)
+site.register(User)

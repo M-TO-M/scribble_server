@@ -21,6 +21,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 NAVER_API_CLIENT_ID = os.environ.get('NAVER_API_CLIENT_ID')
 NAVER_API_CLIENT_SECRET = os.environ.get('NAVER_API_CLIENT_SECRET')
 
+ADMIN_URL = os.environ.get('ADMIN_URL')
+
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -35,6 +37,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt.token_blacklist',
     'rest_framework_tracking',
     'drf_yasg',
+    'django_api_admin',
 ]
 
 MIDDLEWARE = [

@@ -1,3 +1,4 @@
+import re
 import importlib
 
 from django.contrib.auth.models import AnonymousUser
@@ -9,6 +10,7 @@ from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 
 from scribble.authentication import CustomJWTAuthentication
+from scribble.settings.base import ADMIN_URL
 from django.conf import settings
 
 REQ_ALLOWED_PATH = [
@@ -33,6 +35,7 @@ class TokenAuthMiddleWare(MiddlewareMixin):
         self.process_request(request)
 
         response = None
+        print(self.process_admin_response(request))
         if request.path_info not in VERSION_ALLOWED_PATH:
             response = self.process_response(request, response)
 
@@ -40,6 +43,20 @@ class TokenAuthMiddleWare(MiddlewareMixin):
 
     def process_request(self, request):
         request.user = SimpleLazyObject(lambda: self.get_token_user(request))
+
+    def process_admin_response(self, request) -> bool:
+        pattern = re.finditer(r'/([a-zA-Z]+)', request.path_info, re.S)
+        if not pattern:
+            return False
+
+        for i, m in enumerate(pattern):
+            group = m.group().strip('/')
+            if i == 0 and not re.match(ADMIN_URL, group):
+                return False
+            if i == 1 and re.match("login", group):
+                print("admin login path")
+                # self.response["Authorization"] = f'Bearer {self.response.data["access"]}'
+        return True
 
     def process_response(self, request, response):
         attr = getattr(settings, 'REST_FRAMEWORK', None)
