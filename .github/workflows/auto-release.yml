@@ -52,3 +52,4 @@ jobs:
           tag: ${{ steps.extract-version.outputs.version }}
           name: ${{ steps.extract-version.outputs.version }}
           bodyFile: "./CHANGELOG_RELEASE.md"
+          skipIfReleaseExists: true
