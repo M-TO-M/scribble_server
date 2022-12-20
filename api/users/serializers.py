@@ -2,6 +2,7 @@ import logging
 from random import randint
 from typing import Union
 
+from django.contrib.auth.hashers import check_password
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
@@ -9,7 +10,9 @@ from rest_framework.exceptions import ValidationError
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.serializers import TokenBlacklistSerializer
 
+from apps.users.choices import SocialAccountTypeEnum
 from apps.users.models import User, category_choices
+from core.fields import ChoiceTypeField
 from core.validators import SpecificEmailDomainValidator, domain_allowlist, CategoryDictValidator
 from scribble.authentication import CustomJWTAuthentication
 from utils.logging_utils import BraceStyleAdapter
@@ -88,6 +91,84 @@ class SignOutSerializer(TokenBlacklistSerializer):
         except TokenError:
             raise ValidationError(detail=_("invalid_refresh_token"))
         return {}
+
+
+class DRFSignInSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField(
+        required=True,
+        validators=[SpecificEmailDomainValidator(allowlist=domain_allowlist)]
+    )
+    password = serializers.CharField(required=True)
+
+    class Meta:
+        model = User
+        fields = ("email", "password")
+
+    def validate(self, attrs):
+        try:
+            user = self.Meta.model.objects.get(email=attrs["email"])
+            self.instance = user
+        except self.Meta.model.DoesNotExist:
+            raise ValidationError(detail=_("no_exist_email"))
+
+        if check_password(attrs["password"], self.instance.password) is False:
+            raise ValidationError(detail=_("invalid_password"))
+        return attrs
+
+    def to_representation(self, instance):
+        return SignUpSerializer(instance=self.instance).data
+
+
+class SocialSignInSerializer(serializers.ModelSerializer):
+    social_type = ChoiceTypeField(
+        choices=SocialAccountTypeEnum.choices(),
+        default=SocialAccountTypeEnum.DEFAULT.value,
+        valid_choice={"social_type": SocialAccountTypeEnum.choices_list()}
+    )
+    auth_id = serializers.CharField(required=True, max_length=20)
+    code = serializers.CharField(required=True, max_length=200, write_only=True)
+
+    class Meta:
+        model = User
+        fields = (
+            "id",
+            "social_type",
+            "auth_id",
+            "email",
+            "password",
+            "nickname",
+            "category",
+            "profile_image",
+            "created_at",
+            "updated_at"
+        )
+
+    def validate_social_type(self, value):
+        _default = self.get_fields().get("social_type").default
+        if not value or value == _default:
+            raise ValidationError("invalid_social_type")
+        return value
+
+    def validate(self, attrs):
+        auth_id, code = attrs["auth_id"], attrs["code"]
+        if not auth_id:
+            raise ValidationError("invalid_social_account")
+
+        auth_type = attrs["social_type"][0]
+        auth_id = f"{auth_type}@{auth_type}"
+        try:
+            user = self.Meta.model.objects.get(social_type=attrs["social_type"], auth_id=auth_id)
+            self.instance = user
+        except self.Meta.model.DoesNotExist:
+            raise ValidationError(detail=_("no_exist_auth_id"))
+        return attrs
+
+    def to_representation(self, instance):
+        return SignUpSerializer(instance=self.instance).data
+
+    def create(self, validated_data):
+        user = User.objects.create_user(**validated_data)
+        return user
 
 
 class VerifySerializer(serializers.ModelSerializer):

@@ -8,12 +8,15 @@ from django.conf import settings
 from django.contrib.auth.hashers import check_password
 from django.utils.translation import gettext_lazy as _
 
-from rest_framework import generics, mixins, status
+from rest_framework import generics, mixins, status, viewsets
+from rest_framework.decorators import action
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.response import Response
+from rest_framework.status import is_client_error
 from rest_framework.throttling import AnonRateThrottle
 from rest_framework_tracking.mixins import LoggingMixin
 
+from api.users.logics import SocialLoginService
 from apps.users.models import UserLoginLog
 from api.users.serializers import *
 
@@ -434,3 +437,84 @@ class UserInfoByTokenView(generics.GenericAPIView, mixins.RetrieveModelMixin):
 
         response = {"user": UserSerializer(user).data}
         return Response(response, status=status.HTTP_200_OK)
+
+
+class TokenObtainViewSet(viewsets.ModelViewSet):
+    serializer_class = ScribbleTokenObtainPairSerializer
+
+    def finalize_response(self, request, response, *args, **kwargs):
+        response = super(TokenObtainViewSet, self).finalize_response(request, response, *args, **kwargs)
+        if is_client_error(response.status_code):
+            return response
+
+        if self.action == "signout":
+            response.delete_cookie(settings.SIMPLE_JWT["AUTH_COOKIE"])
+            return response
+
+        if self.action.startswith("signin"):  # signin_social
+            token = self.serializer_class.get_token(request.user)
+            response.data["access"] = str(token.access_token)
+            response.data["refresh"] = str(token)
+            response.set_cookie(
+                key=settings.SIMPLE_JWT["AUTH_COOKIE"],
+                value=str(token),
+                expires=settings.SIMPLE_JWT["REFRESH_TOKEN_LIFETIME"],
+                secure=settings.SIMPLE_JWT["AUTH_COOKIE_SECURE"],
+                httponly=settings.SIMPLE_JWT["AUTH_COOKIE_HTTP_ONLY"]
+            )
+            return response
+
+
+class UserViewSet(TokenObtainViewSet):
+    serializer_class = UserSerializer
+    queryset = User.objects.all()
+
+    @action(detail=False, methods=["post"], serializer_class=DRFSignInSerializer, name="signin")
+    def signin_drf(self, request, *args, **kwargs):
+        """
+        { "email": ${EMAIL}, "password": ${PASSWORD} }
+        """
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        request.user = serializer.instance
+        return Response(
+            serializer.data,
+            status=status.HTTP_201_CREATED,
+            headers=self.get_success_headers(serializer.data)
+        )
+
+    @action(detail=False, methods=["post"], serializer_class=SocialSignInSerializer, name="signin_social")
+    def signin_social(self, request, *args, **kwargs):
+        """
+        { "social_type": ${SOCIAL_PLATFORM_NAME}, "redirect_uri": ${REDIRECT_URI}, "code": ${ACCESS_CODE} }
+        """
+        data = request.data
+        social_type = data.pop("social_type")
+        if social_type not in SocialAccountTypeEnum.choices_list():
+            raise ValidationError(detail=_("invalid_social_type"))
+
+        service = SocialLoginService(social_type=social_type)
+        user_data, user_exists = service.kakao_auth(**data)
+
+        if user_exists:
+            request.user = service.social_user
+            return Response(
+                user_data,
+                status=status.HTTP_200_OK,
+                headers=self.get_success_headers(user_data)
+            )
+
+        serializer_data = {
+            "email": user_data["kakao_account"]["email"],
+            "nickname": user_data["kakao_account"]["profile"]["nickname"],
+            "profile_image": user_data["kakao_account"]["profile"]["profile_image_url"],
+        }
+        serializer_data.update({"social_type": social_type, "auth_id": f"{social_type[0]}@{user_data['id']}"})
+        serializer = self.get_serializer(data=serializer_data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        request.user = serializer.instance
+        return Response(
+            serializer.data,
+            status=status.HTTP_201_CREATED,
+            headers=self.get_success_headers(serializer.data)
+        )
