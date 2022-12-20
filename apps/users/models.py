@@ -78,6 +78,7 @@ class User(AbstractUser, TimeStampModel):
     auth_id = models.CharField(
         max_length=50,
         null=False,
+        default="",
         verbose_name='소셜 로그인 계정 고유 아이디'
     )
 
