@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser, UserManager
 from rest_framework_tracking.models import APIRequestLog
 
+from apps.users.choices import SocialAccountTypeEnum
 from core.models import TimeStampModel
 from core.validators import domain_allowlist, SpecificEmailDomainValidator, CategoryDictValidator
 
@@ -67,6 +68,18 @@ class User(AbstractUser, TimeStampModel):
     category = models.JSONField(
         default=dict,
         validators=[CategoryDictValidator(category_choices)]
+    )
+    social_type = models.CharField(
+        max_length=20,
+        choices=SocialAccountTypeEnum.choices(),
+        default=SocialAccountTypeEnum.DEFAULT.value,
+        verbose_name='소셜 로그인 플랫폼'
+    )
+    auth_id = models.CharField(
+        max_length=50,
+        unique=True,
+        null=False,
+        verbose_name='소셜 로그인 계정 고유 아이디'
     )
 
     objects = NewUserManager()
