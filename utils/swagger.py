@@ -15,9 +15,21 @@ class ScribbleOpenAPISchemaGenerator(OpenAPISchemaGenerator):
         view_cls = {}
 
         for path, method, callback in endpoints:
-            http_method_names = callback.view_initkwargs.get('http_method_names')
-            if http_method_names and method.lower() != http_method_names[0]:
+            try:
+                actions = callback.actions.get(method.lower())
+                view_initkwargs = callback.initkwargs.get('name')
+                if not actions or not view_initkwargs or actions.lower() != view_initkwargs.lower().replace(" ", "_"):
+                    continue
+            except AttributeError:
                 continue
+
+            # todo: contents, main api package에 대한 swagger callback 처리
+            # try:
+            #     http_method_names = callback.view_initkwargs.get('http_method_names')
+            #     if http_method_names and method.lower() != http_method_names[0]:
+            #         continue
+            # except AttributeError:
+            #     continue
 
             view = self.create_view(callback, method, request)
             path = self.coerce_path(path, view)
@@ -43,6 +55,36 @@ user_response_example_with_access = {
     "id": 1,
     "email": "user@email.com",
     "nickname": "user_nickname",
+    "category": {
+        "9": "과학"
+    },
+    "profile_image": "https://placekitten.com/101/37",
+    "access": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ0b2tlbl90eXB..",
+    "created_at": "2022-06-01T01:48:27.252426Z",
+    "updated_at": "2022-06-01T01:48:27.252439Z"
+}
+
+social_user_signin_response_example = {
+    "id": 1,
+    "social_type": "kakao",
+    "auth_id": "k@2584917382",
+    "nickname": "user_nickname",
+    "new_user": False,
+    "category": {
+        "9": "과학"
+    },
+    "profile_image": "https://placekitten.com/101/37",
+    "access": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ0b2tlbl90eXB..",
+    "created_at": "2022-06-01T01:48:27.252426Z",
+    "updated_at": "2022-06-01T01:48:27.252439Z"
+}
+
+social_user_signup_response_example = {
+    "id": 1,
+    "social_type": "kakao",
+    "auth_id": "k@2584917382",
+    "nickname": "user_nickname",
+    "new_user": True,
     "category": {
         "9": "과학"
     },

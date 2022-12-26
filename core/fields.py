@@ -4,7 +4,27 @@ from django.db.models import CharField
 from django.utils.translation import gettext_lazy as _
 from django.core.validators import EMPTY_VALUES
 
+from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
+
 from core.validators import ISBNValidator
+
+
+class ChoiceTypeField(serializers.ChoiceField):
+    def __init__(self, valid_choice=None, **kwargs):
+        super().__init__(**kwargs)
+        self.valid_choice = valid_choice
+
+    def fail(self, key, **kwargs):
+        msg = self.error_messages.get(key, None)
+        message_string = msg.format(**kwargs)
+        detail = {"detail": message_string}
+        detail.update(self.valid_choice)
+        raise ValidationError(detail, code=key)
+
+    default_error_messages = {
+        'invalid_choice': "invalid_choice_{input}",
+    }
 
 
 class ISBNField(CharField):

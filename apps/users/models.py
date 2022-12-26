@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser, UserManager
 from rest_framework_tracking.models import APIRequestLog
 
+from apps.users.choices import SocialAccountTypeEnum
 from core.models import TimeStampModel
 from core.validators import domain_allowlist, SpecificEmailDomainValidator, CategoryDictValidator
 
@@ -28,7 +29,7 @@ class NewUserManager(UserManager):
     def _create_user(self, nickname, email, password, **extra_fields):
         if not nickname:
             raise ValueError("닉네임은 설정되어야 합니다")
-        if not email:
+        if extra_fields.get("social_type") == SocialAccountTypeEnum.DEFAULT.value and not email:
             raise ValueError("이메일은 설정되어야 합니다")
         email = self.normalize_email(email)
         user = self.model(nickname=nickname, email=email, **extra_fields)
@@ -68,16 +69,33 @@ class User(AbstractUser, TimeStampModel):
         default=dict,
         validators=[CategoryDictValidator(category_choices)]
     )
+    social_type = models.CharField(
+        max_length=20,
+        choices=SocialAccountTypeEnum.choices(),
+        default=SocialAccountTypeEnum.DEFAULT.value,
+        verbose_name='소셜 로그인 플랫폼'
+    )
+    auth_id = models.CharField(
+        max_length=50,
+        null=False,
+        unique=True,
+        default="",
+        verbose_name='소셜 로그인 계정 고유 아이디'
+    )
 
     objects = NewUserManager()
     USERNAME_FIELD = 'nickname'
-    REQUIRED_FIELDS = ['email']
+    REQUIRED_FIELDS = []
 
     class Meta:
         db_table = 'user'
         verbose_name = '사용자'
         verbose_name_plural = verbose_name
         ordering = ['created_at']
+
+    @property
+    def social_auth_id(self):
+        return f"{self.social_type[0]}@{self.auth_id}"
 
 
 class UserLoginLog(TimeStampModel, APIRequestLog):
