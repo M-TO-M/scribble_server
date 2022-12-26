@@ -42,8 +42,9 @@ jobs:
 
       - name: Debug Container state
         run: |
-          running_state=$(docker ps -a)
+          running_state=$(docker ps --format "{{.Names}} {{.Status}}")
           echo $running_state
+          echo $(docker ps --format "{{.Names}} {{.Status}}" | grep "Up" | wc -l)
 
       - name: Check container running state
         run: |
