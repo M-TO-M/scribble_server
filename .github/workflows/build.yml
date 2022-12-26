@@ -40,6 +40,11 @@ jobs:
       - name: Build Docker containers
         run: sudo kill `sudo lsof -t -i:8084` && sh scripts/build-docker-compose.sh
 
+      - name: Debug Container state
+        run: |
+          running_state=$(docker ps -a)
+          echo $running_state
+
       - name: Check container running state
         run: |
           if [ $(docker ps --format "{{.Names}} {{.Status}}" | grep "Up" | wc -l) -ne 3 ]
