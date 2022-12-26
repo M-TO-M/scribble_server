@@ -26,4 +26,4 @@ class ResponseRenderer(renderers.JSONRenderer):
                     response_json.update(data.pop(i))
                     response_json[data_key] = data
 
-        return json.dumps(response_json)
+        return json.dumps(response_json, default=str)
