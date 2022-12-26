@@ -24,9 +24,18 @@ from core.exceptions import UserNotFound
 from core.serializers import ScribbleTokenObtainPairSerializer
 from core.throttling import AnonRateThrottle
 from utils.logging_utils import BraceStyleAdapter
-from utils.swagger import swagger_response, swagger_parameter, \
-    swagger_schema_with_properties, swagger_schema_with_description, swagger_schema_with_items, \
-    UserFailCaseCollection as user_fail_case, user_response_example, user_response_example_with_access
+from utils.swagger import (
+    swagger_response,
+    swagger_parameter,
+    swagger_schema_with_properties,
+    swagger_schema_with_description,
+    swagger_schema_with_items,
+    UserFailCaseCollection as user_fail_case,
+    user_response_example,
+    user_response_example_with_access,
+    social_user_signup_response_example,
+    social_user_signin_response_example
+)
 
 log = BraceStyleAdapter(logging.getLogger("api.users.views"))
 
@@ -195,6 +204,31 @@ class UserViewSet(TokenObtainViewSet):
         user_data = {attr: getattr(request.user, attr) for attr in self.resp_attrs}
         return Response({"user": user_data}, status=status.HTTP_201_CREATED)
 
+    @swagger_auto_schema(
+        operation_id='signin_social',
+        operation_description='소셜 계정 로그인을 수행합니다.',
+        request_body=swagger_schema_with_properties(
+            openapi.TYPE_OBJECT,
+            {
+                'social_type': swagger_schema_with_description(openapi.TYPE_STRING, description='소셜 플랫폼 종류'),
+                'redirect_uri': swagger_schema_with_description(openapi.FORMAT_URI, description='카카오 REST API redirect_uri'),
+                'code': swagger_schema_with_description(openapi.TYPE_STRING, description='소셜 플랫폼 인가코드'),
+            }
+        ),
+        responses={
+            200: swagger_response(
+                description='SIGN_IN_SOCIAL(이미 가입된 소셜 계정인 경우)',
+                schema=SocialSignInSerializer,
+                examples=social_user_signin_response_example
+            ),
+            201: swagger_response(
+                description='SIGN_UP_SOCIAL(새로 가입을 진행하는 소셜 계정인 경우)',
+                schema=SocialSignInSerializer,
+                examples=social_user_signup_response_example
+            )
+        },
+        security=[]
+    )
     @action(
         detail=False,
         methods=["post"],
@@ -211,6 +245,10 @@ class UserViewSet(TokenObtainViewSet):
 
         data = request.data
         social_type = data.pop("social_type")
+        if not social_type:
+            raise ValidationError(detail=_("no_social_type"))
+        social_type = social_type.lower()
+
         if social_type not in SocialAccountTypeEnum.choices_list():
             raise ValidationError(detail=_("invalid_social_type"))
 

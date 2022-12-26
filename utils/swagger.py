@@ -52,6 +52,36 @@ user_response_example_with_access = {
     "updated_at": "2022-06-01T01:48:27.252439Z"
 }
 
+social_user_signin_response_example = {
+    "id": 1,
+    "social_type": "kakao",
+    "auth_id": "k@2584917382",
+    "nickname": "user_nickname",
+    "new_user": False,
+    "category": {
+        "9": "과학"
+    },
+    "profile_image": "https://placekitten.com/101/37",
+    "access": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ0b2tlbl90eXB..",
+    "created_at": "2022-06-01T01:48:27.252426Z",
+    "updated_at": "2022-06-01T01:48:27.252439Z"
+}
+
+social_user_signup_response_example = {
+    "id": 1,
+    "social_type": "kakao",
+    "auth_id": "k@2584917382",
+    "nickname": "user_nickname",
+    "new_user": True,
+    "category": {
+        "9": "과학"
+    },
+    "profile_image": "https://placekitten.com/101/37",
+    "access": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ0b2tlbl90eXB..",
+    "created_at": "2022-06-01T01:48:27.252426Z",
+    "updated_at": "2022-06-01T01:48:27.252439Z"
+}
+
 note_response_example = {
     'note': {
         'id': 1,
