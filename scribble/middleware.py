@@ -9,6 +9,7 @@ from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 
 from scribble.authentication import CustomJWTAuthentication
+from scribble.settings.base import RUN_ENV
 from django.conf import settings
 
 REQ_ALLOWED_PATH = [
@@ -20,6 +21,8 @@ REQ_ALLOWED_PATH = [
     "/contents/books/search/navbar",
     "/contents/books/search/tagging"
 ]
+if RUN_ENV == "dev":
+    REQ_ALLOWED_PATH.append("/docs")
 
 VERSION = getattr(settings, 'VERSION', '')
 VERSION_ALLOWED_PATH = ['/' + VERSION + path for path in REQ_ALLOWED_PATH]
