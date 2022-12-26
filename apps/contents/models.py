@@ -48,15 +48,13 @@ class BookObject(TimeStampModel):
 class Note(TimeStampModel):
     user = models.ForeignKey(
         User,
-        on_delete=models.SET_DEFAULT,
-        default=DEFAULT_MODEL_PK.user,
+        on_delete=models.CASCADE,
         related_name='note',
         verbose_name='작성자'
     )
     book = models.ForeignKey(
         BookObject,
-        on_delete=models.SET_DEFAULT,
-        default=DEFAULT_MODEL_PK.book_object,
+        on_delete=models.CASCADE,
         related_name='note',
         verbose_name='도서'
     )
@@ -106,8 +104,7 @@ class NoteLikesRelation(TimeStampModel):
 class Page(TimeStampModel):
     note = models.ForeignKey(
         Note,
-        on_delete=models.SET_DEFAULT,
-        default=DEFAULT_MODEL_PK.note,
+        on_delete=models.CASCADE,
         related_name='page',
         verbose_name='노트'
     )
@@ -178,16 +175,14 @@ class PageLikesRelation(TimeStampModel):
 class PageComment(TimeStampModel):
     comment_user = models.ForeignKey(
         User,
-        on_delete=models.SET_DEFAULT,
-        default=DEFAULT_MODEL_PK.page_comment,
+        on_delete=models.CASCADE,
         related_name='page_comment',
         verbose_name='작성자'
     )
 
     page = models.ForeignKey(
         Page,
-        on_delete=models.SET_DEFAULT,
-        default=DEFAULT_MODEL_PK.page,
+        on_delete=models.CASCADE,
         related_name='page_comment',
         verbose_name='페이지'
     )
