@@ -1,8 +1,6 @@
 import logging
-from random import randint
 from typing import Union
 
-from django.contrib.auth.hashers import check_password
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
@@ -20,7 +18,7 @@ from utils.logging_utils import BraceStyleAdapter
 log = BraceStyleAdapter(logging.getLogger("api.users.serializers"))
 
 
-class UserValidationBaseSerializer(serializers.ModelSerializer):
+class UserBaseSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(
         error_messages={'unique': _('exist_email')},
         validators=[SpecificEmailDomainValidator(allowlist=domain_allowlist)]
@@ -32,7 +30,18 @@ class UserValidationBaseSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = '__all__'
+        fields = (
+            "id",
+            "social_type",
+            "auth_id",
+            "email",
+            "password",
+            "nickname",
+            "category",
+            "profile_image",
+            "created_at",
+            "updated_at"
+        )
 
     def validate_email(self, value):
         try:
@@ -55,16 +64,6 @@ class UserValidationBaseSerializer(serializers.ModelSerializer):
                 raise ValidationError(detail={"detail": "invalid_category", "category_list": category_choices})
             ret[category_choices.index(val)] = val
         return ret
-
-
-class SignUpSerializer(UserValidationBaseSerializer):
-    class Meta:
-        model = User
-        fields = ("id", "email", "password", "nickname", "category", "profile_image", "created_at", "updated_at")
-
-    def create(self, validated_data):
-        user = User.objects.create_user(**validated_data)
-        return user
 
 
 class SignOutSerializer(TokenBlacklistSerializer):
@@ -93,32 +92,6 @@ class SignOutSerializer(TokenBlacklistSerializer):
         return {}
 
 
-class DRFSignInSerializer(serializers.ModelSerializer):
-    email = serializers.EmailField(
-        required=True,
-        validators=[SpecificEmailDomainValidator(allowlist=domain_allowlist)]
-    )
-    password = serializers.CharField(required=True)
-
-    class Meta:
-        model = User
-        fields = ("email", "password")
-
-    def validate(self, attrs):
-        try:
-            user = self.Meta.model.objects.get(email=attrs["email"])
-            self.instance = user
-        except self.Meta.model.DoesNotExist:
-            raise ValidationError(detail=_("no_exist_email"))
-
-        if check_password(attrs["password"], self.instance.password) is False:
-            raise ValidationError(detail=_("invalid_password"))
-        return attrs
-
-    def to_representation(self, instance):
-        return SignUpSerializer(instance=self.instance).data
-
-
 class SocialSignInSerializer(serializers.ModelSerializer):
     social_type = ChoiceTypeField(
         choices=SocialAccountTypeEnum.choices(),
@@ -126,7 +99,6 @@ class SocialSignInSerializer(serializers.ModelSerializer):
         valid_choice={"social_type": SocialAccountTypeEnum.choices_list()}
     )
     auth_id = serializers.CharField(required=True, max_length=20)
-    code = serializers.CharField(required=True, max_length=200, write_only=True)
 
     class Meta:
         model = User
@@ -134,8 +106,6 @@ class SocialSignInSerializer(serializers.ModelSerializer):
             "id",
             "social_type",
             "auth_id",
-            "email",
-            "password",
             "nickname",
             "category",
             "profile_image",
@@ -150,24 +120,21 @@ class SocialSignInSerializer(serializers.ModelSerializer):
         return value
 
     def validate(self, attrs):
-        auth_id, code = attrs["auth_id"], attrs["code"]
+        auth_id = attrs["auth_id"]
         if not auth_id:
             raise ValidationError("invalid_social_account")
 
-        auth_type = attrs["social_type"][0]
-        auth_id = f"{auth_type}@{auth_type}"
+        auth_id = f"{attrs['social_type'][0]}@{auth_id}"
         try:
             user = self.Meta.model.objects.get(social_type=attrs["social_type"], auth_id=auth_id)
-            self.instance = user
+            raise ValidationError(detail=_("exist_auth_id"))
         except self.Meta.model.DoesNotExist:
-            raise ValidationError(detail=_("no_exist_auth_id"))
-        return attrs
-
-    def to_representation(self, instance):
-        return SignUpSerializer(instance=self.instance).data
+            return attrs
 
     def create(self, validated_data):
         user = User.objects.create_user(**validated_data)
+        self.instance = user
+        log.debug(f"{user.social_type} auth account created: {user.auth_id}")
         return user
 
 
@@ -176,38 +143,41 @@ class VerifySerializer(serializers.ModelSerializer):
     nickname = serializers.SerializerMethodField()
 
     @staticmethod
-    def get_email(email: str) -> str:
+    def get_email(email: str) -> tuple[bool, str]:
         try:
-            User.objects.get(email__exact=email)
-            raise ValidationError(detail=_("exist_email"))
+            User.objects.get(email=email)
+            return False, "exist_email"
         except User.DoesNotExist:
-            domain = email.rsplit("@", 1)[1]
-            if domain not in domain_allowlist:
-                raise ValidationError(detail={"detail": "invalid_domain", "domain_allowlist": domain_allowlist})
-            return domain
+            if email.rsplit("@", 1)[1] not in domain_allowlist:
+                return False, "invalid_domain"
+            return True, ""
 
     @staticmethod
-    def get_nickname(nickname: str) -> None:
+    def get_nickname(nickname: str) -> tuple[bool, str]:
         try:
             User.objects.get(nickname__exact=nickname)
-            recommend = nickname + str(randint(1, 100))
-            raise ValidationError(detail={"detail": "exist_nickname", "recommend": recommend})
+            return False, "exist_nickname"
         except User.DoesNotExist:
-            return None
+            return True, ""
 
 
-class UserSerializer(UserValidationBaseSerializer):
-    class Meta:
-        model = User
-        fields = ("id", "email", "nickname", "category", "profile_image", "created_at", "updated_at")
+class UserSerializer(UserBaseSerializer):
+    def create(self, validated_data):
+        user = User.objects.create_user(**validated_data)
+        log.debug(f"drf account created: {user.id}")
+        return user
 
     def update(self, instance, validated_data):
         instance.nickname = validated_data.pop('nickname', instance.nickname)
         instance.profile_image = validated_data.pop('profile_image', instance.profile_image)
         instance.category = validated_data.pop('category', instance.category)
         instance.save()
-
         return instance
+
+    def to_representation(self, instance):
+        data = super().to_representation(self.instance)
+        data.pop('password')
+        return data
 
 
 class CategoryFieldSerializer(serializers.Serializer):

@@ -14,6 +14,7 @@ from django.conf import settings
 REQ_ALLOWED_PATH = [
     "/main/",
     "/users/new",
+    "/users/new_social",
     "/users/verify",
     "/users/signin",
     "/contents/books/search/navbar",
