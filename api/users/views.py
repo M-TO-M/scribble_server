@@ -14,10 +14,10 @@ from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.response import Response
 from rest_framework.status import is_client_error
 from rest_framework.throttling import UserRateThrottle
-from rest_framework_tracking.mixins import LoggingMixin
+# from rest_framework_tracking.mixins import LoggingMixin
 
 from api.users.logics import SocialLoginService
-from apps.users.models import UserLoginLog
+# from apps.users.models import UserLoginLog
 from api.users.serializers import *
 
 from core.exceptions import UserNotFound
@@ -40,17 +40,17 @@ from utils.swagger import (
 log = BraceStyleAdapter(logging.getLogger("api.users.views"))
 
 
-class SignInLoggingMixin(LoggingMixin):
-    def initial(self, request, *args, **kwargs):
-        super(LoggingMixin, self).initial(request, *args, **kwargs)
-
-        user_agent = request.META.get('HTTP_USER_AGENT')
-        if user_agent is None:
-            user_agent = 'test'
-        self.log['user_agent'] = user_agent
-
-    def handle_log(self):
-        UserLoginLog(**self.log).save()
+# class SignInLoggingMixin(LoggingMixin):
+#     def initial(self, request, *args, **kwargs):
+#         super(LoggingMixin, self).initial(request, *args, **kwargs)
+#
+#         user_agent = request.META.get('HTTP_USER_AGENT')
+#         if user_agent is None:
+#             user_agent = 'test'
+#         self.log['user_agent'] = user_agent
+#
+#     def handle_log(self):
+#         UserLoginLog(**self.log).save()
 
 
 class TokenObtainViewSet(viewsets.ModelViewSet):
